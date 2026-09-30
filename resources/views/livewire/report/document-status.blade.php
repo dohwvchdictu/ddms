@@ -1,0 +1,552 @@
+<div class="w-full lg:ps-64">
+    <div class="p-4 sm:p-6 lg:pt-1.5 space-y-4 sm:space-y-6">
+        {{-- Breadcrumb --}}
+        <ol class="flex items-center whitespace-nowrap">
+            <li class="inline-flex items-center">
+                <a class="flex items-center text-sm text-gray-500 hover:text-blue-600 focus:outline-none focus:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 dark:focus:text-blue-500"
+                    href="{{ route('dashboard') }}">
+                    Home
+                </a>
+                <svg class="shrink-0 mx-2 size-4 text-gray-400 dark:text-neutral-500" xmlns="http://www.w3.org/2000/svg"
+                    width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m9 18 6-6-6-6"></path>
+                </svg>
+            </li>
+            <li class="inline-flex items-center">
+                <a class="flex items-center text-sm text-gray-500 hover:text-blue-600 focus:outline-none focus:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 dark:focus:text-blue-500"
+                    href="#">
+                    Report
+                </a>
+                <svg class="shrink-0 mx-2 size-4 text-gray-400 dark:text-neutral-500" xmlns="http://www.w3.org/2000/svg"
+                    width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m9 18 6-6-6-6"></path>
+                </svg>
+            </li>
+            <li class="inline-flex items-center text-sm font-semibold text-gray-800 truncate dark:text-neutral-200"
+                aria-current="page">
+                Status of Documents
+            </li>
+        </ol>
+        {{-- End of Breadcrumb --}}
+
+        {{-- Filter Section --}}
+        <!-- Card Section -->
+        <div class="max-w-full px-4 py-2 sm:px-6 lg:px-8 lg:py-2 mx-auto">
+            <!-- Header Grid -->
+            <div class="mb-4 flex justify-between items-center border-b border-gray-200 dark:border-neutral-700">
+                <div>
+                    <h3 class="py-2 text-xl font-semibold text-emerald-600 dark:text-neutral-200">Status
+                        Disaggregation</h3>
+                </div>
+
+            </div>
+            <!-- End Header Grid -->
+
+            <!-- Grid -->
+            {{-- Five stat cards, always on a single row. The icon is dropped and the
+                 figures step down on narrow viewports so the row never wraps. --}}
+            <div class="grid grid-cols-5 gap-2 sm:gap-3 xl:gap-6">
+                <!-- Card -->
+                <div
+                    class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-800">
+                    <div class="p-3 xl:p-5 flex gap-x-2 xl:gap-x-4">
+                        <div
+                            class="hidden xl:flex shrink-0 justify-center items-center size-[46px] bg-gray-100 rounded-lg dark:bg-neutral-800">
+                            <svg class="shrink-0 size-5 text-gray-600 dark:text-neutral-400"
+                                xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="lucide lucide-file-input">
+                                <path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4" />
+                                <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                                <path d="M2 15h10" />
+                                <path d="m9 18 3-3-3-3" />
+                            </svg>
+                        </div>
+
+                        <div class="grow">
+                            <div class="flex items-center gap-x-1.5 min-w-0">
+                                <p class="text-[10px] lg:text-xs uppercase tracking-wide whitespace-nowrap truncate text-sky-600 dark:text-sky-400">
+                                    Received
+                                </p>
+                                <div class="hs-tooltip hidden sm:block shrink-0">
+                                    <div class="hs-tooltip-toggle">
+                                        <svg class="shrink-0 size-4 text-gray-500 dark:text-neutral-400"
+                                            xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                            <path d="M12 17h.01" />
+                                        </svg>
+                                        <span
+                                            class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm dark:bg-neutral-700"
+                                            role="tooltip">
+                                            The number of documents offices took in during this period. This is
+                                            the basis of the completion rate.
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-1 flex items-center gap-x-2">
+                                <h3 class="text-base sm:text-lg xl:text-2xl font-medium text-gray-800 dark:text-neutral-200">
+                                    {{ number_format($totals['received']) }}
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Card -->
+
+                <!-- Card -->
+                <div
+                    class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-800">
+                    <div class="p-3 xl:p-5 flex gap-x-2 xl:gap-x-4">
+                        <div
+                            class="hidden xl:flex shrink-0 justify-center items-center size-[46px] bg-gray-100 rounded-lg dark:bg-neutral-800">
+                            <svg class="shrink-0 size-5 text-gray-600 dark:text-neutral-400"
+                                xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="lucide lucide-file-output">
+                                <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                                <path d="M4 7V4a2 2 0 0 1 2-2 2 2 0 0 0-2 2" />
+                                <path d="M4.063 20.999a2 2 0 0 0 2 1L18 22a2 2 0 0 0 2-2V7l-5-5H6" />
+                                <path d="m5 11-3 3" />
+                                <path d="m5 17-3-3h10" />
+                            </svg>
+                        </div>
+
+                        <div class="grow">
+                            <div class="flex items-center gap-x-1.5 min-w-0">
+                                <p class="text-[10px] lg:text-xs uppercase tracking-wide whitespace-nowrap truncate text-emerald-600 dark:text-emerald-400">
+                                    Completed
+                                </p>
+                                <div class="hs-tooltip hidden sm:block shrink-0">
+                                    <div class="hs-tooltip-toggle">
+                                        <svg class="shrink-0 size-4 text-gray-500 dark:text-neutral-400"
+                                            xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                            <path d="M12 17h.01" />
+                                        </svg>
+                                        <span
+                                            class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm dark:bg-neutral-700"
+                                            role="tooltip">
+                                            Of the documents received in this period, how many the office has
+                                            since finished — forwarded onward or closed.
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-1 flex items-center gap-x-2">
+                                <h3 class="text-base sm:text-lg xl:text-2xl font-medium text-gray-800 dark:text-neutral-200">
+                                    {{ number_format($totals['completed']) }}
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Card -->
+
+                <!-- Card -->
+                <div
+                    class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-800">
+                    <div class="p-3 xl:p-5 flex gap-x-2 xl:gap-x-4">
+                        <div
+                            class="hidden xl:flex shrink-0 justify-center items-center size-[46px] bg-gray-100 rounded-lg dark:bg-neutral-800">
+                            <svg class="shrink-0 size-5 text-gray-600 dark:text-neutral-400"
+                                xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M5 22h14" />
+                                <path d="M5 2h14" />
+                                <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
+                                <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
+                            </svg>
+                        </div>
+
+                        <div class="grow">
+                            <div class="flex items-center gap-x-1.5 min-w-0">
+                                <p class="text-[10px] lg:text-xs uppercase tracking-wide whitespace-nowrap truncate text-amber-600 dark:text-amber-400">
+                                    Pending
+                                </p>
+                                <div class="hs-tooltip hidden sm:block shrink-0">
+                                    <div class="hs-tooltip-toggle">
+                                        <svg class="shrink-0 size-4 text-gray-500 dark:text-neutral-400"
+                                            xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                            <path d="M12 17h.01" />
+                                        </svg>
+                                        <span
+                                            class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm dark:bg-neutral-700"
+                                            role="tooltip">
+                                            The number of documents for processing.
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-1 flex items-center gap-x-2">
+                                <h3 class="text-base sm:text-lg xl:text-2xl font-medium text-gray-800 dark:text-neutral-200">
+                                    {{ number_format($totals['pending']) }}
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Card -->
+
+                <!-- Card -->
+                <div
+                    class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-800">
+                    <div class="p-3 xl:p-5 flex gap-x-2 xl:gap-x-4">
+                        <div
+                            class="hidden xl:flex shrink-0 justify-center items-center size-[46px] bg-gray-100 rounded-lg dark:bg-neutral-800">
+                            <svg class="shrink-0 size-5 text-gray-600 dark:text-neutral-400"
+                                xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="lucide lucide-clock-alert">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 15 14" />
+                            </svg>
+                        </div>
+
+                        <div class="grow">
+                            <div class="flex items-center gap-x-1.5 min-w-0">
+                                <p class="text-[10px] lg:text-xs uppercase tracking-wide whitespace-nowrap truncate text-red-600 dark:text-red-400">
+                                    Overdue
+                                </p>
+                                <div class="hs-tooltip hidden sm:block shrink-0">
+                                    <div class="hs-tooltip-toggle">
+                                        <svg class="shrink-0 size-4 text-gray-500 dark:text-neutral-400"
+                                            xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                            <path d="M12 17h.01" />
+                                        </svg>
+                                        <span
+                                            class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm dark:bg-neutral-700"
+                                            role="tooltip">
+                                            Pending documents past their deadline — the date created plus the
+                                            required days of their citizen charter, or of their document type
+                                            when they have no charter. Charged to the office now holding them.
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-1 flex items-center gap-x-2">
+                                <h3 class="text-base sm:text-lg xl:text-2xl font-medium text-gray-800 dark:text-neutral-200">
+                                    {{ number_format($totals['overdue']) }}
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Card -->
+
+                <!-- Card -->
+                <div
+                    class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-800">
+                    <div class="p-3 xl:p-5 flex gap-x-2 xl:gap-x-4">
+                        <div
+                            class="hidden xl:flex shrink-0 justify-center items-center size-[46px] bg-gray-100 rounded-lg dark:bg-neutral-800">
+                            <svg class="shrink-0 size-5 text-gray-600 dark:text-neutral-400"
+                                xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="lucide lucide-book-copy">
+                                <path d="M2 16V4a2 2 0 0 1 2-2h11" />
+                                <path
+                                    d="M22 18H11a2 2 0 1 0 0 4h10.5a.5.5 0 0 0 .5-.5v-15a.5.5 0 0 0-.5-.5H11a2 2 0 0 0-2 2v12" />
+                                <path d="M5 14H4a2 2 0 1 0 0 4h1" />
+                            </svg>
+                        </div>
+
+                        <div class="grow">
+                            <div class="flex items-center gap-x-1.5 min-w-0">
+                                <p class="text-[10px] lg:text-xs uppercase tracking-wide whitespace-nowrap truncate text-gray-600 dark:text-neutral-300">
+                                    Completion Rate
+                                </p>
+                                <div class="hs-tooltip hidden sm:block shrink-0">
+                                    <div class="hs-tooltip-toggle">
+                                        <svg class="shrink-0 size-4 text-gray-500 dark:text-neutral-400"
+                                            xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10" />
+                                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                            <path d="M12 17h.01" />
+                                        </svg>
+                                        <span
+                                            class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm dark:bg-neutral-700"
+                                            role="tooltip">
+                                            The share of received documents that offices finished — Completed
+                                            divided by Received.
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-1 flex items-center gap-x-2">
+                                <h3 class="text-base sm:text-lg xl:text-2xl font-medium text-gray-800 dark:text-neutral-200">
+                                    {{ $totals['rate'] === null ? '—' : number_format($totals['rate'], 2) . '%' }}
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Card -->
+            </div>
+            <!-- End Grid -->
+        </div>
+        <!-- End Card Section -->
+
+        {{-- Status by Documents Table --}}
+        <div class="max-w-full px-2 py-5 sm:px-6 lg:px-2 lg:py-5 mx-auto">
+            <!-- Card -->
+            <div class="flex flex-col">
+                <div class="-m-1.5 overflow-x-auto">
+                    <div class="p-1.5 min-w-full inline-block align-middle">
+                        <div
+                            class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden dark:bg-neutral-900 dark:border-neutral-700">
+                            {{-- Header --}}
+                            <div
+                                class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-gray-200 dark:border-neutral-700">
+                                <div>
+                                    <h2 class="text-xl font-bold text-emerald-700 dark:text-neutral-200">
+                                        Document Status by Office
+                                    </h2>
+                                    <p class="text-sm text-gray-600 dark:text-neutral-400 mb-2">
+                                        Monthly summary of the status of documents per office.
+                                    </p>
+                                </div>
+                                <div>
+                                    {{--
+                                        Applied by the Filter button rather than on change - wire:model is
+                                        deferred in Livewire 3, so both dates reach the server together on
+                                        click instead of each one re-walking the logs on its own. The print
+                                        link is built from the same server-side dates, so it can only ever
+                                        print the range the table is showing.
+                                    --}}
+                                    <div class="flex flex-wrap gap-2 items-center">
+                                        <div class="min-w-[130px]">
+                                            <label for="startDate" class="sr-only">Start Date</label>
+                                            <input type="date" wire:model="startDate" name="startDate"
+                                                class="bg-neutral-50 border border-gray-200 text-gray-600 text-sm shadow-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-neutral-800 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-neutral-200 dark:[color-scheme:dark] dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                                placeholder="Select date">
+                                        </div>
+                                        <div class="min-w-[130px]">
+                                            <label for="endDate" class="sr-only">End Date</label>
+                                            <input type="date" wire:model="endDate" name="endDate"
+                                                class="bg-neutral-50 border border-gray-200 text-gray-600 text-sm shadow-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-neutral-800 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-neutral-200 dark:[color-scheme:dark] dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                                placeholder="Select date">
+                                        </div>
+                                        <div class="shrink-0 flex items-center gap-x-2">
+                                            <button type="button" wire:click="applyFilter"
+                                                class="py-2.5 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+                                                <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg"
+                                                    width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                    stroke-linejoin="round">
+                                                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                                                </svg>
+                                                <span wire:loading.remove wire:target="applyFilter">Filter</span>
+                                                <span wire:loading wire:target="applyFilter">Loading...</span>
+                                            </button>
+
+                                            {{-- Icon-only, so it keeps the Filter button as the one primary
+                                                 action; yellow is the print colour used on document detail. --}}
+                                            <a href="{{ route('print.document.status', ['startDate' => $startDate, 'endDate' => $endDate]) }}"
+                                                target="_blank" aria-label="Print Report"
+                                                class="py-2.5 px-3 inline-flex items-center rounded-lg border border-transparent bg-yellow-600 text-white hover:bg-yellow-700 focus:outline-none focus:bg-yellow-700 disabled:opacity-50 disabled:pointer-events-none">
+                                                <div class="hs-tooltip inline-block">
+                                                    <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg"
+                                                        width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                        stroke-linejoin="round">
+                                                        <path
+                                                            d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                                                        <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6" />
+                                                        <rect x="6" y="14" width="12" height="8" rx="1" />
+                                                    </svg>
+                                                    <span
+                                                        class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm dark:bg-neutral-700"
+                                                        role="tooltip">
+                                                        Print Report
+                                                    </span>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {{-- End of Header --}}
+
+                            <!-- Table -->
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
+                                <thead class="bg-gray-50 dark:bg-neutral-800">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-start">
+                                            <a class="group inline-flex items-center gap-x-2 text-xs font-semibold uppercase text-gray-800 hover:text-gray-500 focus:outline-none focus:text-gray-500 dark:text-neutral-200 dark:hover:text-white dark:focus:text-white"
+                                                href="#">
+                                                Office
+                                                <svg class="shrink-0 size-3.5 text-gray-800 dark:text-neutral-200"
+                                                    xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="m7 15 5 5 5-5" />
+                                                    <path d="m7 9 5-5 5 5" />
+                                                </svg>
+                                            </a>
+                                        </th>
+
+                                        <th scope="col" class="px-6 py-3 text-start">
+                                            <a class="group inline-flex items-center gap-x-2 text-xs font-semibold uppercase text-sky-600 hover:text-sky-500 focus:outline-none focus:text-gray-500 dark:text-sky-400 dark:hover:text-sky-300 dark:focus:text-sky-300"
+                                                href="#">
+                                                Received
+                                                <svg class="shrink-0 size-3.5 text-gray-800 dark:text-neutral-200"
+                                                    xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="m7 15 5 5 5-5" />
+                                                    <path d="m7 9 5-5 5 5" />
+                                                </svg>
+                                            </a>
+                                        </th>
+
+                                        <th scope="col" class="px-6 py-3 text-start">
+                                            <a class="group inline-flex items-center gap-x-2 text-xs font-semibold uppercase text-emerald-600 hover:text-emerald-500 focus:outline-none focus:text-gray-500 dark:text-emerald-400 dark:hover:text-emerald-300 dark:focus:text-emerald-300"
+                                                href="#">
+                                                Completed
+                                                <svg class="shrink-0 size-3.5 text-gray-800 dark:text-neutral-200"
+                                                    xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="m7 15 5 5 5-5" />
+                                                    <path d="m7 9 5-5 5 5" />
+                                                </svg>
+                                            </a>
+                                        </th>
+
+                                        <th scope="col" class="px-6 py-3 text-start">
+                                            <a class="group inline-flex items-center gap-x-2 text-xs font-semibold uppercase text-amber-600 hover:text-amber-500 focus:outline-none focus:text-gray-500 dark:text-amber-400 dark:hover:text-amber-300 dark:focus:text-amber-300"
+                                                href="#">
+                                                Pending
+                                                <svg class="shrink-0 size-3.5 text-gray-800 dark:text-neutral-200"
+                                                    xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="m7 15 5 5 5-5" />
+                                                    <path d="m7 9 5-5 5 5" />
+                                                </svg>
+                                            </a>
+                                        </th>
+
+                                        <th scope="col" class="px-6 py-3 text-start">
+                                            <a class="group inline-flex items-center gap-x-2 text-xs font-semibold uppercase text-red-600 hover:text-red-500 focus:outline-none focus:text-gray-500 dark:text-red-400 dark:hover:text-red-300 dark:focus:text-red-300"
+                                                href="#">
+                                                Overdue
+                                                <svg class="shrink-0 size-3.5 text-gray-800 dark:text-neutral-200"
+                                                    xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="m7 15 5 5 5-5" />
+                                                    <path d="m7 9 5-5 5 5" />
+                                                </svg>
+                                            </a>
+                                        </th>
+
+                                        <th scope="col" class="px-6 py-3 text-start">
+                                            <a class="group inline-flex items-center gap-x-2 text-xs font-semibold uppercase text-gray-800 hover:text-gray-500 focus:outline-none focus:text-gray-500 dark:text-neutral-200 dark:hover:text-white dark:focus:text-white"
+                                                href="#">
+                                                Completion Rate
+                                                <svg class="shrink-0 size-3.5 text-gray-800 dark:text-neutral-200"
+                                                    xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="m7 15 5 5 5-5" />
+                                                    <path d="m7 9 5-5 5 5" />
+                                                </svg>
+                                            </a>
+                                        </th>
+                                    </tr>
+                                </thead>
+
+                                <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
+                                    @forelse ($offices as $key => $office)
+                                        <tr wire:key="office-{{ $office['id'] }}"
+                                            class="bg-white hover:bg-gray-50 dark:bg-neutral-900 dark:hover:bg-neutral-800">
+                                            <td class="size-px whitespace-nowrap">
+                                                <span class="block">
+                                                    <div class="px-6 py-4">
+                                                        <div class="block font-semibold text-emerald-900 dark:text-emerald-400 decoration-2">
+                                                            {{ $office['officeName'] }}</div>
+                                                    </div>
+                                                </span>
+                                            </td>
+                                            <td class="size-px whitespace-nowrap">
+                                                <span class="block relative z-10">
+                                                    <div class="px-6 flex text-sky-600 dark:text-sky-400 gap-x-1">
+                                                        {{ number_format($received = ($receivedByOffice[$office['id']] ?? 0)) }}
+                                                    </div>
+                                                </span>
+                                            </td>
+                                            <td class="size-px whitespace-nowrap">
+                                                <span class="block relative z-10">
+                                                    <div class="px-6 flex text-emerald-600 dark:text-emerald-400 gap-x-1">
+                                                        {{ number_format($completed = ($completedByOffice[$office['id']] ?? 0)) }}
+                                                    </div>
+                                                </span>
+                                            </td>
+                                            <td class="size-px whitespace-nowrap">
+                                                <span class="block relative z-10">
+                                                    <div class="px-6 flex text-amber-600 dark:text-amber-400 gap-x-1">
+                                                        {{ number_format($pendingByOffice[$office['id']] ?? 0) }}
+                                                    </div>
+                                                </span>
+                                            </td>
+                                            <td class="size-px whitespace-nowrap">
+                                                <span class="block relative z-10">
+                                                    {{-- Emphasised only when there is something to act on. --}}
+                                                    <div class="px-6 flex gap-x-1 {{ ($overdue = $overdueByOffice[$office['id']] ?? 0) > 0 ? 'font-semibold text-red-600 dark:text-red-400' : 'text-gray-400 dark:text-neutral-500' }}">
+                                                        {{ number_format($overdue) }}
+                                                    </div>
+                                                </span>
+                                            </td>
+                                            <td class="size-px whitespace-nowrap">
+                                                <span class="block relative z-10">
+                                                    <div class="px-6 flex gap-x-1 text-gray-800 dark:text-neutral-200">
+                                                        @php
+                                                            $rate = $this->completionRate($received, $completed);
+                                                        @endphp
+                                                        {{ $rate === null ? '—' : number_format($rate, 2) . '%' }}
+                                                    </div>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td class="text-center py-5 font-bold text-lg text-gray-800 dark:text-neutral-200" colspan="6">No records
+                                                found!
+                                            </td>
+                                        </tr>
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+                            <!-- End Table -->
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{-- End of Status by Documents Table --}}
+    </div>
+</div>

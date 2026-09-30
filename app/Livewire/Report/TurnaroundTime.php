@@ -1,0 +1,625 @@
+<?php
+
+namespace App\Livewire\Report;
+
+use App\Models\Document;
+use App\Services\ApiService;
+use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use App\Traits\LivewireAlert;
+use Livewire\Attributes\Title;
+use Livewire\Component;
+use Livewire\WithPagination;
+
+#[Title('Turnaround Time | Document Tracking Information System')]
+class TurnaroundTime extends Component
+{
+    use LivewireAlert;
+    use WithPagination;
+
+    /**
+     * Action ids. A hop is one office's own custody window: it starts when that
+     * office logs "Received" and ends when the document is logged "Forwarded".
+     * The office is therefore charged only for the time the document actually sat
+     * with it — the transit that follows, until the next office takes receipt, is
+     * charged to nobody.
+     *
+     * "Closed" is the terminal fallback: a document closed where it sits is never
+     * forwarded, so without it the last office in every chain would never be
+     * measured.
+     *
+     * A receive is never a hop *end*. If the next office takes receipt while a hop
+     * is still open, the document moved without a "Forwarded" log — which is what
+     * "Endorsed" and "Returned" do — and that open hop is abandoned rather than
+     * measured, with the clock restarting at the new office. "For Receiving" is
+     * ignored entirely: it marks a document in transit, not in anyone's custody.
+     *
+     * The origin office only "Created" the document, so it is never a hop start
+     * and is excluded — dwell is counted per receiving office.
+     */
+    private const ACTION_RECEIVED = 1;
+    private const ACTION_FORWARDED = 3;
+    private const ACTION_CLOSED = 5;
+    private const HOP_BOUNDARIES = [self::ACTION_RECEIVED, self::ACTION_FORWARDED, self::ACTION_CLOSED];
+
+    /** Bucket key for a document with neither a category nor a charter procedure. */
+    private const CLASSIFICATION_NONE = 'x';
+
+    /** Constant Variables */
+    /** Office directory kept protected so it is not serialized into the Livewire snapshot; reloaded from cache in boot(). */
+    protected $offices = [];
+    protected $response;
+    public $perPage = 10;
+    public $detailPerPage = 10;
+
+    /** Office whose per-document breakdown is expanded (only one at a time). */
+    public $expandedOffice = null;
+
+    /** Sortable numeric columns shared by the office table and the detail table. */
+    private const SORTABLE = ['avg', 'min', 'max'];
+
+    /** Sort state for the main office table. */
+    public $sortColumn = 'avg';
+    public $sortDirection = 'desc';
+
+    /** Sort state for the expanded per-category table. */
+    public $detailSortColumn = 'avg';
+    public $detailSortDirection = 'desc';
+
+    /** Filter form inputs — take effect only when Filter is clicked */
+    public $officeFilter = '';
+    public $source = '';
+    public $startDate;
+    public $endDate;
+
+    /** Filters currently applied to the data */
+    public $applied = [];
+
+    public function mount()
+    {
+        /** Filter Records from the start of the current month to today */
+        $this->startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
+        $this->endDate = Carbon::now()->format('Y-m-d');
+
+        $this->applyFilters();
+    }
+
+    /** Reloads the cached office directory on every request without bloating the snapshot. */
+    public function boot()
+    {
+        $this->checkApiConnection();
+    }
+
+    public function applyFilters()
+    {
+        $this->applied = [
+            'office' => $this->officeFilter,
+            'source' => $this->source,
+            'startDate' => $this->startDate,
+            'endDate' => $this->endDate,
+        ];
+
+        $this->expandedOffice = null;
+        $this->resetPage();
+    }
+
+    /** Expand a single office's per-document breakdown, or collapse it if re-clicked. */
+    public function toggleOffice($officeId)
+    {
+        $this->expandedOffice = $this->expandedOffice === (int) $officeId ? null : (int) $officeId;
+        $this->resetPage('docs');
+    }
+
+    /** Sort the office table by a numeric column, toggling direction on repeat clicks. */
+    public function sortBy($column)
+    {
+        if (!in_array($column, self::SORTABLE, true)) {
+            return;
+        }
+
+        if ($this->sortColumn === $column) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortColumn = $column;
+            $this->sortDirection = 'desc';
+        }
+
+        $this->resetPage('page');
+    }
+
+    /** Sort the expanded per-category table by a numeric column. */
+    public function sortDetailBy($column)
+    {
+        if (!in_array($column, self::SORTABLE, true)) {
+            return;
+        }
+
+        if ($this->detailSortColumn === $column) {
+            $this->detailSortDirection = $this->detailSortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->detailSortColumn = $column;
+            $this->detailSortDirection = 'desc';
+        }
+
+        $this->resetPage('docs');
+    }
+
+    public function checkApiConnection()
+    {
+        /** API */
+        $this->response = app(ApiService::class)->getOfficesData();
+
+        if (!$this->response) {
+            $this->offices = [];
+
+            $this->alert('error', 'No response from API server. Check connection and try again.', [
+                'position' => 'center',
+                'toast' => true,
+                'timer' => null,
+                'showConfirmButton' => true,
+                'confirmButtonText' => 'OK',
+                'confirmButtonColor' => '#dc2626',
+            ]);
+
+            return false;
+        }
+
+        $this->offices = app(ApiService::class)->getActiveOffices($this->response);
+
+        return true;
+    }
+
+    /**
+     * Documents in scope for the report — filtered by source and creation date
+     * only. The office filter is applied later, to the per-office result rows,
+     * because a single document passes through several offices.
+     */
+    private function filteredDocuments()
+    {
+        return Document::query()
+            ->when($this->applied['source'] ?? '', function ($query, $source) {
+                $query->where('source', $source);
+            })
+            ->whereBetween('created_at', [
+                Carbon::parse($this->applied['startDate'] ?? $this->startDate),
+                Carbon::parse($this->applied['endDate'] ?? $this->endDate)->addDay(),
+            ]);
+    }
+
+    /** Whole business days between two moments, weekends excluded. */
+    private function businessDays($start, $end): int
+    {
+        $start = Carbon::parse($start);
+        $end = Carbon::parse($end);
+
+        if ($end->lessThanOrEqualTo($start)) {
+            return 0;
+        }
+
+        return $start->diffInDaysFiltered(function (Carbon $date) {
+            return !$date->isWeekend();
+        }, $end);
+    }
+
+    /**
+     * Walk every in-scope document's logs and accumulate, per office, the dwell
+     * time of each completed hop (Received → Forwarded, or → Closed).
+     * Returns [office stats keyed by office_id, overall summary].
+     *
+     * Only source and date drive the heavy walk, so the result is cached under
+     * those keys — the office filter is a cheap post-filter on the rows and the
+     * same walk is reused when a user switches offices or pages the table.
+     */
+    private function computeDwell(): array
+    {
+        $signature = md5(json_encode([
+            'source' => $this->applied['source'] ?? '',
+            'start' => $this->applied['startDate'] ?? $this->startDate,
+            'end' => $this->applied['endDate'] ?? $this->endDate,
+        ]));
+
+        /** _v3 = receive-to-forward dwell; bumped so pre-change results are not served. */
+        return Cache::remember('turnaround_dwell_v3_' . $signature, now()->addMinutes(5), function () {
+            return $this->walkDwell();
+        });
+    }
+
+    /** The uncached hop walk backing computeDwell(). */
+    private function walkDwell(): array
+    {
+        $totalDocuments = $this->filteredDocuments()->count();
+
+        $perOffice = [];
+        $documentsWithHop = [];
+        $overall = ['count' => 0, 'sum' => 0, 'min' => null, 'max' => null];
+
+        if ($totalDocuments === 0) {
+            return ['offices' => $perOffice, 'total' => 0, 'documents' => 0, 'overall' => $overall];
+        }
+
+        /**
+         * Join logs to documents so the date/source filter runs in SQL and we
+         * avoid a giant IN(...) on document ids. Rows are streamed with a cursor
+         * (lightweight stdClass, not Eloquent models) to keep memory flat over
+         * the hundreds of thousands of logs a full year can hold.
+         */
+        $rangeStart = Carbon::parse($this->applied['startDate'] ?? $this->startDate);
+        $rangeEnd = Carbon::parse($this->applied['endDate'] ?? $this->endDate)->addDay();
+
+        $logs = DB::table('logs')
+            ->join('documents', 'documents.id', '=', 'logs.document_id')
+            ->whereIn('logs.action_id', self::HOP_BOUNDARIES)
+            ->when($this->applied['source'] ?? '', function ($query, $source) {
+                $query->where('documents.source', $source);
+            })
+            ->whereBetween('documents.created_at', [$rangeStart, $rangeEnd])
+            ->orderBy('logs.document_id')
+            ->orderBy('logs.created_at')
+            ->orderBy('logs.id')
+            ->select('logs.document_id', 'logs.office_id', 'logs.action_id', 'logs.created_at')
+            ->cursor();
+
+        $currentDoc = null;
+        $openHop = null; // ['office' => id, 'time' => created_at]
+
+        foreach ($logs as $log) {
+            $documentId = (int) $log->document_id;
+
+            if ($documentId !== $currentDoc) {
+                $currentDoc = $documentId;
+                $openHop = null;
+            }
+
+            /**
+             * A receive starts the clock for the receiving office. It never ends
+             * the hop in progress: if one is still open the document left without
+             * a "Forwarded" log, so that window is abandoned unmeasured.
+             *
+             * Offices routinely log the same receipt several times in a burst
+             * (batch scans). A repeat receive by the office already holding the
+             * document is not a handoff — keep the original custody timestamp.
+             */
+            if ((int) $log->action_id === self::ACTION_RECEIVED) {
+                if ($openHop === null || $openHop['office'] !== (int) $log->office_id) {
+                    $openHop = ['office' => (int) $log->office_id, 'time' => $log->created_at];
+                }
+
+                continue;
+            }
+
+            /**
+             * Anything left is Forwarded or Closed (the query admits nothing
+             * else), and either one ends the holding office's custody window.
+             */
+            if ($openHop !== null) {
+                $office = $openHop['office'];
+                $days = $this->businessDays($openHop['time'], $log->created_at);
+
+                if (!isset($perOffice[$office])) {
+                    $perOffice[$office] = ['count' => 0, 'sum' => 0, 'min' => $days, 'max' => $days];
+                }
+
+                $perOffice[$office]['count']++;
+                $perOffice[$office]['sum'] += $days;
+                $perOffice[$office]['min'] = min($perOffice[$office]['min'], $days);
+                $perOffice[$office]['max'] = max($perOffice[$office]['max'], $days);
+
+                $overall['count']++;
+                $overall['sum'] += $days;
+                $overall['min'] = $overall['min'] === null ? $days : min($overall['min'], $days);
+                $overall['max'] = $overall['max'] === null ? $days : max($overall['max'], $days);
+
+                $documentsWithHop[$documentId] = true;
+                $openHop = null;
+            }
+        }
+
+        return [
+            'offices' => $perOffice,
+            'total' => $totalDocuments,
+            'documents' => count($documentsWithHop),
+            'overall' => $overall,
+        ];
+    }
+
+    /**
+     * Per-type breakdown for a single office: one row per document category or
+     * charter procedure, summarising the dwell of the completed hops at that
+     * office. Loaded on demand when a row is expanded and cached under
+     * office + filters.
+     */
+    private function officeDetail(int $officeId): array
+    {
+        $signature = md5(json_encode([
+            'office' => $officeId,
+            'source' => $this->applied['source'] ?? '',
+            'start' => $this->applied['startDate'] ?? $this->startDate,
+            'end' => $this->applied['endDate'] ?? $this->endDate,
+        ]));
+
+        /** v4: the bucket key changed from a bare category id to a classification
+         *  key, so cached v3 payloads cannot be reused. */
+        return Cache::remember('turnaround_detail_v4_' . $signature, now()->addMinutes(5), function () use ($officeId) {
+            return $this->walkOfficeDetail($officeId);
+        });
+    }
+
+    /** The uncached per-office hop walk backing officeDetail(). */
+    private function walkOfficeDetail(int $officeId): array
+    {
+        $rangeStart = Carbon::parse($this->applied['startDate'] ?? $this->startDate);
+        $rangeEnd = Carbon::parse($this->applied['endDate'] ?? $this->endDate)->addDay();
+
+        /** Only documents that were received at this office are worth walking. */
+        $documentIds = DB::table('logs')
+            ->join('documents', 'documents.id', '=', 'logs.document_id')
+            ->where('logs.office_id', $officeId)
+            ->where('logs.action_id', self::ACTION_RECEIVED)
+            ->when($this->applied['source'] ?? '', function ($query, $source) {
+                $query->where('documents.source', $source);
+            })
+            ->whereBetween('documents.created_at', [$rangeStart, $rangeEnd])
+            ->distinct()
+            ->pluck('logs.document_id');
+
+        if ($documentIds->isEmpty()) {
+            return ['categories' => [], 'completed' => 0];
+        }
+
+        /**
+         * document_id => classification key, so each hop can be attributed to a
+         * type. A Citizen's Charter transaction has no category and is attributed
+         * to its charter procedure instead; the charter only stands in where the
+         * category is absent, mirroring Document::classification. Prefixed so a
+         * category id and a charter id of the same number cannot collide.
+         */
+        $classificationByDoc = Document::whereIn('id', $documentIds)
+            ->get(['id', 'category_id', 'citizen_charter_id'])
+            ->mapWithKeys(fn ($document) => [
+                $document->id => $this->classificationKey($document->category_id, $document->citizen_charter_id),
+            ]);
+
+        $logs = DB::table('logs')
+            ->whereIn('document_id', $documentIds)
+            ->whereIn('action_id', self::HOP_BOUNDARIES)
+            ->orderBy('document_id')
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->select('document_id', 'office_id', 'action_id', 'created_at')
+            ->cursor();
+
+        $categories = [];
+        $completed = 0;
+        $currentDoc = null;
+        $openHop = null;
+
+        foreach ($logs as $log) {
+            $documentId = (int) $log->document_id;
+
+            if ($documentId !== $currentDoc) {
+                $currentDoc = $documentId;
+                $openHop = null;
+            }
+
+            /**
+             * A receive only starts a window. Repeat receives by the holding
+             * office are duplicate scans, not handoffs; a receive by a different
+             * office abandons the open window, which never got a "Forwarded".
+             */
+            if ((int) $log->action_id === self::ACTION_RECEIVED) {
+                if ($openHop === null || $openHop['office'] !== (int) $log->office_id) {
+                    $openHop = ['office' => (int) $log->office_id, 'time' => $log->created_at];
+                }
+
+                continue;
+            }
+
+            /** Forwarded or Closed ends the window; only credit the office being detailed. */
+            if ($openHop !== null) {
+                if ($openHop['office'] === $officeId) {
+                    $key = $classificationByDoc[$documentId] ?? self::CLASSIFICATION_NONE;
+                    $days = $this->businessDays($openHop['time'], $log->created_at);
+
+                    if (!isset($categories[$key])) {
+                        $categories[$key] = ['count' => 0, 'sum' => 0, 'min' => $days, 'max' => $days];
+                    }
+
+                    $categories[$key]['count']++;
+                    $categories[$key]['sum'] += $days;
+                    $categories[$key]['min'] = min($categories[$key]['min'], $days);
+                    $categories[$key]['max'] = max($categories[$key]['max'], $days);
+                    $completed++;
+                }
+
+                $openHop = null;
+            }
+        }
+
+        return ['categories' => $categories, 'completed' => $completed];
+    }
+
+    /**
+     * How a document is grouped in the per-type breakdown: its category when it has
+     * one, else the charter procedure that classifies it. Category-first, mirroring
+     * Document::classification, so the documents encoded before the charter form
+     * dropped the category select keep grouping the way they always have.
+     */
+    private function classificationKey($categoryId, $charterId): string
+    {
+        if ($categoryId) {
+            return 'c:' . $categoryId;
+        }
+
+        if ($charterId) {
+            return 'p:' . $charterId;
+        }
+
+        return self::CLASSIFICATION_NONE;
+    }
+
+    /**
+     * Turn the bucket keys back into the names shown in the expanded table.
+     * Both lookups are needed: a category row and a charter row can appear side by
+     * side for the same office.
+     */
+    private function classificationNames(array $keys): array
+    {
+        $categoryNames = \App\Models\Category::pluck('name', 'id');
+        $charterNames = \App\Models\CitizenCharter::pluck('name', 'id');
+
+        $resolved = [];
+
+        foreach ($keys as $key) {
+            [$kind, $id] = array_pad(explode(':', $key, 2), 2, null);
+
+            $resolved[$key] = match ($kind) {
+                'c' => $categoryNames[$id] ?? 'Uncategorized',
+                'p' => $charterNames[$id] ?? 'Uncategorized',
+                default => 'Uncategorized',
+            };
+        }
+
+        return $resolved;
+    }
+
+    /**
+     * Map of office_id => officeName pulled from the full offices API list
+     * (not the active-only dropdown list) so rows for documents that passed
+     * through a deactivated office still resolve to its name.
+     */
+    private function officeNames(): array
+    {
+        return collect($this->response['officeList'] ?? [])->pluck('officeName', 'id')->toArray();
+    }
+
+    /**
+     * One row per office, sorted by the chosen column, honouring the office filter.
+     */
+    private function officeRows(array $perOffice): array
+    {
+        $names = $this->officeNames();
+        $selected = $this->applied['office'] ?? '';
+
+        $rows = [];
+
+        foreach ($perOffice as $officeId => $stats) {
+            if ($selected !== '' && (string) $officeId !== (string) $selected) {
+                continue;
+            }
+
+            $rows[] = [
+                'office_id' => $officeId,
+                'name' => $names[$officeId] ?? ('Office #' . $officeId),
+                'documents' => $stats['count'],
+                'avg' => $stats['count'] ? round($stats['sum'] / $stats['count'], 1) : null,
+                'min' => $stats['min'],
+                'max' => $stats['max'],
+            ];
+        }
+
+        usort($rows, $this->rowSorter($this->sortColumn, $this->sortDirection));
+
+        return $rows;
+    }
+
+    /**
+     * Comparator for the dwell tables: sort by the chosen numeric column in the
+     * chosen direction, breaking ties by document count (busiest first) so the
+     * order stays stable.
+     */
+    private function rowSorter(string $column, string $direction): callable
+    {
+        $factor = $direction === 'asc' ? 1 : -1;
+
+        return function ($a, $b) use ($column, $factor) {
+            $cmp = ($a[$column] <=> $b[$column]) * $factor;
+
+            return $cmp !== 0 ? $cmp : $b['documents'] <=> $a['documents'];
+        };
+    }
+
+    public function render()
+    {
+        $data = $this->computeDwell();
+        $allRows = collect($this->officeRows($data['offices']));
+
+        $overall = $data['overall'];
+        $selected = $this->applied['office'] ?? '';
+
+        /**
+         * When a single office is selected the summary should reflect that office
+         * only; otherwise show the system-wide figures across every hop.
+         */
+        if ($selected !== '') {
+            $handled = $allRows->sum('documents');
+            $totals = [
+                'documents' => $handled,
+                'total' => $data['total'],
+                'average' => $allRows->count() ? $allRows->first()['avg'] : null,
+                'fastest' => $allRows->count() ? $allRows->min('min') : null,
+                'slowest' => $allRows->count() ? $allRows->max('max') : null,
+            ];
+        } else {
+            $totals = [
+                'documents' => $data['documents'],
+                'total' => $data['total'],
+                'average' => $overall['count'] ? round($overall['sum'] / $overall['count'], 1) : null,
+                'fastest' => $overall['min'],
+                'slowest' => $overall['max'],
+            ];
+        }
+
+        $page = Paginator::resolveCurrentPage('page');
+        $rows = new LengthAwarePaginator(
+            $allRows->slice(($page - 1) * $this->perPage, $this->perPage)->values(),
+            $allRows->count(),
+            $this->perPage,
+            $page,
+            ['path' => Paginator::resolveCurrentPath(), 'pageName' => 'page']
+        );
+
+        /** Lazy-load the expanded office's per-type breakdown, if any. */
+        $detail = null;
+        if ($this->expandedOffice !== null) {
+            $result = $this->officeDetail($this->expandedOffice);
+
+            $names = $this->classificationNames(array_keys($result['categories']));
+
+            $categoryRows = collect($result['categories'])
+                ->map(function ($stats, $key) use ($names) {
+                    return [
+                        'name' => $names[$key] ?? 'Uncategorized',
+                        'documents' => $stats['count'],
+                        'avg' => $stats['count'] ? round($stats['sum'] / $stats['count'], 1) : null,
+                        'min' => $stats['min'],
+                        'max' => $stats['max'],
+                    ];
+                })
+                ->sort($this->rowSorter($this->detailSortColumn, $this->detailSortDirection))
+                ->values();
+
+            $docsPage = Paginator::resolveCurrentPage('docs');
+
+            $detail = [
+                'office' => $this->expandedOffice,
+                'completed' => $result['completed'],
+                'rows' => new LengthAwarePaginator(
+                    $categoryRows->slice(($docsPage - 1) * $this->detailPerPage, $this->detailPerPage)->values(),
+                    $categoryRows->count(),
+                    $this->detailPerPage,
+                    $docsPage,
+                    ['path' => Paginator::resolveCurrentPath(), 'pageName' => 'docs']
+                ),
+            ];
+        }
+
+        return view('livewire.report.turnaround-time', [
+            'rows' => $rows,
+            'totals' => $totals,
+            'detail' => $detail,
+        ]);
+    }
+}
