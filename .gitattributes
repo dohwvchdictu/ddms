@@ -9,3 +9,8 @@
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore
+
+# Wayfinder output, committed because the Docker asset stage has no PHP.
+/resources/react/actions/** linguist-generated
+/resources/react/routes/** linguist-generated
+/resources/react/wayfinder/** linguist-generated

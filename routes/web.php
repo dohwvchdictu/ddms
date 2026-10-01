@@ -1,7 +1,7 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\MiscController;
-use App\Livewire\Auth\LoginPage;
 use App\Livewire\Documents\NewBundle;
 use App\Livewire\Documents\NewDocument;
 use App\Livewire\HomePage;
@@ -40,7 +40,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 
-Route::get('/', LoginPage::class)->name('login');
+Route::get('/', [LoginController::class, 'show'])->name('login');
+Route::post('/login', [LoginController::class, 'store'])->name('login.store');
 
 Route::middleware(['jwt.auth'])->group(function () {
     /** Dashboard */

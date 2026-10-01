@@ -1,25 +1,22 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
-import { networkInterfaces } from 'os';
+import tailwindcss3 from 'tailwindcss3';
+import autoprefixer from 'autoprefixer';
+import { getLocalIP } from './vite.shared.js';
 
-function getLocalIP() {
-    for (const nets of Object.values(networkInterfaces())) {
-        for (const net of nets) {
-            if (net.family === 'IPv4' && !net.internal) {
-                return net.address;
-            }
-        }
-    }
-    return 'localhost';
-}
-
-const localIP = getLocalIP();
-
+// Legacy Blade / Livewire / Preline UI (Tailwind 3). The React UI is built
+// separately by vite.react.config.ts. PostCSS is configured inline rather
+// than in postcss.config.js so the React build never picks it up.
 export default defineConfig({
     server: {
         host: '0.0.0.0',
         hmr: {
-            host: localIP,
+            host: getLocalIP(),
+        },
+    },
+    css: {
+        postcss: {
+            plugins: [tailwindcss3({ config: './tailwind.config.js' }), autoprefixer()],
         },
     },
     plugins: [

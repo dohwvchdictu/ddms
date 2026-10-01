@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../wayfinder'
 /**
-* @see \App\Livewire\Auth\LoginPage::__invoke
- * @see app/Livewire/Auth/LoginPage.php:7
+* @see \App\Http\Controllers\Auth\LoginController::login
+ * @see app/Http/Controllers/Auth/LoginController.php:14
  * @route '/'
  */
 export const login = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -15,8 +15,8 @@ login.definition = {
 } satisfies RouteDefinition<["get","head"]>
 
 /**
-* @see \App\Livewire\Auth\LoginPage::__invoke
- * @see app/Livewire/Auth/LoginPage.php:7
+* @see \App\Http\Controllers\Auth\LoginController::login
+ * @see app/Http/Controllers/Auth/LoginController.php:14
  * @route '/'
  */
 login.url = (options?: RouteQueryOptions) => {
@@ -24,8 +24,8 @@ login.url = (options?: RouteQueryOptions) => {
 }
 
 /**
-* @see \App\Livewire\Auth\LoginPage::__invoke
- * @see app/Livewire/Auth/LoginPage.php:7
+* @see \App\Http\Controllers\Auth\LoginController::login
+ * @see app/Http/Controllers/Auth/LoginController.php:14
  * @route '/'
  */
 login.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -33,8 +33,8 @@ login.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     method: 'get',
 })
 /**
-* @see \App\Livewire\Auth\LoginPage::__invoke
- * @see app/Livewire/Auth/LoginPage.php:7
+* @see \App\Http\Controllers\Auth\LoginController::login
+ * @see app/Http/Controllers/Auth/LoginController.php:14
  * @route '/'
  */
 login.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -129,7 +129,7 @@ routingLogbook.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => 
 })
 
 /**
- * @see routes/web.php:93
+ * @see routes/web.php:94
  * @route '/logout'
  */
 export const logout = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -143,7 +143,7 @@ logout.definition = {
 } satisfies RouteDefinition<["post"]>
 
 /**
- * @see routes/web.php:93
+ * @see routes/web.php:94
  * @route '/logout'
  */
 logout.url = (options?: RouteQueryOptions) => {
@@ -151,7 +151,7 @@ logout.url = (options?: RouteQueryOptions) => {
 }
 
 /**
- * @see routes/web.php:93
+ * @see routes/web.php:94
  * @route '/logout'
  */
 logout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({

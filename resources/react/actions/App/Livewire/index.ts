@@ -1,4 +1,3 @@
-import Auth from './Auth'
 import HomePage from './HomePage'
 import Documents from './Documents'
 import Inbox from './Inbox'
@@ -7,8 +6,7 @@ import Views from './Views'
 import Report from './Report'
 import Partials from './Partials'
 const Livewire = {
-    Auth: Object.assign(Auth, Auth),
-HomePage: Object.assign(HomePage, HomePage),
+    HomePage: Object.assign(HomePage, HomePage),
 Documents: Object.assign(Documents, Documents),
 Inbox: Object.assign(Inbox, Inbox),
 Status: Object.assign(Status, Status),

@@ -1,10 +1,10 @@
 import Filament from './Filament'
-import Livewire from './Livewire'
 import Http from './Http'
+import Livewire from './Livewire'
 const App = {
     Filament: Object.assign(Filament, Filament),
-Livewire: Object.assign(Livewire, Livewire),
 Http: Object.assign(Http, Http),
+Livewire: Object.assign(Livewire, Livewire),
 }
 
 export default App
