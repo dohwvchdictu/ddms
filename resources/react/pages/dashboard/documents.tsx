@@ -1,7 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, FileSearch, Loader2, Search, X } from 'lucide-react';
+import { ChevronRight, FileSearch } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { STATUS_STYLES } from '@/components/document-tracking';
+import Pagination from '@/components/pagination';
+import SearchInput from '@/components/search-input';
+import StatusBadge from '@/components/status-badge';
 import TrackingDialog from '@/components/tracking-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
@@ -9,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { parseDay } from '@/lib/working-days';
 import { dashboard } from '@/routes';
 import { documents as documentsRoute } from '@/routes/dashboard';
+import type { Paginated } from '@/types';
 
 type Filter = 'for_action' | 'pending' | 'due_soon' | 'due_today' | 'overdue';
 
@@ -22,17 +25,6 @@ interface Row {
     created_at: string | null;
     due_date: string;
     days_left: number;
-}
-
-interface Paginated<T> {
-    data: T[];
-    current_page: number;
-    last_page: number;
-    from: number | null;
-    to: number | null;
-    total: number;
-    prev_page_url: string | null;
-    next_page_url: string | null;
 }
 
 interface Props {
@@ -138,32 +130,15 @@ export default function DashboardDocuments({ filter, search, documents, counts }
                     </p>
                 </div>
 
-                <div className="relative w-full sm:w-80">
-                    {loading ? (
-                        <Loader2 className="absolute top-1/2 left-3 size-4 -translate-y-1/2 animate-spin text-emerald-600" aria-hidden="true" />
-                    ) : (
-                        <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-                    )}
-                    <input
-                        type="text"
-                        value={query}
-                        onChange={(event) => setQuery(event.target.value)}
-                        placeholder="Search subject or control number…"
-                        aria-label={`Search ${current.label} documents`}
-                        autoComplete="off"
-                        className="h-10 w-full rounded-lg border bg-background pr-9 pl-9 text-sm shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                    />
-                    {query && (
-                        <button
-                            type="button"
-                            onClick={() => setQuery('')}
-                            className="absolute top-1/2 right-2 flex size-6 -translate-y-1/2 items-center justify-center rounded text-muted-foreground hover:text-foreground"
-                            aria-label="Clear search"
-                        >
-                            <X className="size-4" />
-                        </button>
-                    )}
-                </div>
+                <SearchInput
+                    value={query}
+                    onChange={setQuery}
+                    placeholder="Search subject or control number…"
+                    label={`Search ${current.label} documents`}
+                    loading={loading}
+                    resultCount={search && query.trim() === search ? documents.total : undefined}
+                    className="w-full sm:w-80"
+                />
             </div>
 
             {/* Filter tabs: switch card without going back to the dashboard. */}
@@ -241,14 +216,7 @@ export default function DashboardDocuments({ filter, search, documents, counts }
                                         {row.office ?? '—'}
                                     </TableCell>
                                     <TableCell>
-                                        <span
-                                            className={cn(
-                                                'rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap',
-                                                STATUS_STYLES[row.status] ?? STATUS_STYLES.Created,
-                                            )}
-                                        >
-                                            {row.status}
-                                        </span>
+                                        <StatusBadge status={row.status} />
                                     </TableCell>
                                     <TableCell className="text-sm whitespace-nowrap text-muted-foreground">
                                         {row.created_at ? dateFormat.format(new Date(row.created_at)) : '—'}
@@ -265,26 +233,7 @@ export default function DashboardDocuments({ filter, search, documents, counts }
                     </Table>
                 )}
 
-                {documents.total > 0 && (
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 text-sm">
-                        <p className="text-muted-foreground">
-                            Showing <span className="font-medium text-foreground">{number.format(documents.from ?? 0)}</span>–
-                            <span className="font-medium text-foreground">{number.format(documents.to ?? 0)}</span> of{' '}
-                            <span className="font-medium text-foreground">{number.format(documents.total)}</span>
-                        </p>
-                        <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">
-                                Page {documents.current_page} of {documents.last_page}
-                            </span>
-                            <PageLink href={documents.prev_page_url} label="Previous page">
-                                <ChevronLeft className="size-4" />
-                            </PageLink>
-                            <PageLink href={documents.next_page_url} label="Next page">
-                                <ChevronRight className="size-4" />
-                            </PageLink>
-                        </div>
-                    </div>
-                )}
+                <Pagination page={documents} />
             </div>
 
             <TrackingDialog document={tracking} onClose={() => setTracking(null)} />
@@ -292,16 +241,3 @@ export default function DashboardDocuments({ filter, search, documents, counts }
     );
 }
 
-function PageLink({ href, label, children }: { href: string | null; label: string; children: React.ReactNode }) {
-    const className = 'flex size-8 items-center justify-center rounded-md border';
-
-    return href ? (
-        <Link href={href} preserveScroll aria-label={label} className={cn(className, 'hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none')}>
-            {children}
-        </Link>
-    ) : (
-        <span aria-disabled="true" aria-label={label} className={cn(className, 'text-muted-foreground opacity-50')}>
-            {children}
-        </span>
-    );
-}

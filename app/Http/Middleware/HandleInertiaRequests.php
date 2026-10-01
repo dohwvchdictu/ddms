@@ -37,6 +37,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'error' => fn () => $request->session()->get('error'),
                 'status' => fn () => $request->session()->get('status'),
+                'legacy' => fn () => $this->legacyAlert(),
             ],
             'sidebarCounts' => fn () => $this->sidebarCounts(),
         ];
@@ -65,6 +66,27 @@ class HandleInertiaRequests extends Middleware
             ] : null,
             // Cached at login; never fetched here, so it cannot stall a page.
             'photo' => session('user_photo') ?? EmployeePhoto::cachedUrl($user) ?? self::DEFAULT_PHOTO,
+        ];
+    }
+
+    /**
+     * A SweetAlert queued by a Livewire page (App\Traits\LivewireAlert::flash)
+     * before redirecting to a React page, reshaped as a toast. Needed only while
+     * the migration lasts: Livewire actions still land on React lists.
+     *
+     * @return array{type: string, message: string}|null
+     */
+    protected function legacyAlert(): ?array
+    {
+        $alert = session('livewire-alert');
+
+        if (! is_array($alert) || blank($alert['titleText'] ?? null)) {
+            return null;
+        }
+
+        return [
+            'type' => in_array($alert['icon'] ?? null, ['success', 'error', 'warning', 'info'], true) ? $alert['icon'] : 'info',
+            'message' => $alert['titleText'],
         ];
     }
 

@@ -12,6 +12,19 @@ export interface SidebarCounts {
     total: number;
 }
 
+/** A Laravel length-aware paginator, as Inertia sends it (`->paginate()`). */
+export interface Paginated<T> {
+    data: T[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    from: number | null;
+    to: number | null;
+    total: number;
+    prev_page_url: string | null;
+    next_page_url: string | null;
+}
+
 /** A notification sent with Inertia::flash('toast', [...]); see app.tsx. */
 export interface Toast {
     type: 'success' | 'error' | 'info' | 'warning';
@@ -22,7 +35,8 @@ export interface Toast {
 export interface SharedProps {
     app: { name: string };
     auth: { user: User | null };
-    flash: { error: string | null; status: string | null };
+    /** `legacy`: a Livewire page's SweetAlert, carried over a redirect to React. */
+    flash: { error: string | null; status: string | null; legacy: Pick<Toast, 'type' | 'message'> | null };
     sidebarCounts: SidebarCounts | null;
     [key: string]: unknown;
 }

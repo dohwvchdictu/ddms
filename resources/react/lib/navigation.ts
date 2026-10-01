@@ -70,11 +70,14 @@ export const groups: NavGroup[] = [
         ],
     },
     {
-        title: 'My Documents',
+        // The counterpart to Inbox: what the office encoded and sends out.
+        // Purchase Requests and Payments fold into My Documents as filters
+        // when that list moves to React.
+        title: 'Outbox',
         icon: FolderOpen,
         defaultOpen: true,
         items: [
-            { title: 'Documents', href: '/my-documents', icon: Files, legacy: true },
+            { title: 'My Documents', href: '/my-documents', icon: Files },
             { title: 'Purchase Requests', href: '/my-purchase-requests', icon: ShoppingCart, legacy: true },
             { title: 'Payments', href: '/my-payments', icon: Wallet, legacy: true },
             { title: 'Routing Logbook', href: '/routing-logbook', icon: BookOpen, legacy: true },

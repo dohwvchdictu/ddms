@@ -102,7 +102,7 @@
                     <li class="hs-accordion active" id="inbox-accordion" data-hs-accordion-always-open>
                         <button type="button"
                             class="hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:focus:bg-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-200"
-                            aria-expanded="true" aria-controls="inbox-accordion-child" data-title="Inbox">
+                            aria-expanded="true" aria-controls="inbox-accordion-child" data-title="Outbox">
                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24"
                                 height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -111,7 +111,7 @@
                                 <path
                                     d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
                             </svg>
-                            Inbox
+                            Outbox
 
                             <svg class="hs-accordion-active:block ms-auto hidden size-4"
                                 xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -133,7 +133,8 @@
                             role="region" aria-labelledby="inbox-accordion" style="height:auto;">
                             <ul class="ps-8 pt-1 space-y-1">
                                 <li>
-                                    <a wire:navigate
+                                    {{-- No wire:navigate: My Documents is a React page now. --}}
+                                    <a
                                         class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm rounded-lg focus:outline-none {{ request()->is('my-documents') ? 'text-gray-100 bg-emerald-600 dark:bg-emerald-600 dark:text-white' : 'text-gray-800 hover:bg-gray-100 dark:hover:bg-neutral-700 focus:bg-gray-100 dark:focus:bg-neutral-700 dark:bg-neutral-800 dark:text-neutral-200' }}"
                                         href="/my-documents">
                                         <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg"

@@ -4,6 +4,8 @@ import DashboardDocumentsController from './DashboardDocumentsController'
 import DocumentSearchController from './DocumentSearchController'
 import DocumentTrackingController from './DocumentTrackingController'
 import DocumentController from './DocumentController'
+import MyDocumentsController from './MyDocumentsController'
+import OfficeEmployeesController from './OfficeEmployeesController'
 import MiscController from './MiscController'
 const Controllers = {
     Auth: Object.assign(Auth, Auth),
@@ -12,6 +14,8 @@ DashboardDocumentsController: Object.assign(DashboardDocumentsController, Dashbo
 DocumentSearchController: Object.assign(DocumentSearchController, DocumentSearchController),
 DocumentTrackingController: Object.assign(DocumentTrackingController, DocumentTrackingController),
 DocumentController: Object.assign(DocumentController, DocumentController),
+MyDocumentsController: Object.assign(MyDocumentsController, MyDocumentsController),
+OfficeEmployeesController: Object.assign(OfficeEmployeesController, OfficeEmployeesController),
 MiscController: Object.assign(MiscController, MiscController),
 }
 

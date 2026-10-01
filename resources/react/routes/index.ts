@@ -86,6 +86,49 @@ dashboard.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 })
 
 /**
+* @see \App\Http\Controllers\MyDocumentsController::__invoke
+ * @see app/Http/Controllers/MyDocumentsController.php:31
+ * @route '/my-documents'
+ */
+export const myDocuments = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: myDocuments.url(options),
+    method: 'get',
+})
+
+myDocuments.definition = {
+    methods: ["get","head"],
+    url: '/my-documents',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\MyDocumentsController::__invoke
+ * @see app/Http/Controllers/MyDocumentsController.php:31
+ * @route '/my-documents'
+ */
+myDocuments.url = (options?: RouteQueryOptions) => {
+    return myDocuments.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\MyDocumentsController::__invoke
+ * @see app/Http/Controllers/MyDocumentsController.php:31
+ * @route '/my-documents'
+ */
+myDocuments.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: myDocuments.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\MyDocumentsController::__invoke
+ * @see app/Http/Controllers/MyDocumentsController.php:31
+ * @route '/my-documents'
+ */
+myDocuments.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: myDocuments.url(options),
+    method: 'head',
+})
+
+/**
 * @see \App\Livewire\Views\RoutingLogbook::__invoke
  * @see app/Livewire/Views/RoutingLogbook.php:7
  * @route '/routing-logbook'
@@ -129,7 +172,7 @@ routingLogbook.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => 
 })
 
 /**
- * @see routes/web.php:108
+ * @see routes/web.php:114
  * @route '/logout'
  */
 export const logout = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -143,7 +186,7 @@ logout.definition = {
 } satisfies RouteDefinition<["post"]>
 
 /**
- * @see routes/web.php:108
+ * @see routes/web.php:114
  * @route '/logout'
  */
 logout.url = (options?: RouteQueryOptions) => {
@@ -151,7 +194,7 @@ logout.url = (options?: RouteQueryOptions) => {
 }
 
 /**
- * @see routes/web.php:108
+ * @see routes/web.php:114
  * @route '/logout'
  */
 logout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({

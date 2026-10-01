@@ -520,7 +520,8 @@ class MyPurchaseRequests extends Component
     #[On('closeModal')]
     public function closeModal()
     {
-        return $this->redirect(MyDocuments::class);
+        // My Documents is a React page now, so a plain URL rather than the Livewire class.
+        return $this->redirect('/my-documents');
     }
 
     public function updatedSelectAll($value)

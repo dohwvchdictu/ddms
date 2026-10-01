@@ -7,9 +7,10 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentSearchController;
 use App\Http\Controllers\DocumentTrackingController;
 use App\Http\Controllers\MiscController;
+use App\Http\Controllers\MyDocumentsController;
+use App\Http\Controllers\OfficeEmployeesController;
 use App\Livewire\Documents\NewBundle;
 use App\Livewire\Inbox\MyBundles;
-use App\Livewire\Inbox\MyDocuments;
 use App\Livewire\Inbox\MyPayments;
 use App\Livewire\Inbox\MyPurchaseRequests;
 use App\Livewire\Partials\Navbar;
@@ -66,7 +67,12 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::get('/new-bundle', NewBundle::class);
 
     /** My Documents */
-    Route::get('/my-documents', MyDocuments::class);
+    Route::get('/my-documents', MyDocumentsController::class)->name('my-documents');
+    Route::get('/my-documents/selectable', [MyDocumentsController::class, 'selectable'])->name('my-documents.selectable');
+    Route::post('/my-documents/forward', [MyDocumentsController::class, 'forward'])->name('my-documents.forward');
+    Route::get('/offices/{office}/employees', OfficeEmployeesController::class)
+        ->whereNumber('office')
+        ->name('offices.employees');
     Route::get('/my-bundles', MyBundles::class);
     Route::get('/my-purchase-requests', MyPurchaseRequests::class);
     Route::get('/my-payments', MyPayments::class);

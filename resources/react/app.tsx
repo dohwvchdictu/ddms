@@ -1,6 +1,7 @@
 import './css/app.css';
 
 import { createInertiaApp, router } from '@inertiajs/react';
+import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
@@ -36,12 +37,18 @@ createInertiaApp({
         return page() as never;
     },
     setup({ el, App, props }) {
+        // A Livewire page that redirected here may have queued a SweetAlert. That
+        // is always a full page load, so only the first page can carry one.
+        const legacy = (props.initialPage.props.flash as SharedProps['flash'] | undefined)?.legacy ?? null;
+
         createRoot(el).render(
             <>
                 <TooltipProvider delayDuration={200}>
                     <App {...props} />
                 </TooltipProvider>
                 <Toaster richColors closeButton />
+                {/* After the Toaster: effects run in order, so it is listening by then. */}
+                <LegacyToast alert={legacy} />
             </>,
         );
     },
@@ -49,3 +56,14 @@ createInertiaApp({
         color: '#059669',
     },
 });
+
+/** Shows the carried-over Livewire alert once the Toaster is mounted. */
+function LegacyToast({ alert }: { alert: SharedProps['flash']['legacy'] }) {
+    useEffect(() => {
+        if (alert) {
+            toast[alert.type](alert.message);
+        }
+    }, [alert]);
+
+    return null;
+}
