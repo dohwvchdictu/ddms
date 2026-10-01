@@ -2,11 +2,12 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DashboardDocumentsController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentSearchController;
 use App\Http\Controllers\DocumentTrackingController;
 use App\Http\Controllers\MiscController;
 use App\Livewire\Documents\NewBundle;
-use App\Livewire\Documents\NewDocument;
 use App\Livewire\Inbox\MyBundles;
 use App\Livewire\Inbox\MyDocuments;
 use App\Livewire\Inbox\MyPayments;
@@ -48,6 +49,7 @@ Route::post('/login', [LoginController::class, 'store'])->name('login.store');
 Route::middleware(['jwt.auth'])->group(function () {
     /** Dashboard */
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/dashboard/documents', DashboardDocumentsController::class)->name('dashboard.documents');
 
     /** Header search */
     Route::get('/documents/search', DocumentSearchController::class)->name('documents.search');
@@ -56,7 +58,11 @@ Route::middleware(['jwt.auth'])->group(function () {
         ->name('documents.tracking');
 
     /** Create Document */
-    Route::get('/new-document', NewDocument::class);
+    Route::get('/new-document', [DocumentController::class, 'create'])->name('documents.create');
+    Route::post('/new-document', [DocumentController::class, 'store'])->name('documents.store');
+    Route::get('/new-document/{document}/saved', [DocumentController::class, 'created'])
+        ->whereNumber('document')
+        ->name('documents.created');
     Route::get('/new-bundle', NewBundle::class);
 
     /** My Documents */

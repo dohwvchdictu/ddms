@@ -53,7 +53,7 @@ export interface NavGroup {
 export const primary: NavItem[] = [{ title: 'Dashboard', href: '/dashboard', icon: House }];
 
 /** The main call to action, shown as a green button. */
-export const newDocument: NavItem = { title: 'New Document', href: '/new-document', icon: FilePlus2, legacy: true };
+export const newDocument: NavItem = { title: 'New Document', href: '/new-document', icon: FilePlus2 };
 
 export const groups: NavGroup[] = [
     {

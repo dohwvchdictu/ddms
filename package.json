@@ -34,9 +34,12 @@
     },
     "dependencies": {
         "@preline/theme-switch": "^2.6.0",
+        "cmdk": "^1.1.1",
+        "cn": "^0.4.0",
         "datatables.net-dt": "^2.1.8",
         "jquery": "^3.7.1",
         "preline": "^2.7.0",
-        "radix-ui": "^1.6.7"
+        "radix-ui": "^1.6.7",
+        "recharts": "^3.8.0"
     }
 }

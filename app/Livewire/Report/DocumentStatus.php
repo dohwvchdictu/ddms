@@ -31,7 +31,7 @@ class DocumentStatus extends Component
     private const ACTIONS_COMPLETED = [self::ACTION_FORWARDED, self::ACTION_CLOSED];
 
     /** Fallback when neither the citizen charter nor the category sets required_days. */
-    private const DEFAULT_REQUIRED_DAYS = 20;
+    private const DEFAULT_REQUIRED_DAYS = Document::DEFAULT_REQUIRED_DAYS;
 
     /** Constant Variables */
     /** Office directory kept protected so it is not serialized into the Livewire snapshot; reloaded from cache in boot(). */

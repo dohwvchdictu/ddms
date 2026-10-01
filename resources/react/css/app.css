@@ -57,6 +57,17 @@
     --border: oklch(0.922 0 0);
     --input: oklch(0.922 0 0);
     --ring: oklch(0.596 0.145 163.225);
+
+    /* Charts: validated categorical slots 1-2 and the fixed status palette
+       (dataviz reference palette). Ink and grid follow the chart chrome. */
+    --chart-series-1: #2a78d6;
+    --chart-series-2: #eb6834;
+    --chart-good: #0ca30c;
+    --chart-warning: #fab219;
+    --chart-serious: #ec835a;
+    --chart-critical: #d03b3b;
+    --chart-grid: #e1e0d9;
+    --chart-axis: #898781;
 }
 
 .dark {
@@ -78,6 +89,11 @@
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
     --ring: oklch(0.596 0.145 163.225);
+
+    --chart-series-1: #3987e5;
+    --chart-series-2: #d95926;
+    --chart-grid: #2c2c2a;
+    --chart-axis: #898781;
 }
 
 @layer base {

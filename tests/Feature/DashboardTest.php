@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Dashboard\DailyActivity;
 use App\Actions\Dashboard\DeadlineCounts;
 use App\Actions\Navigation\SidebarCounts;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -27,6 +28,10 @@ class DashboardTest extends TestCase
         // Keep the tests off the database: both queries are covered by the
         // rules they encode, not by what happens to be in the dev data.
         $this->mock(DeadlineCounts::class, fn (MockInterface $mock) => $mock->shouldReceive('handle')->andReturn(self::COUNTS));
+        $this->mock(DailyActivity::class, fn (MockInterface $mock) => $mock->shouldReceive('handle')->andReturn([
+            ['date' => '2026-09-30', 'created' => 12, 'closed' => 7],
+            ['date' => '2026-10-01', 'created' => 3, 'closed' => 5],
+        ]));
         $this->mock(SidebarCounts::class, fn (MockInterface $mock) => $mock->shouldReceive('handle')->andReturn([
             'incoming' => 3,
             'pending' => 1,
@@ -68,7 +73,11 @@ class DashboardTest extends TestCase
                 ->where('counts.pending', 9)
                 ->where('counts.due_soon', 2)
                 ->where('counts.due_today', 1)
-                ->where('counts.overdue', 5));
+                ->where('counts.overdue', 5)
+                ->where('counts.on_track', 5)
+                ->has('activity', 2)
+                ->where('activity.0.created', 12)
+                ->where('activity.1.closed', 5));
     }
 
     public function test_layout_props_carry_the_greeting_office_and_badges(): void

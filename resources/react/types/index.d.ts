@@ -12,6 +12,13 @@ export interface SidebarCounts {
     total: number;
 }
 
+/** A notification sent with Inertia::flash('toast', [...]); see app.tsx. */
+export interface Toast {
+    type: 'success' | 'error' | 'info' | 'warning';
+    message: string;
+    description?: string;
+}
+
 export interface SharedProps {
     app: { name: string };
     auth: { user: User | null };

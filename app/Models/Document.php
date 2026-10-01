@@ -54,8 +54,12 @@ class Document extends Model
         );
     }
 
-    /** Fallback when neither the citizen charter nor the category sets required_days. */
-    public const DEFAULT_REQUIRED_DAYS = 20;
+    /**
+     * Fallback, in working days, when neither the citizen charter nor the
+     * category sets required_days. The one place to change it: the dashboard,
+     * reports and the New Document preview all read this.
+     */
+    public const DEFAULT_REQUIRED_DAYS = 3;
 
     /**
      * The prescribed timeline, in working days, that a document's deadline is

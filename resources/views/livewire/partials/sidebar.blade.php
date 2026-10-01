@@ -81,7 +81,8 @@
                             role="region" aria-labelledby="account-accordion" style="height:auto;">
                             <ul class="ps-8 pt-1 space-y-1">
                                 <li>
-                                    <a wire:navigate
+                                    {{-- No wire:navigate: New Document is a React page now. --}}
+                                    <a
                                         class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm rounded-lg focus:outline-none {{ request()->is('new-document') ? 'text-gray-100 bg-emerald-600 dark:bg-emerald-600 dark:text-white' : 'text-gray-800 hover:bg-gray-100 dark:hover:bg-neutral-700 focus:bg-gray-100 dark:focus:bg-neutral-700 dark:bg-neutral-800 dark:text-neutral-200' }}"
                                         href="/new-document">
                                         <svg class="shrink-0 mt-0.5 size-4" xmlns="http://www.w3.org/2000/svg"

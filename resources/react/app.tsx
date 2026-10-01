@@ -1,10 +1,22 @@
 import './css/app.css';
 
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
+import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import type { SharedProps } from '@/types';
+
+// Any controller can confirm an action with Inertia::flash('toast', [...]).
+// Registered once here, not in a layout, so a toast sent with a redirect still
+// shows while the next page mounts.
+router.on('flash', (event) => {
+    const message = event.detail.flash.toast;
+
+    if (message) {
+        toast[message.type](message.message, { description: message.description });
+    }
+});
 
 createInertiaApp({
     // APP_NAME comes from the server, so there is one place to rebrand.

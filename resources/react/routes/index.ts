@@ -44,7 +44,7 @@ login.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\DashboardController::__invoke
- * @see app/Http/Controllers/DashboardController.php:11
+ * @see app/Http/Controllers/DashboardController.php:15
  * @route '/dashboard'
  */
 export const dashboard = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -59,7 +59,7 @@ dashboard.definition = {
 
 /**
 * @see \App\Http\Controllers\DashboardController::__invoke
- * @see app/Http/Controllers/DashboardController.php:11
+ * @see app/Http/Controllers/DashboardController.php:15
  * @route '/dashboard'
  */
 dashboard.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ dashboard.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DashboardController::__invoke
- * @see app/Http/Controllers/DashboardController.php:11
+ * @see app/Http/Controllers/DashboardController.php:15
  * @route '/dashboard'
  */
 dashboard.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -77,7 +77,7 @@ dashboard.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\DashboardController::__invoke
- * @see app/Http/Controllers/DashboardController.php:11
+ * @see app/Http/Controllers/DashboardController.php:15
  * @route '/dashboard'
  */
 dashboard.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -129,7 +129,7 @@ routingLogbook.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => 
 })
 
 /**
- * @see routes/web.php:102
+ * @see routes/web.php:108
  * @route '/logout'
  */
 export const logout = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -143,7 +143,7 @@ logout.definition = {
 } satisfies RouteDefinition<["post"]>
 
 /**
- * @see routes/web.php:102
+ * @see routes/web.php:108
  * @route '/logout'
  */
 logout.url = (options?: RouteQueryOptions) => {
@@ -151,7 +151,7 @@ logout.url = (options?: RouteQueryOptions) => {
 }
 
 /**
- * @see routes/web.php:102
+ * @see routes/web.php:108
  * @route '/logout'
  */
 logout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({

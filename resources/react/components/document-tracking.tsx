@@ -139,10 +139,20 @@ interface DocumentTrackingProps {
     documentId: number;
     controlNo: string;
     onBack: () => void;
+    /** Label of the back button; "Results" inside the search window. */
+    backLabel?: string;
+    /** Keyboard hint in the footer. */
+    hint?: string;
 }
 
 /** The routing trail of one document, shown in place of the search results. */
-export default function DocumentTracking({ documentId, controlNo, onBack }: DocumentTrackingProps) {
+export default function DocumentTracking({
+    documentId,
+    controlNo,
+    onBack,
+    backLabel = 'Results',
+    hint = 'Press Backspace or Esc to go back.',
+}: DocumentTrackingProps) {
     const [data, setData] = useState<Tracking | null>(null);
     const [failed, setFailed] = useState(false);
     const [attempt, setAttempt] = useState(0);
@@ -181,7 +191,7 @@ export default function DocumentTracking({ documentId, controlNo, onBack }: Docu
             <div className="flex items-center gap-2 border-b px-3 py-2.5">
                 <Button variant="ghost" size="sm" onClick={onBack} className="gap-1.5 text-muted-foreground">
                     <ArrowLeft />
-                    Results
+                    {backLabel}
                 </Button>
                 <span className="text-muted-foreground/50" aria-hidden="true">
                     /
@@ -332,7 +342,7 @@ export default function DocumentTracking({ documentId, controlNo, onBack }: Docu
             </div>
 
             <div className="flex items-center justify-between gap-2 border-t bg-muted/40 px-4 py-2.5">
-                <p className="hidden text-xs text-muted-foreground sm:block">Press Backspace or Esc to go back.</p>
+                <p className="hidden text-xs text-muted-foreground sm:block">{hint}</p>
                 <Button asChild size="sm" className="ml-auto">
                     <a href={documentUrl(controlNo)}>
                         Open document

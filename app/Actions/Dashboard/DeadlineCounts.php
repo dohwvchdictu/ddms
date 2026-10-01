@@ -2,7 +2,10 @@
 
 namespace App\Actions\Dashboard;
 
+use App\Models\Document;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -48,7 +51,10 @@ class DeadlineCounts
     public const DUE_SOON_DAYS = 3;
 
     /** Fallback when neither the citizen charter nor the category sets required_days. */
-    public const DEFAULT_REQUIRED_DAYS = 20;
+    public const DEFAULT_REQUIRED_DAYS = Document::DEFAULT_REQUIRED_DAYS;
+
+    /** Filters the dashboard cards link to; see documentsQuery(). */
+    public const FILTERS = ['for_action', 'pending', 'due_soon', 'due_today', 'overdue'];
 
     /**
      * @return array{for_action: int, pending: int, due_soon: int, due_today: int, overdue: int, on_track: int, total: int}
@@ -65,19 +71,119 @@ class DeadlineCounts
             'total' => 0,
         ];
 
-        /**
-         * The charter's required days win when it has a usable value, else the
-         * category's, else the default. A non-positive value counts as unset: a
-         * zero-day commitment would mark a document overdue the moment it was
-         * encoded.
-         */
-        $requiredDays = 'case'
+        foreach ($this->groups() as $group) {
+            $documents = (int) $group->documents;
+
+            $counts[in_array($group->status, self::FOR_ACTION_STATUSES, true) ? 'for_action' : 'pending'] += $documents;
+            $counts[self::bucket(self::remainingDays($group->created_date, $group->required_days))] += $documents;
+            $counts['total'] += $documents;
+        }
+
+        return $counts;
+    }
+
+    /**
+     * The documents behind one card, as a query the list page can search and
+     * paginate. The deadline cards cannot be filtered in SQL directly (the
+     * working-day arithmetic is done in PHP), so the same lossless groups are
+     * bucketed first, and the query then matches the (commitment, creation
+     * date) pairs that landed in the chosen bucket.
+     */
+    public function documentsQuery(string $filter): Builder
+    {
+        $query = Document::query()
+            ->select('documents.*')
+            ->leftJoin('citizen_charters', 'citizen_charters.id', '=', 'documents.citizen_charter_id')
+            ->leftJoin('categories', 'categories.id', '=', 'documents.category_id')
+            ->whereNull('documents.bundle_id');
+
+        if ($filter === 'for_action') {
+            return $query->whereIn('documents.status', self::FOR_ACTION_STATUSES);
+        }
+
+        if ($filter === 'pending') {
+            return $query->whereIn('documents.status', self::PENDING_STATUSES);
+        }
+
+        $query->whereIn('documents.status', array_merge(self::FOR_ACTION_STATUSES, self::PENDING_STATUSES));
+
+        /** @var array<int, array<int, string>> $datesByDays  required days => creation dates */
+        $datesByDays = [];
+
+        foreach ($this->groups() as $group) {
+            if (self::bucket(self::remainingDays($group->created_date, $group->required_days)) === $filter) {
+                $datesByDays[(int) $group->required_days][$group->created_date] = $group->created_date;
+            }
+        }
+
+        if ($datesByDays === []) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function ($where) use ($datesByDays) {
+            foreach ($datesByDays as $days => $dates) {
+                $where->orWhere(function ($pair) use ($days, $dates) {
+                    $pair->whereRaw(self::requiredDaysSql() . ' = ?', [$days])
+                        ->whereIn(DB::raw('date(documents.created_at)'), array_values($dates));
+                });
+            }
+        });
+    }
+
+    /** Deadline of one document: created date plus its commitment in working days. */
+    public static function dueDate(Document $document): Carbon
+    {
+        return $document->created_at->copy()->startOfDay()->addWeekdays(self::requiredDays($document));
+    }
+
+    /** Signed working days to the deadline: >0 left, 0 today, <0 overdue. */
+    public static function remainingDays(string|\DateTimeInterface $createdDate, int|string $requiredDays): int
+    {
+        $dueDate = Carbon::parse($createdDate)->startOfDay()->addWeekdays((int) $requiredDays);
+
+        return (int) Carbon::today()->diffInWeekdays($dueDate, false);
+    }
+
+    /** Same rule as requiredDaysSql(), for a loaded model. */
+    public static function requiredDays(Document $document): int
+    {
+        $charter = (int) ($document->citizencharter?->required_days ?? 0);
+        $category = (int) ($document->category?->required_days ?? 0);
+
+        return $charter > 0 ? $charter : ($category > 0 ? $category : self::DEFAULT_REQUIRED_DAYS);
+    }
+
+    private static function bucket(int $remaining): string
+    {
+        return match (true) {
+            $remaining < 0 => 'overdue',
+            $remaining === 0 => 'due_today',
+            $remaining <= self::DUE_SOON_DAYS => 'due_soon',
+            default => 'on_track',
+        };
+    }
+
+    /**
+     * The charter's required days win when it has a usable value, else the
+     * category's, else the default. A non-positive value counts as unset: a
+     * zero-day commitment would mark a document overdue the moment it was
+     * encoded.
+     */
+    private static function requiredDaysSql(): string
+    {
+        return 'case'
             . ' when citizen_charters.required_days > 0 then citizen_charters.required_days'
             . ' when categories.required_days > 0 then categories.required_days'
             . ' else ' . self::DEFAULT_REQUIRED_DAYS
             . ' end';
+    }
 
-        $groups = DB::table('documents')
+    /** Open documents grouped by status, deadline commitment and creation date. */
+    private function groups(): Collection
+    {
+        $requiredDays = self::requiredDaysSql();
+
+        return DB::table('documents')
             ->leftJoin('citizen_charters', 'citizen_charters.id', '=', 'documents.citizen_charter_id')
             ->leftJoin('categories', 'categories.id', '=', 'documents.category_id')
             ->whereNull('documents.bundle_id')
@@ -90,32 +196,5 @@ class DeadlineCounts
                 DB::raw('count(*) as documents'),
             ])
             ->get();
-
-        $today = Carbon::today();
-
-        foreach ($groups as $group) {
-            $dueDate = Carbon::parse($group->created_date)->startOfDay()->addWeekdays((int) $group->required_days);
-
-            /** Signed working days to the deadline: >0 left, <0 overdue */
-            $remaining = (int) $today->diffInWeekdays($dueDate, false);
-
-            $documents = (int) $group->documents;
-
-            $counts[in_array($group->status, self::FOR_ACTION_STATUSES, true) ? 'for_action' : 'pending'] += $documents;
-
-            if ($remaining < 0) {
-                $counts['overdue'] += $documents;
-            } elseif ($remaining === 0) {
-                $counts['due_today'] += $documents;
-            } elseif ($remaining <= self::DUE_SOON_DAYS) {
-                $counts['due_soon'] += $documents;
-            } else {
-                $counts['on_track'] += $documents;
-            }
-
-            $counts['total'] += $documents;
-        }
-
-        return $counts;
     }
 }
