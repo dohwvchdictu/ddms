@@ -65,8 +65,8 @@
         }
         .sidebar-tip.show { opacity: 1; }
     </style>
+    @include('partials.theme-script')
     <script>
-        if (localStorage.getItem('darkMode') === '1') document.documentElement.classList.add('dark');
         function toggleDarkMode() {
             const on = document.documentElement.classList.toggle('dark');
             localStorage.setItem('darkMode', on ? '1' : '0');

@@ -5,13 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    {{-- Same preference key as the Livewire layout, so the theme carries
-         across both halves of the app while they coexist. --}}
-    <script>
-        try {
-            if (localStorage.getItem('darkMode') === '1') document.documentElement.classList.add('dark');
-        } catch (e) {}
-    </script>
+    {{-- The login page always follows the browser/OS theme. --}}
+    @include('partials.theme-script', ['followSystem' => ($page['component'] ?? null) === 'auth/login'])
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

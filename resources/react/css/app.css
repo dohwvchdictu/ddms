@@ -89,3 +89,33 @@
         @apply bg-background text-foreground;
     }
 }
+
+/*
+ * The sign-in page scales with the screen: 16px root at laptop widths, up to
+ * 18px on 2K/4K monitors. Scoped to the auth layout so app pages keep a
+ * normal density.
+ */
+html:has([data-auth-layout]) {
+    font-size: clamp(16px, 0.2vw + 13px, 18px);
+}
+
+/* Fills the bar under "Login successful" while the dashboard loads. */
+@keyframes login-progress {
+    from {
+        width: 0%;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+.login-progress {
+    animation: login-progress 900ms ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .login-progress {
+        animation: none;
+        width: 100%;
+    }
+}
