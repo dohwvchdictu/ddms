@@ -44,9 +44,11 @@ class LivewireAlertTest extends TestCase
 
     public function test_flashed_alert_is_shown_on_the_next_page(): void
     {
-        $this->withSession(['livewire-alert' => ['icon' => 'success', 'titleText' => 'Document successfully received!']])
-            ->get('/')
-            ->assertOk()
+        // Rendered on its own: the Livewire layouts include it, but the login
+        // page that used to be the easiest one to hit is now React.
+        session()->put('livewire-alert', ['icon' => 'success', 'titleText' => 'Document successfully received!']);
+
+        $this->blade('<x-alert-flash />')
             ->assertSee('Swal.fire(', false)
             ->assertSee('Document successfully received!');
     }
