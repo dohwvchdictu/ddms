@@ -3,6 +3,7 @@ import './css/app.css';
 import { createInertiaApp } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import type { SharedProps } from '@/types';
 
 createInertiaApp({
@@ -25,7 +26,9 @@ createInertiaApp({
     setup({ el, App, props }) {
         createRoot(el).render(
             <>
-                <App {...props} />
+                <TooltipProvider delayDuration={200}>
+                    <App {...props} />
+                </TooltipProvider>
                 <Toaster richColors closeButton />
             </>,
         );
