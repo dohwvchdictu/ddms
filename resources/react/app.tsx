@@ -11,13 +11,19 @@ import type { SharedProps } from '@/types';
 // Any controller can confirm an action with Inertia::flash('toast', [...]).
 // Registered once here, not in a layout, so a toast sent with a redirect still
 // shows while the next page mounts.
-router.on('flash', (event) => {
+const removeFlashListener = router.on('flash', (event) => {
     const message = event.detail.flash.toast;
 
     if (message) {
-        toast[message.type](message.message, { description: message.description });
+        // Keyed by its text: should the same flash arrive twice, the second
+        // replaces the first instead of stacking a duplicate.
+        toast[message.type](message.message, { id: `flash:${message.message}:${message.description ?? ''}`, description: message.description });
     }
 });
+
+// In development Vite can re-run this module without a full reload; drop the
+// old listener, or every toast after an edit would show twice.
+import.meta.hot?.dispose(removeFlashListener);
 
 createInertiaApp({
     // APP_NAME comes from the server, so there is one place to rebrand.
@@ -46,7 +52,14 @@ createInertiaApp({
                 <TooltipProvider delayDuration={200}>
                     <App {...props} />
                 </TooltipProvider>
-                <Toaster richColors closeButton />
+                {/* Top right, just under the 64px header (4rem + 1rem gap), on every screen size. */}
+                <Toaster
+                    richColors
+                    closeButton
+                    position="top-right"
+                    offset={{ top: '5rem', right: '1rem' }}
+                    mobileOffset={{ top: '4.75rem', right: '0.75rem', left: '0.75rem' }}
+                />
                 {/* After the Toaster: effects run in order, so it is listening by then. */}
                 <LegacyToast alert={legacy} />
             </>,

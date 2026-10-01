@@ -74,7 +74,9 @@ export default function Combobox({
     );
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        // Modal, so the list scrolls with the mouse wheel inside a Dialog: the dialog blocks
+        // wheel events outside itself, and the list is portalled out of it.
+        <Popover open={open} onOpenChange={setOpen} modal>
             <PopoverTrigger asChild>
                 <button
                     id={id}
