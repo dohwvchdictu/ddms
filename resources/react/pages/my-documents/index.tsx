@@ -1,5 +1,5 @@
-import { Head, Link } from '@inertiajs/react';
-import { ChevronRight, CircleDot, Eye, FileSearch, Loader2, NotebookText, Printer, Send, TriangleAlert } from 'lucide-react';
+import { Head } from '@inertiajs/react';
+import { CircleDot, Eye, FileSearch, Loader2, NotebookText, Printer, Send, TriangleAlert } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import DateRangeFilter, { describeRange, type DateRangeValue } from '@/components/data-table/date-range-filter';
@@ -177,22 +177,8 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
     const columnCount = 3 + COLUMNS.filter((column) => isVisible(column.id)).length;
 
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={[{ title: 'Home', href: dashboard() }, { title: 'My Documents' }]}>
             <Head title="My Documents" />
-
-            <nav aria-label="Breadcrumb">
-                <ol className="flex items-center gap-2 text-sm whitespace-nowrap text-muted-foreground">
-                    <li>
-                        <Link href={dashboard()} className="hover:text-foreground">
-                            Dashboard
-                        </Link>
-                    </li>
-                    <ChevronRight className="size-4" aria-hidden="true" />
-                    <li className="truncate font-semibold text-foreground" aria-current="page">
-                        My Documents
-                    </li>
-                </ol>
-            </nav>
 
             <h1 className="text-2xl font-semibold tracking-tight">My Documents</h1>
 

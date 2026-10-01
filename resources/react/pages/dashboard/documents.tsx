@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ChevronRight, FileSearch } from 'lucide-react';
+import { FileSearch } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import Pagination from '@/components/pagination';
 import SearchInput from '@/components/search-input';
@@ -105,22 +105,8 @@ export default function DashboardDocuments({ filter, search, documents, counts }
         documentsRoute({ query: { filter: key, ...(search ? { search } : {}) } });
 
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={[{ title: 'Home', href: dashboard() }, { title: current.label }]}>
             <Head title={`${current.label} documents`} />
-
-            <nav aria-label="Breadcrumb">
-                <ol className="flex items-center gap-2 text-sm whitespace-nowrap text-muted-foreground">
-                    <li>
-                        <Link href={dashboard()} className="hover:text-foreground">
-                            Dashboard
-                        </Link>
-                    </li>
-                    <ChevronRight className="size-4" aria-hidden="true" />
-                    <li className="truncate font-semibold text-foreground" aria-current="page">
-                        {current.label}
-                    </li>
-                </ol>
-            </nav>
 
             <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>

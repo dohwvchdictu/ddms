@@ -11,8 +11,10 @@
         href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
         rel="stylesheet">
 
+    {{-- Only for the page bodies, which are still Livewire components; the header and
+         sidebar around them are plain Blade (partials/app-header, partials/app-sidebar). --}}
     @livewireStyles
-    
+
     @vite('resources/css/app.css')
     @vite('resources/js/app.js')
 
@@ -20,33 +22,27 @@
     <link rel="icon" href="{!! asset('/img/doh.ico') !!}"/>
 
     <style>
-        /* Dark mode toggle icon swap (sun shown in dark, moon in light) */
-        html.dark .icon-sun { display: block; }
-        html.dark .icon-moon { display: none; }
+        /* The icon rail (desktop): the Blade copy of the React sidebar's collapsed state. */
+        #hs-application-sidebar { transition-property: width, transform; }
+        .lg\:ps-64 { transition: padding .2s; }
 
         @media (min-width: 1024px) {
-            body.sidebar-collapsed #hs-application-sidebar { width: 64px; }
-            body.sidebar-collapsed .lg\:ps-64 { padding-inline-start: 64px; }
-            /* !important: Preline's accordion sets an inline display:block when a group is
-               opened, which would otherwise override this rule and leave the submenu
-               icons showing in the collapsed rail. */
-            body.sidebar-collapsed #hs-application-sidebar .hs-accordion-content { display: none !important; }
-            body.sidebar-collapsed #hs-application-sidebar nav a,
-            body.sidebar-collapsed #hs-application-sidebar nav button,
-            body.sidebar-collapsed #sidebar-collapse-toggle {
-                font-size: 0;
-                gap: 0;
-                justify-content: center;
-                padding-inline: 8px;
-            }
-            body.sidebar-collapsed #hs-application-sidebar nav a > span.inline-flex { display: none; }
-            body.sidebar-collapsed #hs-application-sidebar nav .ms-auto { display: none; }
-            body.sidebar-collapsed #sidebar-collapse-toggle svg { transform: rotate(180deg); }
+            body.sidebar-collapsed #hs-application-sidebar { width: 4rem; }
+            body.sidebar-collapsed .lg\:ps-64 { padding-inline-start: 4rem; }
+            body.sidebar-collapsed #hs-application-sidebar .app-nav-label,
+            body.sidebar-collapsed #hs-application-sidebar .app-nav-badge,
+            body.sidebar-collapsed #hs-application-sidebar .app-new-icon { display: none; }
+            body.sidebar-collapsed #hs-application-sidebar .app-rail-badge { display: inline-flex; }
+            body.sidebar-collapsed #hs-application-sidebar .app-new-rail-icon { display: block; }
+            /* Groups show as icons only; their pages appear once the sidebar expands. */
+            body.sidebar-collapsed #hs-application-sidebar .app-nav-panel { display: none; }
+            body.sidebar-collapsed #hs-application-sidebar .app-nav-row,
+            body.sidebar-collapsed #hs-application-sidebar .app-new-document { justify-content: center; padding-inline: 0; }
+            body.sidebar-collapsed #hs-application-sidebar hr { margin-inline: .5rem; }
         }
 
-        /* Hover hint shown next to a collapsed (icon-only) sidebar item.
-           Fixed + appended to <body> so it isn't clipped by the sidebar's
-           overflow, and only rendered while the sidebar is collapsed. */
+        /* Hover hint next to a collapsed (icon-only) sidebar item. Fixed and appended to
+           <body> so the sidebar's overflow doesn't clip it; shown only while collapsed. */
         .sidebar-tip {
             position: fixed;
             z-index: 80;
@@ -67,88 +63,159 @@
     </style>
     @include('partials.theme-script')
     <script>
-        function toggleDarkMode() {
-            const on = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('darkMode', on ? '1' : '0');
-        }
-        function applySidebarState() {
-            document.body.classList.toggle('sidebar-collapsed', localStorage.getItem('sidebarCollapsed') === '1');
-        }
-        function setSidebarCollapsed(collapsed) {
-            localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0');
-            applySidebarState();
-        }
-        function toggleSidebar() {
-            setSidebarCollapsed(localStorage.getItem('sidebarCollapsed') !== '1');
-        }
-        document.addEventListener('DOMContentLoaded', applySidebarState);
-        document.addEventListener('livewire:navigated', applySidebarState);
+        /**
+         * The header and sidebar's behaviour. Same localStorage keys as the React shell
+         * (darkMode, sidebarCollapsed, sidebarOpenGroups), so choices carry across both.
+         */
+        window.appShell = (function () {
+            var DESKTOP = '(min-width: 1024px)';
 
-        /* While collapsed, a group icon's sub-items are hidden, so clicking one looks dead.
-           Expand the sidebar first (capture phase) and let the accordion open as usual. */
-        document.addEventListener('click', function (e) {
-            if (!document.body.classList.contains('sidebar-collapsed')) return;
-            const toggle = e.target.closest('#hs-application-sidebar .hs-accordion-toggle');
-            if (!toggle) return;
-            setSidebarCollapsed(false);
-            /* Already open: swallow the click so expanding doesn't collapse the group instead */
-            if (toggle.closest('.hs-accordion').classList.contains('active')) {
-                e.preventDefault();
-                e.stopPropagation();
+            function read(key) {
+                try { return localStorage.getItem(key); } catch (e) { return null; }
             }
-        }, true);
 
-        /* Keep the sidebar's scroll position across page changes. sessionStorage rather than
-           a JS variable, because $this->redirect(...) from a Livewire action and a plain F5
-           both do a full page load, which would discard an in-memory value. */
-        const SIDEBAR_SCROLL_KEY = 'sidebarScrollTop';
+            function write(key, value) {
+                try {
+                    value === null ? localStorage.removeItem(key) : localStorage.setItem(key, value);
+                } catch (e) {
+                    // Storage blocked: the choice lasts for this page view only.
+                }
+            }
 
-        function saveSidebarScroll() {
-            const nav = document.getElementById('sidebar-scroll');
-            if (nav) sessionStorage.setItem(SIDEBAR_SCROLL_KEY, nav.scrollTop);
-        }
+            function collapsed() {
+                return read('sidebarCollapsed') === '1';
+            }
 
-        function restoreSidebarScroll() {
-            const nav = document.getElementById('sidebar-scroll');
-            if (!nav) return;
-            const stored = sessionStorage.getItem(SIDEBAR_SCROLL_KEY);
-            /* rAF so this lands after Livewire's own scroll restore and Preline's re-init. */
-            requestAnimationFrame(function () {
-                /* Stored offset is only the fallback for pages with no sidebar entry of
-                   their own; an active item takes over and gets centred below. */
-                if (stored !== null) nav.scrollTop = Number(stored);
+            function setCollapsed(value) {
+                write('sidebarCollapsed', value ? '1' : '0');
+                document.body.classList.toggle('sidebar-collapsed', value);
+            }
 
-                /* `bg-emerald-600` is the active-link marker in sidebar.blade.php. */
-                let active = nav.querySelector('a.bg-emerald-600');
-                if (!active) return;
-                /* Collapsed rail hides child links, so reveal the owning group icon instead. */
-                if (!active.getClientRects().length) active = active.closest('li.hs-accordion');
-                if (!active) return;
+            function openGroups() {
+                try {
+                    var saved = JSON.parse(read('sidebarOpenGroups') || '{}');
+                    return saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {};
+                } catch (e) {
+                    return {};
+                }
+            }
 
-                /* Centre the active item in the nav's viewport. Adjust nav.scrollTop
-                   rather than scrollIntoView(), which would also scroll the page behind
-                   this fixed sidebar. The browser clamps the value at both ends, so items
-                   near the top/bottom simply sit as close to centre as they can. */
-                const navBox = nav.getBoundingClientRect();
-                const box = active.getBoundingClientRect();
-                nav.scrollTop += (box.top + box.height / 2) - (navBox.top + navBox.height / 2);
-            });
-        }
+            function setGroup(li, open) {
+                var panel = li.querySelector('.app-nav-panel');
+                var badge = li.querySelector('.app-group-badge');
 
-        document.addEventListener('livewire:navigating', saveSidebarScroll);
-        window.addEventListener('pagehide', saveSidebarScroll);
-        document.addEventListener('DOMContentLoaded', restoreSidebarScroll);
-        document.addEventListener('livewire:navigated', restoreSidebarScroll);
+                li.querySelector('.app-nav-group-toggle').setAttribute('aria-expanded', open ? 'true' : 'false');
+                li.querySelector('.app-group-chevron').classList.toggle('rotate-180', open);
+                panel.classList.toggle('grid-rows-[1fr]', open);
+                panel.classList.toggle('opacity-100', open);
+                panel.classList.toggle('grid-rows-[0fr]', !open);
+                panel.classList.toggle('opacity-0', !open);
+                panel.inert = !open;
+                // While open, the counts show on the rows themselves.
+                if (badge) badge.classList.toggle('hidden', open);
+            }
 
-        /* Tooltip hints for the collapsed sidebar: while collapsed, hovering an
-           icon shows its label (from data-title) next to it. Delegated on
-           document so it keeps working across wire:navigate page swaps. */
+            function syncThemeButtons() {
+                var saved = read('darkMode');
+                var current = saved === '1' ? 'dark' : saved === '0' ? 'light' : 'system';
+
+                document.querySelectorAll('[data-theme-choice]').forEach(function (button) {
+                    button.setAttribute('aria-checked', button.dataset.themeChoice === current ? 'true' : 'false');
+                });
+            }
+
+            return {
+                /** Folds to the icon rail on desktop; opens the slide-in menu below lg. */
+                toggleSidebar: function () {
+                    if (window.matchMedia(DESKTOP).matches) {
+                        setCollapsed(!collapsed());
+                    } else if (window.HSOverlay) {
+                        window.HSOverlay.open(document.getElementById('hs-application-sidebar'));
+                    }
+                },
+
+                applySidebar: function () {
+                    document.body.classList.toggle('sidebar-collapsed', collapsed());
+                },
+
+                /** Each group: open if it holds the current page, else as last left, else its default. */
+                applyGroups: function () {
+                    var saved = openGroups();
+
+                    document.querySelectorAll('.app-nav-group').forEach(function (li) {
+                        var remembered = saved[li.dataset.group];
+                        var open = li.dataset.active === '1' || (typeof remembered === 'boolean' ? remembered : li.dataset.openDefault === '1');
+                        setGroup(li, open);
+                    });
+                },
+
+                toggleGroup: function (button) {
+                    var li = button.closest('.app-nav-group');
+
+                    // In the rail a group's pages are hidden, so expand the sidebar and show them.
+                    if (document.body.classList.contains('sidebar-collapsed') && window.matchMedia(DESKTOP).matches) {
+                        setCollapsed(false);
+                        setGroup(li, true);
+                        return;
+                    }
+
+                    var open = button.getAttribute('aria-expanded') !== 'true';
+                    var saved = openGroups();
+                    saved[li.dataset.group] = open;
+                    write('sidebarOpenGroups', JSON.stringify(saved));
+                    setGroup(li, open);
+                },
+
+                /** 'light' | 'dark' | 'system', stored as the React menu stores it. */
+                setTheme: function (theme) {
+                    write('darkMode', theme === 'dark' ? '1' : theme === 'light' ? '0' : null);
+                    var dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                    document.documentElement.classList.toggle('dark', dark);
+                    syncThemeButtons();
+                },
+
+                syncThemeButtons: syncThemeButtons,
+            };
+        })();
+
+        document.addEventListener('DOMContentLoaded', appShell.syncThemeButtons);
+
+        /* Keep the sidebar's scroll position across page loads, then centre the current
+           page's link. sessionStorage, because every navigation here is a full page load. */
         (function () {
-            if (window.__sidebarTipInit) return;
-            window.__sidebarTipInit = true;
+            var KEY = 'sidebarScrollTop';
 
-            const SEL = '#hs-application-sidebar [data-title]';
-            let tip = null;
+            window.addEventListener('pagehide', function () {
+                var nav = document.getElementById('sidebar-scroll');
+                if (nav) {
+                    try { sessionStorage.setItem(KEY, nav.scrollTop); } catch (e) {}
+                }
+            });
+
+            document.addEventListener('DOMContentLoaded', function () {
+                var nav = document.getElementById('sidebar-scroll');
+                if (!nav) return;
+
+                requestAnimationFrame(function () {
+                    try {
+                        var stored = sessionStorage.getItem(KEY);
+                        if (stored !== null) nav.scrollTop = Number(stored);
+                    } catch (e) {}
+
+                    var active = nav.querySelector('a[aria-current="page"]');
+                    if (!active || !active.getClientRects().length) return;
+
+                    var navBox = nav.getBoundingClientRect();
+                    var box = active.getBoundingClientRect();
+                    nav.scrollTop += (box.top + box.height / 2) - (navBox.top + navBox.height / 2);
+                });
+            });
+        })();
+
+        /* Tooltip hints for the collapsed sidebar: hovering an icon shows its label (data-title). */
+        (function () {
+            var SEL = '#hs-application-sidebar [data-title]';
+            var tip = null;
 
             function getTip() {
                 if (!tip || !tip.isConnected) {
@@ -158,40 +225,42 @@
                 }
                 return tip;
             }
+
             function hide() { if (tip) tip.classList.remove('show'); }
 
             document.addEventListener('mouseover', function (e) {
                 if (!document.body.classList.contains('sidebar-collapsed')) return;
-                const item = e.target.closest && e.target.closest(SEL);
+                var item = e.target.closest && e.target.closest(SEL);
                 if (!item) return;
-                const t = getTip();
+                var t = getTip();
+                var r = item.getBoundingClientRect();
                 t.textContent = item.getAttribute('data-title');
-                const r = item.getBoundingClientRect();
                 t.style.top = (r.top + r.height / 2) + 'px';
                 t.style.left = (r.right + 8) + 'px';
                 t.classList.add('show');
             });
             document.addEventListener('mouseout', function (e) {
-                const from = e.target.closest && e.target.closest(SEL);
+                var from = e.target.closest && e.target.closest(SEL);
                 if (!from) return;
-                const to = e.relatedTarget && e.relatedTarget.closest
-                    ? e.relatedTarget.closest(SEL) : null;
-                if (to !== from) hide(); // still inside the same item -> keep showing
+                var to = e.relatedTarget && e.relatedTarget.closest ? e.relatedTarget.closest(SEL) : null;
+                if (to !== from) hide();
             });
             document.addEventListener('click', hide);
-            document.addEventListener('livewire:navigating', hide);
         })();
     </script>
 </head>
 
 <body class="bg-slate-100 dark:bg-neutral-900">
+    {{-- Before anything paints, so the rail doesn't flash open. --}}
+    <script>appShell.applySidebar();</script>
+
+    @include('partials.app-header')
+    @include('partials.app-sidebar')
+    @include('partials.search-dialog')
 
     <main>
-        @livewire('header-section')
-        @livewire('partials.navbar')
-        @livewire('partials.sidebar')
-        {{-- Spacer for the fixed banner (90px) + navbar (55px) --}}
-        <div style="height: 145px"></div>
+        {{-- Room for the fixed 64px header. --}}
+        <div class="h-16"></div>
         {{ $slot }}
     </main>
 

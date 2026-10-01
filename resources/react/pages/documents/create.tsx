@@ -1,5 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { CalendarClock, ChevronRight, Loader2, Save } from 'lucide-react';
+import { CalendarClock, Loader2, Save } from 'lucide-react';
 import { useEffect, useMemo, useRef, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import { store } from '@/actions/App/Http/Controllers/DocumentController';
@@ -57,22 +57,8 @@ const toOptions = (items: Option[]) => items.map((item) => ({ value: String(item
 
 export default function CreateDocumentPage(props: Props) {
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={[{ title: 'Home', href: dashboard() }, { title: 'New Document' }]}>
             <Head title="New Document" />
-
-            <nav aria-label="Breadcrumb">
-                <ol className="flex items-center gap-2 text-sm whitespace-nowrap text-muted-foreground">
-                    <li>
-                        <Link href={dashboard()} className="hover:text-foreground">
-                            Dashboard
-                        </Link>
-                    </li>
-                    <ChevronRight className="size-4" aria-hidden="true" />
-                    <li className="truncate font-semibold text-foreground" aria-current="page">
-                        New Document
-                    </li>
-                </ol>
-            </nav>
 
             <h1 className="text-2xl font-semibold tracking-tight">New Document</h1>
 

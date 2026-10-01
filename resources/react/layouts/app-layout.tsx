@@ -3,6 +3,7 @@ import { CircleAlert } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import AppHeader from '@/components/app-header';
 import AppSidebar from '@/components/app-sidebar';
+import Breadcrumbs, { type Crumb } from '@/components/breadcrumbs';
 import SearchDialog from '@/components/search-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
@@ -26,7 +27,7 @@ function readCollapsed(): boolean {
  * The signed-in app shell: fixed green header, sidebar (an icon rail when
  * collapsed on desktop, a slide-in sheet on mobile) and the page content.
  */
-export default function AppLayout({ children }: { children: ReactNode }) {
+export default function AppLayout({ children, breadcrumbs }: { children: ReactNode; breadcrumbs?: Crumb[] }) {
     const { flash } = usePage().props;
     const [collapsed, setCollapsed] = useState(readCollapsed);
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -93,7 +94,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
 
             <main className={cn('pt-16 transition-[padding] duration-200', collapsed ? 'lg:pl-16' : 'lg:pl-64')}>
-                <div className="mx-auto max-w-[85rem] space-y-6 p-4 sm:p-6 lg:p-8">
+                {/* With breadcrumbs, they sit right under the header with a rule below,
+                    where the Livewire pages have them, so both kinds of page line up. */}
+                <div className={cn('mx-auto max-w-[85rem] space-y-6 p-4 sm:p-6 lg:p-8', breadcrumbs && 'lg:pt-1.5')}>
+                    {breadcrumbs && (
+                        <div className="space-y-4 sm:space-y-6">
+                            <Breadcrumbs items={breadcrumbs} />
+                            <hr className="border-border" />
+                        </div>
+                    )}
                     {flash.error && (
                         <Alert variant="destructive">
                             <CircleAlert />

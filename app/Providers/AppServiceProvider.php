@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Http\Middleware\JwtMiddleware;
+use App\Support\CurrentEmployee;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 
@@ -30,5 +32,10 @@ class AppServiceProvider extends ServiceProvider
         Livewire::addPersistentMiddleware([
             JwtMiddleware::class,
         ]);
+
+        // The Blade copy of the app shell on the Livewire pages reads the same
+        // employee and badge counts as the React one (HandleInertiaRequests).
+        View::composer('partials.app-header', fn ($view) => $view->with('employee', CurrentEmployee::get()));
+        View::composer('partials.app-sidebar', fn ($view) => $view->with('sidebarCounts', CurrentEmployee::sidebarCounts()));
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardDocumentsController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentSearchController;
 use App\Http\Controllers\DocumentTrackingController;
+use App\Http\Controllers\EmployeePhotoController;
 use App\Http\Controllers\MiscController;
 use App\Http\Controllers\MyDocumentsController;
 use App\Http\Controllers\OfficeEmployeesController;
@@ -13,7 +14,6 @@ use App\Livewire\Documents\NewBundle;
 use App\Livewire\Inbox\MyBundles;
 use App\Livewire\Inbox\MyPayments;
 use App\Livewire\Inbox\MyPurchaseRequests;
-use App\Livewire\Partials\Navbar;
 use App\Livewire\Report\DocumentStatus;
 use App\Livewire\Report\Employees;
 use App\Livewire\Report\ExternalDocuments;
@@ -108,7 +108,7 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::get('/inbox/generate-logbook', [MiscController::class, 'generateLogbook'])->name('inbox.generate-logbook');
 
     /** User Photo */
-    Route::get('/employee/image/{filename}', [Navbar::class, 'getEmployeePhoto'])->name('employee.photo');
+    Route::get('/employee/image/{filename}', EmployeePhotoController::class)->name('employee.photo');
 
     /** Logout */
     Route::post('/logout', function () {

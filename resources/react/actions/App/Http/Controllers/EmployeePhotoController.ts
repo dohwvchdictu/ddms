@@ -1,15 +1,15 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\EmployeePhotoController::__invoke
  * @see app/Http/Controllers/EmployeePhotoController.php:16
  * @route '/employee/image/{filename}'
  */
-export const photo = (args: { filename: string | number } | [filename: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: photo.url(args, options),
+const EmployeePhotoController = (args: { filename: string | number } | [filename: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: EmployeePhotoController.url(args, options),
     method: 'get',
 })
 
-photo.definition = {
+EmployeePhotoController.definition = {
     methods: ["get","head"],
     url: '/employee/image/{filename}',
 } satisfies RouteDefinition<["get","head"]>
@@ -19,7 +19,7 @@ photo.definition = {
  * @see app/Http/Controllers/EmployeePhotoController.php:16
  * @route '/employee/image/{filename}'
  */
-photo.url = (args: { filename: string | number } | [filename: string | number ] | string | number, options?: RouteQueryOptions) => {
+EmployeePhotoController.url = (args: { filename: string | number } | [filename: string | number ] | string | number, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { filename: args }
     }
@@ -37,7 +37,7 @@ photo.url = (args: { filename: string | number } | [filename: string | number ] 
                         filename: args.filename,
                 }
 
-    return photo.definition.url
+    return EmployeePhotoController.definition.url
             .replace('{filename}', parsedArgs.filename.toString())
             .replace(/\/+$/, '') + queryParams(options)
 }
@@ -47,8 +47,8 @@ photo.url = (args: { filename: string | number } | [filename: string | number ] 
  * @see app/Http/Controllers/EmployeePhotoController.php:16
  * @route '/employee/image/{filename}'
  */
-photo.get = (args: { filename: string | number } | [filename: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: photo.url(args, options),
+EmployeePhotoController.get = (args: { filename: string | number } | [filename: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: EmployeePhotoController.url(args, options),
     method: 'get',
 })
 /**
@@ -56,12 +56,8 @@ photo.get = (args: { filename: string | number } | [filename: string | number ] 
  * @see app/Http/Controllers/EmployeePhotoController.php:16
  * @route '/employee/image/{filename}'
  */
-photo.head = (args: { filename: string | number } | [filename: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
-    url: photo.url(args, options),
+EmployeePhotoController.head = (args: { filename: string | number } | [filename: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: EmployeePhotoController.url(args, options),
     method: 'head',
 })
-const employee = {
-    photo: Object.assign(photo, photo),
-}
-
-export default employee
+export default EmployeePhotoController

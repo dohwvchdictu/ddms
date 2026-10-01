@@ -37,24 +37,8 @@ document.addEventListener('livewire:navigated', () => {
     Livewire.hook('element.init', initPrelineElements);
 }, { once: true });
 
-// Keyboard shortcut for document search modal
-document.addEventListener('keydown', (event) => {
-    // Check if '/' key is pressed and not in an input/textarea
-    if (event.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
-        event.preventDefault();
-        const searchModal = document.getElementById('document-search-modal');
-        if (searchModal && window.HSOverlay) {
-            window.HSOverlay.open(searchModal);
-            // Focus on search input after modal opens
-            setTimeout(() => {
-                const searchInput = searchModal.querySelector('input[type="text"]');
-                if (searchInput) {
-                    searchInput.focus();
-                }
-            }, 100);
-        }
-    }
-});
+// The header's document search (partials/search-dialog.blade.php), including its "/" shortcut.
+import './search-dialog';
 // document.addEventListener('livewire:init', () => {
 //     Livewire.on('close-modal', ({ class: className }) => {
 //         const modal = document.querySelector(className);

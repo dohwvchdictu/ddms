@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowRight, CalendarClock, ChevronRight, CircleCheck, FilePlus2 } from 'lucide-react';
+import { ArrowRight, CalendarClock, CircleCheck, FilePlus2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { create } from '@/actions/App/Http/Controllers/DocumentController';
 import CopyButton from '@/components/copy-button';
@@ -32,28 +32,8 @@ export default function DocumentCreated({ document, listPath }: Props) {
     const kind = document.is_bundle ? 'Bundle' : 'Document';
 
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={[{ title: 'Home', href: dashboard() }, { title: 'New Document', href: create() }, { title: 'Saved' }]}>
             <Head title={`${kind} saved`} />
-
-            <nav aria-label="Breadcrumb">
-                <ol className="flex items-center gap-2 text-sm whitespace-nowrap text-muted-foreground">
-                    <li>
-                        <Link href={dashboard()} className="hover:text-foreground">
-                            Dashboard
-                        </Link>
-                    </li>
-                    <ChevronRight className="size-4" aria-hidden="true" />
-                    <li>
-                        <Link href={create()} className="hover:text-foreground">
-                            New Document
-                        </Link>
-                    </li>
-                    <ChevronRight className="size-4" aria-hidden="true" />
-                    <li className="truncate font-semibold text-foreground" aria-current="page">
-                        Saved
-                    </li>
-                </ol>
-            </nav>
 
             {/* One receipt-style card, short enough to fit on screen without scrolling. */}
             <section aria-labelledby="saved-heading" className="mx-auto w-full max-w-lg overflow-hidden rounded-xl border bg-card shadow-sm">
