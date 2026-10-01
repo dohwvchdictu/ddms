@@ -11,6 +11,9 @@ import { cn } from '@/lib/utils';
 /** Same key as the Livewire layout, so the choice carries across both. */
 const COLLAPSED_KEY = 'sidebarCollapsed';
 
+/** Tailwind's `lg` breakpoint, where the sidebar is always on screen. */
+const DESKTOP_QUERY = '(min-width: 64rem)';
+
 function readCollapsed(): boolean {
     try {
         return localStorage.getItem(COLLAPSED_KEY) === '1';
@@ -60,7 +63,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
     return (
         <div className="min-h-dvh bg-muted/40">
-            <AppHeader onOpenSearch={() => setSearchOpen(true)} onOpenSidebar={() => setMobileOpen(true)} />
+            <AppHeader
+                onOpenSearch={() => setSearchOpen(true)}
+                // Same button everywhere: it folds the sidebar to an icon rail on
+                // desktop, and opens the slide-in menu where there is no sidebar.
+                onToggleSidebar={() => (window.matchMedia(DESKTOP_QUERY).matches ? toggleCollapsed() : setMobileOpen(true))}
+                sidebarExpanded={!collapsed}
+            />
 
             <aside
                 className={cn(
@@ -68,7 +77,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                     collapsed ? 'w-16' : 'w-64',
                 )}
             >
-                <AppSidebar collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
+                <AppSidebar collapsed={collapsed} />
             </aside>
 
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>

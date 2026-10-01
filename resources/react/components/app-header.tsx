@@ -5,14 +5,17 @@ import { dashboard } from '@/routes';
 
 interface AppHeaderProps {
     onOpenSearch: () => void;
-    onOpenSidebar: () => void;
+    /** Collapses/expands the sidebar on desktop, opens the slide-in menu below it. */
+    onToggleSidebar: () => void;
+    /** Whether the desktop sidebar is expanded, for the button's state. */
+    sidebarExpanded: boolean;
 }
 
 /**
- * The fixed green bar across the top: seals and system name on the left,
- * search in the middle, greeting and user menu on the right.
+ * The fixed green bar across the top: sidebar toggle, seals and system name
+ * on the left, search in the middle, greeting and user menu on the right.
  */
-export default function AppHeader({ onOpenSearch, onOpenSidebar }: AppHeaderProps) {
+export default function AppHeader({ onOpenSearch, onToggleSidebar, sidebarExpanded }: AppHeaderProps) {
     const { auth } = usePage().props;
     const user = auth.user;
 
@@ -21,9 +24,11 @@ export default function AppHeader({ onOpenSearch, onOpenSidebar }: AppHeaderProp
             <div className="flex h-full items-center gap-3 px-3 sm:px-4">
                 <button
                     type="button"
-                    onClick={onOpenSidebar}
-                    className="flex size-9 shrink-0 items-center justify-center rounded-md hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:outline-none lg:hidden"
-                    aria-label="Open navigation"
+                    onClick={onToggleSidebar}
+                    className="flex size-9 shrink-0 items-center justify-center rounded-md hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:outline-none"
+                    aria-label={sidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
+                    aria-controls="app-sidebar"
+                    title={sidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
                 >
                     <Menu className="size-5" />
                 </button>
