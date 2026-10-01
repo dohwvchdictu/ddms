@@ -71,7 +71,7 @@ class Document extends Model
      * before the charter form dropped the category select carry both, and for
      * those the charter is the promise that was actually made to the citizen.
      *
-     * This mirrors the SQL `CASE` used by HomePage, Report\DocumentStatus and
+     * This mirrors the SQL `CASE` used by Dashboard\DeadlineCounts, Report\DocumentStatus and
      * MiscController, which aggregate too many rows to hydrate models. Keep the
      * two in step.
      *

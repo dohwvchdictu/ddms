@@ -33,7 +33,7 @@
             <nav class="hs-accordion-group p-3 w-full flex flex-col flex-wrap" data-hs-accordion-always-open>
                 <ul class="flex flex-col space-y-1">
                     <li>
-                        <a wire:navigate
+                        <a
                             class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm rounded-lg focus:outline-none {{ request()->is('dashboard') ? 'text-gray-100 bg-emerald-600 dark:bg-emerald-600 dark:text-white' : 'text-gray-800 hover:bg-gray-100 dark:hover:bg-neutral-700 focus:bg-gray-100 dark:focus:bg-neutral-700 dark:bg-neutral-800 dark:text-neutral-200' }}"
                             data-title="Dashboard" href="/dashboard">
                             <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24"
