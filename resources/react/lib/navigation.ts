@@ -1,4 +1,26 @@
-import { ChartColumn, FilePlus2, House, Inbox, ListChecks, MessageSquare, type LucideIcon } from 'lucide-react';
+import {
+    Archive,
+    BookOpen,
+    Building2,
+    ChartColumn,
+    ClipboardList,
+    FilePlus2,
+    Files,
+    FileText,
+    Globe,
+    Hourglass,
+    House,
+    Inbox,
+    ListChecks,
+    Network,
+    Send,
+    ShoppingCart,
+    Timer,
+    UserRoundCheck,
+    Wallet,
+    ArrowDownToLine,
+    type LucideIcon,
+} from 'lucide-react';
 import type { SidebarCounts } from '@/types';
 
 /**
@@ -10,6 +32,7 @@ import type { SidebarCounts } from '@/types';
 export interface NavItem {
     title: string;
     href: string;
+    icon: LucideIcon;
     legacy?: boolean;
     /** Red badge count, read from the shared `sidebarCounts` prop. */
     badge?: keyof SidebarCounts;
@@ -26,46 +49,65 @@ export interface NavGroup {
     dot?: keyof SidebarCounts;
 }
 
-export const navigation: NavGroup[] = [
-    { title: 'Dashboard', icon: House, href: '/dashboard' },
+export interface NavSection {
+    title: string;
+    groups: NavGroup[];
+}
+
+export const navigation: NavSection[] = [
     {
-        title: 'New Document',
-        icon: FilePlus2,
-        items: [{ title: 'Document', href: '/new-document', legacy: true }],
-    },
-    {
-        title: 'Inbox',
-        icon: Inbox,
-        items: [
-            { title: 'My Documents', href: '/my-documents', legacy: true },
-            { title: 'My Purchase Requests', href: '/my-purchase-requests', legacy: true },
-            { title: 'My Payments', href: '/my-payments', legacy: true },
-            { title: 'Routing Logbook', href: '/routing-logbook', legacy: true },
+        title: 'Main',
+        groups: [
+            { title: 'Dashboard', icon: House, href: '/dashboard' },
+            {
+                title: 'New Document',
+                icon: FilePlus2,
+                items: [{ title: 'Document', href: '/new-document', icon: FileText, legacy: true }],
+            },
         ],
     },
     {
-        title: 'Status',
-        icon: ListChecks,
-        dot: 'total',
-        items: [
-            { title: 'Incoming', href: '/status-incoming', legacy: true, badge: 'incoming' },
-            { title: 'Pending', href: '/status-pending', legacy: true, badge: 'pending' },
-            { title: 'Endorsed', href: '/status-endorsed', legacy: true, badge: 'endorsed' },
-            { title: 'Processed', href: '/status-forwarded', legacy: true },
-            { title: 'Closed', href: '/status-closed', legacy: true },
+        title: 'Documents',
+        groups: [
+            {
+                title: 'Inbox',
+                icon: Inbox,
+                items: [
+                    { title: 'My Documents', href: '/my-documents', icon: Files, legacy: true },
+                    { title: 'My Purchase Requests', href: '/my-purchase-requests', icon: ShoppingCart, legacy: true },
+                    { title: 'My Payments', href: '/my-payments', icon: Wallet, legacy: true },
+                    { title: 'Routing Logbook', href: '/routing-logbook', icon: BookOpen, legacy: true },
+                ],
+            },
+            {
+                title: 'Status',
+                icon: ListChecks,
+                dot: 'total',
+                items: [
+                    { title: 'Incoming', href: '/status-incoming', icon: ArrowDownToLine, legacy: true, badge: 'incoming' },
+                    { title: 'Pending', href: '/status-pending', icon: Hourglass, legacy: true, badge: 'pending' },
+                    { title: 'Endorsed', href: '/status-endorsed', icon: UserRoundCheck, legacy: true, badge: 'endorsed' },
+                    { title: 'Processed', href: '/status-forwarded', icon: Send, legacy: true },
+                    { title: 'Closed', href: '/status-closed', icon: Archive, legacy: true },
+                ],
+            },
         ],
     },
     {
         title: 'Reports',
-        icon: ChartColumn,
-        items: [
-            { title: 'Status', href: '/report-status-of-documents', legacy: true },
-            { title: 'Endorsements', href: '/report-status-per-employee', legacy: true },
-            { title: 'External Requests', href: '/report-status-of-external-documents', legacy: true },
-            { title: 'Internal Documents', href: '/report-status-of-internal-documents', legacy: true },
-            { title: 'Per Unit', href: '/report-per-unit', legacy: true },
-            { title: 'Turnaround Time', href: '/report-turnaround-time', legacy: true },
+        groups: [
+            {
+                title: 'Reports',
+                icon: ChartColumn,
+                items: [
+                    { title: 'Status', href: '/report-status-of-documents', icon: ClipboardList, legacy: true },
+                    { title: 'Endorsements', href: '/report-status-per-employee', icon: UserRoundCheck, legacy: true },
+                    { title: 'External Requests', href: '/report-status-of-external-documents', icon: Globe, legacy: true },
+                    { title: 'Internal Documents', href: '/report-status-of-internal-documents', icon: Building2, legacy: true },
+                    { title: 'Per Unit', href: '/report-per-unit', icon: Network, legacy: true },
+                    { title: 'Turnaround Time', href: '/report-turnaround-time', icon: Timer, legacy: true },
+                ],
+            },
         ],
     },
-    { title: 'Feedback', icon: MessageSquare, href: '#', legacy: true },
 ];
