@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\DocumentViewController::view
- * @see app/Http/Controllers/DocumentViewController.php:38
+ * @see app/Http/Controllers/DocumentViewController.php:44
  * @route '/document/view/{control_no}'
  */
 export const view = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ view.definition = {
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::view
- * @see app/Http/Controllers/DocumentViewController.php:38
+ * @see app/Http/Controllers/DocumentViewController.php:44
  * @route '/document/view/{control_no}'
  */
 view.url = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -44,7 +44,7 @@ view.url = (args: { control_no: string | number } | [control_no: string | number
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::view
- * @see app/Http/Controllers/DocumentViewController.php:38
+ * @see app/Http/Controllers/DocumentViewController.php:44
  * @route '/document/view/{control_no}'
  */
 view.get = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -53,7 +53,7 @@ view.get = (args: { control_no: string | number } | [control_no: string | number
 })
 /**
 * @see \App\Http\Controllers\DocumentViewController::view
- * @see app/Http/Controllers/DocumentViewController.php:38
+ * @see app/Http/Controllers/DocumentViewController.php:44
  * @route '/document/view/{control_no}'
  */
 view.head = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -124,8 +124,8 @@ incoming.head = (args: { control_no: string | number } | [control_no: string | n
 })
 
 /**
-* @see \App\Livewire\Views\PendingDetail::__invoke
- * @see app/Livewire/Views/PendingDetail.php:7
+* @see \App\Http\Controllers\DocumentViewController::pending
+ * @see app/Http/Controllers/DocumentViewController.php:39
  * @route '/document/pending/{control_no}'
  */
 export const pending = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -139,8 +139,8 @@ pending.definition = {
 } satisfies RouteDefinition<["get","head"]>
 
 /**
-* @see \App\Livewire\Views\PendingDetail::__invoke
- * @see app/Livewire/Views/PendingDetail.php:7
+* @see \App\Http\Controllers\DocumentViewController::pending
+ * @see app/Http/Controllers/DocumentViewController.php:39
  * @route '/document/pending/{control_no}'
  */
 pending.url = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -167,8 +167,8 @@ pending.url = (args: { control_no: string | number } | [control_no: string | num
 }
 
 /**
-* @see \App\Livewire\Views\PendingDetail::__invoke
- * @see app/Livewire/Views/PendingDetail.php:7
+* @see \App\Http\Controllers\DocumentViewController::pending
+ * @see app/Http/Controllers/DocumentViewController.php:39
  * @route '/document/pending/{control_no}'
  */
 pending.get = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -176,8 +176,8 @@ pending.get = (args: { control_no: string | number } | [control_no: string | num
     method: 'get',
 })
 /**
-* @see \App\Livewire\Views\PendingDetail::__invoke
- * @see app/Livewire/Views/PendingDetail.php:7
+* @see \App\Http\Controllers\DocumentViewController::pending
+ * @see app/Http/Controllers/DocumentViewController.php:39
  * @route '/document/pending/{control_no}'
  */
 pending.head = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({

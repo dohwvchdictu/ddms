@@ -35,6 +35,12 @@ class DocumentViewController extends Controller
         return $this->show($controlNo, $tracking, $api, 'incoming');
     }
 
+    /** The document page reached from Pending: the same page, with Pending in its trail. */
+    public function showPending(string $controlNo, DocumentTracking $tracking, ApiService $api): Response
+    {
+        return $this->show($controlNo, $tracking, $api, 'pending');
+    }
+
     public function show(string $controlNo, DocumentTracking $tracking, ApiService $api, string $context = 'documents'): Response
     {
         $document = Document::with(['category', 'citizencharter'])->where('control_no', $controlNo)->firstOrFail();
@@ -117,12 +123,15 @@ class DocumentViewController extends Controller
                 'print' => $can->canPrint(),
                 'receive' => $can->canReceive(),
                 'return' => $can->canReturn(),
+                // On process here: forward, endorse or close (the Pending actions).
+                'pending' => $can->canActOnPending(),
             ],
             // Destinations for Forward: active offices only.
             'offices' => collect($api->getActiveOffices())
                 ->map(fn (array $office) => ['id' => $office['id'], 'name' => $office['officeName'] ?? '', 'code' => $office['officeCode'] ?? null])
                 ->values(),
             'subjectMax' => self::SUBJECT_MAX,
+            'closePasswordThreshold' => PendingController::PASSWORD_THRESHOLD,
             // Which list it was opened from, for the breadcrumb trail.
             'context' => $context,
             // Return goes back to whoever sent it here, unless another office is picked.

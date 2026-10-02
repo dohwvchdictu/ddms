@@ -75,6 +75,15 @@ class DocumentPermissions
             && in_array($this->document->status, IncomingDocuments::STATUSES, true);
     }
 
+    /** On process here (Pending): it can be forwarded, endorsed or closed. */
+    public function canActOnPending(): bool
+    {
+        return $this->officeId !== null
+            && $this->document->bundle_id === null
+            && (string) $this->document->assigned_to === (string) $this->officeId
+            && $this->document->status === 'On Process';
+    }
+
     /** A waiting document can be sent back, unless this office is where it started. */
     public function canReturn(): bool
     {

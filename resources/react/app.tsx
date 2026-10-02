@@ -4,6 +4,7 @@ import { createInertiaApp, router } from '@inertiajs/react';
 import { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { toast } from 'sonner';
+import SuccessOverlay, { showSuccess } from '@/components/success-overlay';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import type { SharedProps } from '@/types';
@@ -17,7 +18,11 @@ const removeFlashListener = router.on('flash', (event) => {
     if (message) {
         // Keyed by its text: should the same flash arrive twice, the second
         // replaces the first instead of stacking a duplicate.
-        toast[message.type](message.message, { id: `flash:${message.message}:${message.description ?? ''}`, description: message.description });
+        if (message.center && message.type === 'success') {
+            showSuccess(message.message, message.description);
+        } else {
+            toast[message.type](message.message, { id: `flash:${message.message}:${message.description ?? ''}`, description: message.description });
+        }
     }
 });
 
@@ -52,6 +57,8 @@ createInertiaApp({
                 <TooltipProvider delayDuration={200}>
                     <App {...props} />
                 </TooltipProvider>
+                {/* Centred success animation for flashes sent with 'center' => true. */}
+                <SuccessOverlay />
                 {/* Top right, just under the 64px header (4rem + 1rem gap), on every screen size. */}
                 <Toaster
                     richColors

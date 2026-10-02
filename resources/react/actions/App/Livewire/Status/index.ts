@@ -1,11 +1,7 @@
-import Pending from './Pending'
-import Endorsed from './Endorsed'
 import Forwarded from './Forwarded'
 import Closed from './Closed'
 const Status = {
-    Pending: Object.assign(Pending, Pending),
-Endorsed: Object.assign(Endorsed, Endorsed),
-Forwarded: Object.assign(Forwarded, Forwarded),
+    Forwarded: Object.assign(Forwarded, Forwarded),
 Closed: Object.assign(Closed, Closed),
 }
 

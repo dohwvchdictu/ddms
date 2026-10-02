@@ -30,6 +30,8 @@ export interface Toast {
     type: 'success' | 'error' | 'info' | 'warning';
     message: string;
     description?: string;
+    /** Show it as a centred success animation instead of a corner toast. */
+    center?: boolean;
 }
 
 export interface SharedProps {

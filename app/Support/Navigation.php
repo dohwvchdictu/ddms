@@ -38,7 +38,7 @@ class Navigation
     {
         return [
             [
-                // `total` rather than the sum of the rows: Endorsed is a subset of Pending.
+                // `total` rather than the sum of the rows, so a document counts once.
                 'title' => 'Inbox',
                 'icon' => 'inbox',
                 'defaultOpen' => true,
@@ -46,7 +46,6 @@ class Navigation
                 'items' => [
                     ['title' => 'Incoming', 'href' => '/status-incoming', 'icon' => 'arrow-down-to-line', 'badge' => 'incoming'],
                     ['title' => 'Pending', 'href' => '/status-pending', 'icon' => 'hourglass', 'badge' => 'pending'],
-                    ['title' => 'Endorsed', 'href' => '/status-endorsed', 'icon' => 'user-round-check', 'badge' => 'endorsed'],
                 ],
             ],
             [

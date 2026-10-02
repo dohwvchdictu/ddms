@@ -76,8 +76,9 @@ class LivewireShellTest extends TestCase
             ->get('/routing-logbook')
             ->assertSee('data-title="Incoming · 4"', false)
             ->assertSee('data-title="Pending · 2"', false)
-            ->assertSee('data-title="Endorsed · 1"', false)
-            ->assertSee('data-title="Inbox · 6"', false);
+            ->assertSee('data-title="Inbox · 6"', false)
+            // Endorsed was merged into Pending's "To me" switch.
+            ->assertDontSee('data-title="Endorsed', false);
     }
 
     public function test_the_photo_route_still_serves_only_images(): void

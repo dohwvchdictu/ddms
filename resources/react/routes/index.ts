@@ -172,6 +172,49 @@ incoming.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 })
 
 /**
+* @see \App\Http\Controllers\PendingController::pending
+ * @see app/Http/Controllers/PendingController.php:46
+ * @route '/status-pending'
+ */
+export const pending = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: pending.url(options),
+    method: 'get',
+})
+
+pending.definition = {
+    methods: ["get","head"],
+    url: '/status-pending',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\PendingController::pending
+ * @see app/Http/Controllers/PendingController.php:46
+ * @route '/status-pending'
+ */
+pending.url = (options?: RouteQueryOptions) => {
+    return pending.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\PendingController::pending
+ * @see app/Http/Controllers/PendingController.php:46
+ * @route '/status-pending'
+ */
+pending.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: pending.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\PendingController::pending
+ * @see app/Http/Controllers/PendingController.php:46
+ * @route '/status-pending'
+ */
+pending.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: pending.url(options),
+    method: 'head',
+})
+
+/**
 * @see \App\Livewire\Views\RoutingLogbook::__invoke
  * @see app/Livewire/Views/RoutingLogbook.php:7
  * @route '/routing-logbook'
@@ -215,7 +258,7 @@ routingLogbook.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => 
 })
 
 /**
- * @see routes/web.php:127
+ * @see routes/web.php:131
  * @route '/logout'
  */
 export const logout = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -229,7 +272,7 @@ logout.definition = {
 } satisfies RouteDefinition<["post"]>
 
 /**
- * @see routes/web.php:127
+ * @see routes/web.php:131
  * @route '/logout'
  */
 logout.url = (options?: RouteQueryOptions) => {
@@ -237,7 +280,7 @@ logout.url = (options?: RouteQueryOptions) => {
 }
 
 /**
- * @see routes/web.php:127
+ * @see routes/web.php:131
  * @route '/logout'
  */
 logout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({

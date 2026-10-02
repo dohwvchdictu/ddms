@@ -20,6 +20,8 @@ interface ForwardDialogProps {
     offices: Office[];
     /** Called once the server has forwarded them; the list reloads by itself. */
     onForwarded: () => void;
+    /** Where to send it; My Documents' forward by default. Pending passes its own. */
+    action?: { url: string; method: 'post' };
 }
 
 interface Employee {
@@ -55,7 +57,7 @@ function rememberRecent(officeId: string): void {
 }
 
 /** Forward the selected documents to another office, optionally endorsed to someone there. */
-export default function ForwardDialog({ open, onOpenChange, documents, offices, onForwarded }: ForwardDialogProps) {
+export default function ForwardDialog({ open, onOpenChange, documents, offices, onForwarded, action }: ForwardDialogProps) {
     const form = useForm({ assigned_to: '', endorsed_to: '', remarks: '' });
     const { data, errors, processing } = form;
     const [employees, setEmployees] = useState<Employee[]>([]);
@@ -138,7 +140,7 @@ export default function ForwardDialog({ open, onOpenChange, documents, offices, 
             document_ids: documents.map((document) => document.id),
         }));
 
-        form.submit(forward(), {
+        form.submit(action ?? forward(), {
             preserveScroll: true,
             onSuccess: () => {
                 rememberRecent(data.assigned_to);

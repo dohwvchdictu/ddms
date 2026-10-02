@@ -110,7 +110,7 @@ class DocumentViewTest extends TestCase
                 ->where('document.origin', 'Knowledge Management and ICT Unit')
                 ->where('document.encoded_by', 'Juan Dela Cruz')
                 ->where('document.required_days', Document::DEFAULT_REQUIRED_DAYS)
-                ->where('can', ['forward' => true, 'delete' => true, 'edit_subject' => true, 'manage_attachments' => false, 'print' => false, 'receive' => false, 'return' => false])
+                ->where('can', ['forward' => true, 'delete' => true, 'edit_subject' => true, 'manage_attachments' => false, 'print' => false, 'receive' => false, 'return' => false, 'pending' => false])
                 ->has('timeline')
                 ->has('offices', 2));
     }
@@ -123,7 +123,7 @@ class DocumentViewTest extends TestCase
             ->get("/document/view/{$document->control_no}")
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->where('can', ['forward' => false, 'delete' => false, 'edit_subject' => false, 'manage_attachments' => false, 'print' => false, 'receive' => false, 'return' => false]));
+                ->where('can', ['forward' => false, 'delete' => false, 'edit_subject' => false, 'manage_attachments' => false, 'print' => false, 'receive' => false, 'return' => false, 'pending' => false]));
 
         $this->signedIn(self::OTHER_OFFICE)->patch("/documents/{$document->id}/subject", ['subject' => 'Someone else rewrote this'])->assertForbidden();
         $this->signedIn(self::OTHER_OFFICE)->delete("/documents/{$document->id}")->assertForbidden();
@@ -291,5 +291,29 @@ class DocumentViewTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->where('can.receive', true)->where('can.return', false));
 
         $this->signedIn()->post("/documents/{$own->id}/return", ['office_id' => 12, 'remarks' => 'No'])->assertForbidden();
+    }
+
+    public function test_the_pending_address_offers_forward_endorse_and_close(): void
+    {
+        $document = $this->saveDocument(['office_id' => self::OTHER_OFFICE, 'assigned_to' => self::OFFICE, 'status' => 'On Process']);
+
+        $this->signedIn()
+            ->get("/document/pending/{$document->control_no}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('documents/show')
+                ->where('context', 'pending')
+                ->where('can.pending', true)
+                ->where('can.receive', false)
+                ->where('closePasswordThreshold', 5));
+    }
+
+    public function test_a_document_not_on_process_here_offers_no_pending_actions(): void
+    {
+        $elsewhere = $this->saveDocument(['office_id' => self::OTHER_OFFICE, 'assigned_to' => self::OTHER_OFFICE, 'status' => 'On Process']);
+
+        $this->signedIn()
+            ->get("/document/pending/{$elsewhere->control_no}")
+            ->assertInertia(fn (Assert $page) => $page->where('can.pending', false));
     }
 }

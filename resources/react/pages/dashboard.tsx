@@ -62,7 +62,8 @@ const OFFICE_CARDS: (CardDef & { key: 'incoming' | 'pending' | 'endorsed'; href:
     {
         key: 'endorsed',
         label: 'Endorsed to me',
-        href: '/status-endorsed',
+        // Pending, filtered to what is endorsed to me (the Endorsed page was merged into it).
+        href: '/status-pending?endorsed=me',
         icon: UserRoundCheck,
         accent: 'text-emerald-700 dark:text-emerald-400',
         tile: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400',

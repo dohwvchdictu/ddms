@@ -5,6 +5,7 @@ namespace App\Actions\Documents;
 use App\Models\Action;
 use App\Models\Document;
 use App\Models\Log;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -23,15 +24,17 @@ class ForwardDocuments
      * @param  list<int>  $documentIds  Anything not forwardable by this office is skipped.
      * @param  array<string, mixed>  $user  The session employee.
      * @param  array{id: int|string, name: string}  $destination
+     * @param  Builder|null  $eligible  Which documents may go: by default this office's own new ones
+     *                               (My Documents); Pending passes the ones on process here.
      * @return int How many documents were forwarded (bundles count once).
      */
-    public function handle(array $documentIds, array $user, array $destination, int|string|null $endorsedTo, ?string $remarks): int
+    public function handle(array $documentIds, array $user, array $destination, int|string|null $endorsedTo, ?string $remarks, ?Builder $eligible = null): int
     {
         $officeId = $user['office']['id'];
 
-        // Re-checked here rather than trusted from the form: still this office's,
-        // still Created, and a top-level document rather than an attachment.
-        $documents = $this->officeDocuments->forwardable($officeId)
+        // Re-checked here rather than trusted from the form: still eligible, and a
+        // top-level document rather than an attachment.
+        $documents = ($eligible ?? $this->officeDocuments->forwardable($officeId))
             ->whereIn('documents.id', $documentIds)
             ->get();
 

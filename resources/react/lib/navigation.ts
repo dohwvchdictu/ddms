@@ -56,15 +56,14 @@ export const newDocument: NavItem = { title: 'New Document', href: '/new-documen
 export const groups: NavGroup[] = [
     {
         // Documents waiting on the user's office. `total` rather than the sum of
-        // the rows: Endorsed is a subset of Pending, so adding them double-counts.
+        // the rows, so a document counts once. "Endorsed to me" is Pending's To me switch.
         title: 'Inbox',
         icon: Inbox,
         defaultOpen: true,
         badge: 'total',
         items: [
             { title: 'Incoming', href: '/status-incoming', icon: ArrowDownToLine, badge: 'incoming' },
-            { title: 'Pending', href: '/status-pending', icon: Hourglass, legacy: true, badge: 'pending' },
-            { title: 'Endorsed', href: '/status-endorsed', icon: UserRoundCheck, legacy: true, badge: 'endorsed' },
+            { title: 'Pending', href: '/status-pending', icon: Hourglass, badge: 'pending' },
         ],
     },
     {

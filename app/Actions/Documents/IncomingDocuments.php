@@ -6,7 +6,7 @@ use App\Models\Document;
 use App\Support\DocumentTypes;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
+use App\Support\DocumentSender;
 
 /**
  * Documents waiting for an office to receive them: forwarded (For Receiving) or
@@ -56,14 +56,7 @@ class IncomingDocuments
      */
     public function withSender(Builder $query, int|string $officeId): Builder
     {
-        return $query->addSelect([
-            'from_office_id' => DB::table('logs')
-                ->select('office_id')
-                ->whereColumn('logs.document_id', 'documents.id')
-                ->where('logs.office_id', '!=', $officeId)
-                ->orderByDesc('logs.id')
-                ->limit(1),
-        ]);
+        return DocumentSender::select($query, $officeId);
     }
 
     /**

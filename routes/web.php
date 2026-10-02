@@ -8,6 +8,7 @@ use App\Http\Controllers\DocumentSearchController;
 use App\Http\Controllers\DocumentTrackingController;
 use App\Http\Controllers\DocumentViewController;
 use App\Http\Controllers\IncomingController;
+use App\Http\Controllers\PendingController;
 use App\Http\Controllers\EmployeePhotoController;
 use App\Http\Controllers\MiscController;
 use App\Http\Controllers\MyDocumentsController;
@@ -20,10 +21,7 @@ use App\Livewire\Report\InternalDocuments;
 use App\Livewire\Report\PerUnit;
 use App\Livewire\Report\TurnaroundTime;
 use App\Livewire\Status\Closed;
-use App\Livewire\Status\Endorsed;
 use App\Livewire\Status\Forwarded;
-use App\Livewire\Status\Pending;
-use App\Livewire\Views\PendingDetail;
 use App\Livewire\Views\QrReceive;
 use App\Livewire\Views\RoutingLogbook;
 use Illuminate\Support\Facades\Route;
@@ -77,8 +75,14 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::get('/status-incoming', [IncomingController::class, 'index'])->name('incoming');
     Route::get('/status-incoming/selectable', [IncomingController::class, 'selectable'])->name('incoming.selectable');
     Route::post('/status-incoming/receive', [IncomingController::class, 'receive'])->name('incoming.receive');
-    Route::get('/status-pending', Pending::class);
-    Route::get('/status-endorsed', Endorsed::class);
+    Route::get('/status-pending', [PendingController::class, 'index'])->name('pending');
+    Route::get('/status-pending/selectable', [PendingController::class, 'selectable'])->name('pending.selectable');
+    Route::post('/status-pending/forward', [PendingController::class, 'forward'])->name('pending.forward');
+    Route::post('/status-pending/endorse', [PendingController::class, 'endorse'])->name('pending.endorse');
+    Route::get('/status-pending/close-code', [PendingController::class, 'closeCode'])->name('pending.close-code');
+    Route::post('/status-pending/close', [PendingController::class, 'close'])->name('pending.close');
+    // Merged into Pending's "To me" switch; kept so bookmarks and older links still land.
+    Route::permanentRedirect('/status-endorsed', '/status-pending?endorsed=me');
     Route::get('/status-forwarded', Forwarded::class);
     Route::get('/status-closed', Closed::class);
 
@@ -100,7 +104,7 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::post('/documents/{document}/return', [DocumentViewController::class, 'returnDocument'])
         ->whereNumber('document')
         ->name('documents.return');
-    Route::get('/document/pending/{control_no}', PendingDetail::class)->name('document.pending');
+    Route::get('/document/pending/{control_no}', [DocumentViewController::class, 'showPending'])->name('document.pending');
     Route::get('/document/qr-receive/{control_no}', QrReceive::class)->name('document.qr-receive');
     Route::get('/routing-logbook', RoutingLogbook::class)->name('routing-logbook');
 

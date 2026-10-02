@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { EllipsisVertical, ExternalLink, History, PackageCheck, PackagePlus, Printer, Send, Trash2, Undo2, X, type LucideIcon } from 'lucide-react';
+import { CircleCheckBig, EllipsisVertical, ExternalLink, History, PackageCheck, PackagePlus, Printer, Send, Trash2, Undo2, UserRoundCheck, X, type LucideIcon } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { destroy, detach, show } from '@/actions/App/Http/Controllers/DocumentViewController';
 import ConfirmDialog from '@/components/confirm-dialog';
@@ -8,6 +8,8 @@ import ListTabs from '@/components/data-table/list-tabs';
 import DescriptionList, { type DescriptionItem } from '@/components/description-list';
 import AttachDialog, { type Attachable } from '@/components/document-view/attach-dialog';
 import ReturnDialog from '@/components/document-view/return-dialog';
+import CloseDialog from '@/components/pending/close-dialog';
+import EndorseDialog from '@/components/pending/endorse-dialog';
 import SubjectEditor from '@/components/document-view/subject-editor';
 import { type TimelineRow } from '@/components/document-timeline';
 import { describeLocation } from '@/components/document-tracking';
@@ -21,7 +23,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { longDate, parseDay } from '@/lib/working-days';
-import { dashboard, incoming, myDocuments } from '@/routes';
+import { dashboard, incoming, myDocuments, pending } from '@/routes';
+import { forward as pendingForward } from '@/routes/pending';
 import { receive } from '@/routes/incoming';
 
 interface DocumentDetails {
@@ -69,24 +72,29 @@ interface Props {
         print: boolean;
         receive: boolean;
         return: boolean;
+        /** On process here: Forward, Endorse and Close, as on the Pending list. */
+        pending: boolean;
     };
     offices: Office[];
     subjectMax: number;
     /** Which list it was opened from: decides the breadcrumb trail. */
-    context: 'documents' | 'incoming';
+    context: 'documents' | 'incoming' | 'pending';
     /** The office that sent it here; Return picks it by default. */
     sender: number | null;
+    /** Closing this many documents or more asks for the HRIS password. */
+    closePasswordThreshold: number;
 }
 
 /** The trail back to the list the document was opened from. */
 const TRAILS = {
     documents: { title: 'My Documents', href: () => myDocuments() },
     incoming: { title: 'Incoming', href: () => incoming() },
+    pending: { title: 'Pending', href: () => pending() },
 };
 
 const dateTime = new Intl.DateTimeFormat('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 
-export default function ShowDocument({ document, timeline, attachments, attachable, can, offices, subjectMax, context, sender }: Props) {
+export default function ShowDocument({ document, timeline, attachments, attachable, can, offices, subjectMax, context, sender, closePasswordThreshold }: Props) {
     const [forwarding, setForwarding] = useState(false);
     const [attaching, setAttaching] = useState(false);
     const [deleting, setDeleting] = useState(false);
@@ -96,6 +104,8 @@ export default function ShowDocument({ document, timeline, attachments, attachab
     const [tab, setTab] = useState('bundle');
     const [confirmingReceive, setConfirmingReceive] = useState(false);
     const [returning, setReturning] = useState(false);
+    const [endorsing, setEndorsing] = useState(false);
+    const [closing, setClosing] = useState(false);
 
     // Receiving reloads this page: the document is now on process here.
     const receiveDocument = () =>
@@ -259,7 +269,19 @@ export default function ShowDocument({ document, timeline, attachments, attachab
                                 Receive
                             </Button>
                         )}
-                        {can.forward && (
+                        {can.pending && (
+                            <>
+                                <Button variant="outline" onClick={() => setClosing(true)}>
+                                    <CircleCheckBig />
+                                    Close
+                                </Button>
+                                <Button variant="outline" onClick={() => setEndorsing(true)}>
+                                    <UserRoundCheck />
+                                    Endorse
+                                </Button>
+                            </>
+                        )}
+                        {(can.forward || can.pending) && (
                             <Button onClick={() => setForwarding(true)} className="bg-emerald-600 text-white hover:bg-emerald-700">
                                 <Send />
                                 Forward
@@ -322,7 +344,22 @@ export default function ShowDocument({ document, timeline, attachments, attachab
                 onConfirm={receiveDocument}
                 busy={busy}
             />
-            <ForwardDialog open={forwarding} onOpenChange={setForwarding} documents={[document]} offices={offices} onForwarded={() => setForwarding(false)} />
+            <ForwardDialog
+                open={forwarding}
+                onOpenChange={setForwarding}
+                documents={[document]}
+                offices={offices}
+                onForwarded={() => setForwarding(false)}
+                // A pending document goes through the Pending forward (it may be on process
+                // here rather than this office's own); a new one through My Documents'.
+                action={can.pending ? pendingForward() : undefined}
+            />
+            {can.pending && (
+                <>
+                    <EndorseDialog open={endorsing} onOpenChange={setEndorsing} documentIds={[document.id]} onDone={() => undefined} />
+                    <CloseDialog open={closing} onOpenChange={setClosing} documents={[document]} passwordThreshold={closePasswordThreshold} onDone={() => undefined} />
+                </>
+            )}
             {can.manage_attachments && (
                 <AttachDialog open={attaching} onOpenChange={setAttaching} bundleId={document.id} bundleControlNo={document.control_no} candidates={attachable} />
             )}
