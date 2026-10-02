@@ -63,6 +63,7 @@ class PendingController extends Controller
             'documents' => $documents,
             'filters' => $filters,
             'facets' => $pending->facets($officeId, $filters, $employeeId),
+            'defaultRange' => self::defaultRange(),
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'maxSelection' => self::MAX_SELECTION,
             'offices' => collect($api->getActiveOffices())
@@ -240,8 +241,7 @@ class PendingController extends Controller
             'type' => DocumentTypes::normalize($request->query('type')),
             'search' => trim((string) $request->query('search', '')),
             'endorsed' => $request->query('endorsed') === 'me' ? 'me' : null,
-            'from' => self::date($request->query('from')),
-            'to' => self::date($request->query('to')),
+            ...self::dateRange($request),
             'sort' => in_array($request->query('sort'), self::SORTS, true) ? $request->query('sort') : self::SORTS[0],
             'per_page' => in_array($perPage, self::PER_PAGE_OPTIONS, true) ? $perPage : self::PER_PAGE,
         ];

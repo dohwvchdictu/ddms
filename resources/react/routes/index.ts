@@ -215,6 +215,49 @@ pending.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 })
 
 /**
+* @see \App\Http\Controllers\ProcessedController::processed
+ * @see app/Http/Controllers/ProcessedController.php:31
+ * @route '/status-forwarded'
+ */
+export const processed = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: processed.url(options),
+    method: 'get',
+})
+
+processed.definition = {
+    methods: ["get","head"],
+    url: '/status-forwarded',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\ProcessedController::processed
+ * @see app/Http/Controllers/ProcessedController.php:31
+ * @route '/status-forwarded'
+ */
+processed.url = (options?: RouteQueryOptions) => {
+    return processed.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\ProcessedController::processed
+ * @see app/Http/Controllers/ProcessedController.php:31
+ * @route '/status-forwarded'
+ */
+processed.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: processed.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\ProcessedController::processed
+ * @see app/Http/Controllers/ProcessedController.php:31
+ * @route '/status-forwarded'
+ */
+processed.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: processed.url(options),
+    method: 'head',
+})
+
+/**
 * @see \App\Http\Controllers\RoutingLogbookController::routingLogbook
  * @see app/Http/Controllers/RoutingLogbookController.php:27
  * @route '/routing-logbook'
@@ -258,7 +301,7 @@ routingLogbook.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => 
 })
 
 /**
- * @see routes/web.php:131
+ * @see routes/web.php:132
  * @route '/logout'
  */
 export const logout = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -272,7 +315,7 @@ logout.definition = {
 } satisfies RouteDefinition<["post"]>
 
 /**
- * @see routes/web.php:131
+ * @see routes/web.php:132
  * @route '/logout'
  */
 logout.url = (options?: RouteQueryOptions) => {
@@ -280,7 +323,7 @@ logout.url = (options?: RouteQueryOptions) => {
 }
 
 /**
- * @see routes/web.php:131
+ * @see routes/web.php:132
  * @route '/logout'
  */
 logout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({

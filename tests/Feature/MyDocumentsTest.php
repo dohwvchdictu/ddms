@@ -71,7 +71,7 @@ class MyDocumentsTest extends TestCase
             'type' => 'all',
             'search' => '',
             'statuses' => [],
-            'from' => '2026-09-01',
+            'from' => '2026-09-02',
             'to' => '2026-10-01',
             'sort' => '-created_at',
             'per_page' => 25,
@@ -95,7 +95,7 @@ class MyDocumentsTest extends TestCase
         $this->get('/my-documents')->assertRedirect(route('login'));
     }
 
-    public function test_it_opens_on_the_last_month(): void
+    public function test_it_opens_on_the_last_30_days(): void
     {
         $this->expectFilters(self::filters());
 

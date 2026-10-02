@@ -54,6 +54,7 @@ class MyDocumentsController extends Controller
             'filters' => $filters,
             'facets' => $officeDocuments->facets($officeId, $filters),
             'statusOptions' => OfficeDocuments::STATUSES,
+            'defaultRange' => self::defaultRange(),
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             // Destinations for Forward: active offices only.
             'offices' => collect($api->getActiveOffices())
@@ -140,14 +141,12 @@ class MyDocumentsController extends Controller
 
     /**
      * The filters from the query string. With no dates given at all the list
-     * opens on the last month, as the Livewire page did; an explicitly blank
-     * date (`from=`) means no bound.
+     * opens on the last 30 days; an explicitly blank date (`from=`) means no bound.
      *
      * @return array{type: string, search: string, statuses: list<string>, from: string|null, to: string|null, sort: string, per_page: int}
      */
     protected function filters(Request $request): array
     {
-        $dated = $request->has('from') || $request->has('to');
         $perPage = (int) $request->query('per_page', self::PER_PAGE);
 
         return [
@@ -155,8 +154,7 @@ class MyDocumentsController extends Controller
             'type' => in_array($request->query('type'), OfficeDocuments::TYPES, true) ? $request->query('type') : 'all',
             'search' => trim((string) $request->query('search', '')),
             'statuses' => self::list($request, 'status', OfficeDocuments::STATUSES),
-            'from' => $dated ? self::date($request->query('from')) : now()->subMonth()->toDateString(),
-            'to' => $dated ? self::date($request->query('to')) : now()->toDateString(),
+            ...self::dateRange($request),
             'sort' => in_array($request->query('sort'), self::SORTS, true) ? $request->query('sort') : self::SORTS[0],
             'per_page' => in_array($perPage, self::PER_PAGE_OPTIONS, true) ? $perPage : self::PER_PAGE,
         ];

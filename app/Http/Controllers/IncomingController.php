@@ -49,6 +49,7 @@ class IncomingController extends Controller
             'filters' => $filters,
             'facets' => $incoming->facets($officeId, $filters),
             'statusOptions' => IncomingDocuments::STATUSES,
+            'defaultRange' => self::defaultRange(),
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'maxSelection' => self::MAX_SELECTION,
         ]);
@@ -127,9 +128,7 @@ class IncomingController extends Controller
             'type' => DocumentTypes::normalize($request->query('type')),
             'search' => trim((string) $request->query('search', '')),
             'statuses' => self::list($request, 'status', IncomingDocuments::STATUSES),
-            // No default range: a queue has to show everything waiting, as the sidebar badge counts it.
-            'from' => self::date($request->query('from')),
-            'to' => self::date($request->query('to')),
+            ...self::dateRange($request),
             'sort' => in_array($request->query('sort'), self::SORTS, true) ? $request->query('sort') : self::SORTS[0],
             'per_page' => in_array($perPage, self::PER_PAGE_OPTIONS, true) ? $perPage : self::PER_PAGE,
         ];

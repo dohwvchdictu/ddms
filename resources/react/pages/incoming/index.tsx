@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import ConfirmDialog from '@/components/confirm-dialog';
 import BulkActionButton from '@/components/data-table/bulk-action-button';
-import DateRangeFilter, { describeRange } from '@/components/data-table/date-range-filter';
+import DateRangeFilter, { describeRange, isSameRange, rangeQuery, type DateRangeValue } from '@/components/data-table/date-range-filter';
 import FacetedFilter, { type FacetOption } from '@/components/data-table/faceted-filter';
 import FilterChips, { type FilterChip } from '@/components/data-table/filter-chips';
 import ListTabs from '@/components/data-table/list-tabs';
@@ -65,6 +65,8 @@ interface Props {
     filters: Filters;
     facets: { statuses: Record<string, number>; types: Record<DocumentType, number> };
     statusOptions: string[];
+    /** The last 30 days: what the list shows with no dates in the URL. */
+    defaultRange: DateRangeValue;
     perPageOptions: number[];
     maxSelection: number;
 }
@@ -102,22 +104,21 @@ function waited(iso: string): string {
 
 const list = (values: string[]) => (values.length ? values.join(',') : undefined);
 
-const toQuery = (filters: Filters) => ({
+const toQuery = (filters: Filters, defaultRange: DateRangeValue) => ({
     type: filters.type === 'all' ? undefined : filters.type,
     search: filters.search.trim() || undefined,
     status: list(filters.statuses),
-    from: filters.from ?? undefined,
-    to: filters.to ?? undefined,
+    ...rangeQuery(filters, defaultRange),
     sort: filters.sort === DEFAULT_SORT ? undefined : filters.sort,
     per_page: filters.per_page === DEFAULT_PER_PAGE ? undefined : filters.per_page,
 });
 
-const toUrl = (filters: Filters) => incoming.url({ query: toQuery(filters) });
 
 /** The page where a waiting document is received or returned (still Livewire). */
 const incomingUrl = (controlNo: string) => `/document/incoming/${encodeURIComponent(controlNo)}`;
 
-export default function Incoming({ documents, filters: initial, facets, statusOptions, perPageOptions, maxSelection }: Props) {
+export default function Incoming({ documents, filters: initial, facets, statusOptions, defaultRange, perPageOptions, maxSelection }: Props) {
+    const toUrl = (filters: Filters) => incoming.url({ query: toQuery(filters, defaultRange) });
     const { filters, update, loading } = useListFilters(initial, toUrl, { debounce: ['search'] });
     const { preferences, isVisible, toggleColumn, setDense } = useTablePreferences('incoming');
     const [tracking, setTracking] = useState<Row | null>(null);
@@ -143,10 +144,10 @@ export default function Incoming({ documents, filters: initial, facets, statusOp
     const chips: FilterChip[] = [
         filters.search && { key: 'search', label: 'Search', value: `“${filters.search}”`, onRemove: () => update({ search: '' }) },
         filters.statuses.length > 0 && { key: 'status', label: 'Status', value: filters.statuses.join(', '), onRemove: () => update({ statuses: [] }) },
-        (filters.from || filters.to) && { key: 'sent', label: 'Sent', value: describeRange(filters), onRemove: () => update({ from: null, to: null }) },
+        !isSameRange(filters, defaultRange) && { key: 'sent', label: 'Sent', value: describeRange(filters), onRemove: () => update({ ...defaultRange }) },
     ].filter((chip): chip is FilterChip => Boolean(chip));
 
-    const reset = () => update({ search: '', statuses: [], from: null, to: null });
+    const reset = () => update({ search: '', statuses: [], ...defaultRange });
 
     // Every row here can be received, so every row gets a checkbox.
     const pageChecked = documents.data.length > 0 && documents.data.every((row) => selection.has(row.id));
@@ -158,7 +159,7 @@ export default function Incoming({ documents, filters: initial, facets, statusOp
         setSelectingAll(true);
 
         try {
-            const { rows, total } = await getJson<{ rows: Row[]; total: number }>(selectableRoute.url({ query: toQuery(filters) }));
+            const { rows, total } = await getJson<{ rows: Row[]; total: number }>(selectableRoute.url({ query: toQuery(filters, defaultRange) }));
             selection.add(rows);
 
             if (total > rows.length) {
@@ -254,9 +255,9 @@ export default function Incoming({ documents, filters: initial, facets, statusOp
                             <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
                                 <Inbox className="size-5" />
                             </div>
-                            <p className="text-sm font-medium">{chips.length > 0 ? `No ${emptyKind} match these filters` : `No ${emptyKind} waiting`}</p>
+                            <p className="text-sm font-medium">{chips.length > 0 ? `No ${emptyKind} match these filters` : `No ${emptyKind} sent in the last 30 days`}</p>
                             <p className="text-sm text-muted-foreground">
-                                {chips.length > 0 ? 'Try fewer filters.' : 'Documents other offices send you will show here until you receive them.'}
+                                {chips.length > 0 ? 'Try fewer filters.' : 'Older ones show under a wider date range.'}
                             </p>
                             {chips.length > 0 && (
                                 <Button variant="outline" size="sm" onClick={reset} className="mt-2">

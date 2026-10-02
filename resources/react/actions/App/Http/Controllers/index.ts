@@ -8,6 +8,7 @@ import MyDocumentsController from './MyDocumentsController'
 import OfficeEmployeesController from './OfficeEmployeesController'
 import IncomingController from './IncomingController'
 import PendingController from './PendingController'
+import ProcessedController from './ProcessedController'
 import DocumentViewController from './DocumentViewController'
 import RoutingLogbookController from './RoutingLogbookController'
 import MiscController from './MiscController'
@@ -23,6 +24,7 @@ MyDocumentsController: Object.assign(MyDocumentsController, MyDocumentsControlle
 OfficeEmployeesController: Object.assign(OfficeEmployeesController, OfficeEmployeesController),
 IncomingController: Object.assign(IncomingController, IncomingController),
 PendingController: Object.assign(PendingController, PendingController),
+ProcessedController: Object.assign(ProcessedController, ProcessedController),
 DocumentViewController: Object.assign(DocumentViewController, DocumentViewController),
 RoutingLogbookController: Object.assign(RoutingLogbookController, RoutingLogbookController),
 MiscController: Object.assign(MiscController, MiscController),

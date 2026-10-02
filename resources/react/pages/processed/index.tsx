@@ -1,19 +1,16 @@
-import { Head, router } from '@inertiajs/react';
-import { CircleCheckBig, ExternalLink, History, Hourglass, Loader2, Send, UserRoundCheck } from 'lucide-react';
+import { Head } from '@inertiajs/react';
+import { CircleDot, ExternalLink, History, Loader2, NotebookText, Send } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import BulkActionButton from '@/components/data-table/bulk-action-button';
 import DateRangeFilter, { describeRange, isSameRange, rangeQuery, type DateRangeValue } from '@/components/data-table/date-range-filter';
+import FacetedFilter, { type FacetOption } from '@/components/data-table/faceted-filter';
 import FilterChips, { type FilterChip } from '@/components/data-table/filter-chips';
 import ListTabs from '@/components/data-table/list-tabs';
 import SelectionBar from '@/components/data-table/selection-bar';
 import SortableHead from '@/components/data-table/sortable-head';
 import ViewOptions from '@/components/data-table/view-options';
-import ForwardDialog from '@/components/my-documents/forward-dialog';
 import SelectionDialog from '@/components/my-documents/selection-dialog';
-import type { Office } from '@/components/my-documents/types';
-import CloseDialog from '@/components/pending/close-dialog';
-import EndorseDialog from '@/components/pending/endorse-dialog';
 import Pagination from '@/components/pagination';
 import SearchInput from '@/components/search-input';
 import StatusBadge from '@/components/status-badge';
@@ -28,8 +25,9 @@ import { useTablePreferences } from '@/hooks/use-table-preferences';
 import AppLayout from '@/layouts/app-layout';
 import { getJson } from '@/lib/fetch-json';
 import { cn } from '@/lib/utils';
-import { pending } from '@/routes';
-import { forward as forwardRoute, selectable as selectableRoute } from '@/routes/pending';
+import { processed } from '@/routes';
+import { generateLogbook } from '@/routes/inbox';
+import { selectable as selectableRoute } from '@/routes/processed';
 import type { Paginated } from '@/types';
 
 type DocumentType = 'all' | 'documents' | 'purchase_requests' | 'payments';
@@ -43,19 +41,20 @@ interface Row {
     source: string;
     status: string;
     is_bundle: boolean;
-    /** The office that sent it here. */
-    from: { code: string | null; name: string | null } | null;
-    /** Its last step here: received, or endorsed since. */
-    since: string | null;
-    endorsed_to: string | null;
-    endorsed_to_me: boolean;
+    /** For Receiving: it can go into an electronic logbook. */
+    selectable: boolean;
+    /** The latest step here. */
+    step: 'Forwarded' | 'Closed' | null;
+    processed_at: string | null;
+    processed_by: string | null;
+    /** The office holding it now: another one, or still this one. */
+    now_at: { code: string | null; name: string | null };
 }
 
 interface Filters {
     type: DocumentType;
     search: string;
-    /** "me": only what is endorsed to me. */
-    endorsed: 'me' | null;
+    statuses: string[];
     from: string | null;
     to: string | null;
     sort: string;
@@ -66,16 +65,15 @@ interface Filters {
 interface Props {
     documents: Paginated<Row>;
     filters: Filters;
-    facets: { types: Record<DocumentType, number>; endorsed: { me: number } };
-    /** The last 30 days: what the list shows with no dates in the URL. */
+    facets: { statuses: Record<string, number>; types: Record<DocumentType, number> };
+    statusOptions: string[];
+    /** The last 30 days: what the page shows with no dates in the URL. */
     defaultRange: DateRangeValue;
     perPageOptions: number[];
     maxSelection: number;
-    offices: Office[];
-    closePasswordThreshold: number;
 }
 
-const DEFAULT_SORT = 'updated_at';
+const DEFAULT_SORT = '-processed_at';
 const DEFAULT_PER_PAGE = 25;
 
 const TYPE_TABS: { value: DocumentType; label: string; empty: string }[] = [
@@ -88,46 +86,33 @@ const TYPE_TABS: { value: DocumentType; label: string; empty: string }[] = [
 /** Columns View options can hide; Control no. always shows. */
 const COLUMNS = [
     { id: 'subject', label: 'Subject' },
-    { id: 'from', label: 'From' },
-    { id: 'since', label: 'Since' },
-    { id: 'endorsed_to', label: 'Endorsed to' },
+    { id: 'processed', label: 'Processed' },
+    { id: 'processed_by', label: 'Processed by' },
+    { id: 'now_at', label: 'Now at' },
 ];
 
 const dateFormat = new Intl.DateTimeFormat('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
-const relative = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+const timeFormat = new Intl.DateTimeFormat('en-PH', { hour: 'numeric', minute: '2-digit' });
 
-/** "3 days ago", "2 hours ago": how long it has been waiting. */
-function waited(iso: string): string {
-    const minutes = Math.round((new Date(iso).getTime() - Date.now()) / 60000);
-
-    if (Math.abs(minutes) < 60) return relative.format(minutes, 'minute');
-    if (Math.abs(minutes) < 60 * 24) return relative.format(Math.round(minutes / 60), 'hour');
-
-    return relative.format(Math.round(minutes / (60 * 24)), 'day');
-}
+const list = (values: string[]) => (values.length ? values.join(',') : undefined);
 
 const toQuery = (filters: Filters, defaultRange: DateRangeValue) => ({
     type: filters.type === 'all' ? undefined : filters.type,
     search: filters.search.trim() || undefined,
-    endorsed: filters.endorsed ?? undefined,
+    status: list(filters.statuses),
     ...rangeQuery(filters, defaultRange),
     sort: filters.sort === DEFAULT_SORT ? undefined : filters.sort,
     per_page: filters.per_page === DEFAULT_PER_PAGE ? undefined : filters.per_page,
 });
 
+const documentUrl = (controlNo: string) => `/document/view/${encodeURIComponent(controlNo)}`;
 
-/** The page where a pending document is acted on (still Livewire). */
-const pendingUrl = (controlNo: string) => `/document/pending/${encodeURIComponent(controlNo)}`;
-
-export default function Pending({ documents, filters: initial, facets, defaultRange, perPageOptions, maxSelection, offices, closePasswordThreshold }: Props) {
-    const toUrl = (filters: Filters) => pending.url({ query: toQuery(filters, defaultRange) });
+export default function Processed({ documents, filters: initial, facets, statusOptions, defaultRange, perPageOptions, maxSelection }: Props) {
+    const toUrl = (filters: Filters) => processed.url({ query: toQuery(filters, defaultRange) });
     const { filters, update, loading } = useListFilters(initial, toUrl, { debounce: ['search'] });
-    const { preferences, isVisible, toggleColumn, setDense } = useTablePreferences('pending');
+    const { preferences, isVisible, toggleColumn, setDense } = useTablePreferences('processed');
     const [tracking, setTracking] = useState<Row | null>(null);
     const [reviewing, setReviewing] = useState(false);
-    const [forwarding, setForwarding] = useState(false);
-    const [endorsing, setEndorsing] = useState(false);
-    const [closing, setClosing] = useState(false);
     const [selectingAll, setSelectingAll] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
     const selection = useSelection<Row>(maxSelection);
@@ -137,24 +122,27 @@ export default function Pending({ documents, filters: initial, facets, defaultRa
         setShowFilters(false);
     }
 
+    const statusFacet: FacetOption[] = statusOptions.map((status) => ({
+        value: status,
+        label: status,
+        count: facets.statuses[status] ?? 0,
+        display: <StatusBadge status={status} />,
+    }));
+
     const chips: FilterChip[] = [
         filters.search && { key: 'search', label: 'Search', value: `“${filters.search}”`, onRemove: () => update({ search: '' }) },
-        filters.endorsed && {
-            key: 'endorsed',
-            label: 'Endorsed',
-            value: 'To me',
-            onRemove: () => update({ endorsed: null }),
-        },
-        !isSameRange(filters, defaultRange) && { key: 'since', label: 'Since', value: describeRange(filters), onRemove: () => update({ ...defaultRange }) },
+        filters.statuses.length > 0 && { key: 'status', label: 'Status', value: filters.statuses.join(', '), onRemove: () => update({ statuses: [] }) },
+        !isSameRange(filters, defaultRange) && { key: 'processed', label: 'Processed', value: describeRange(filters), onRemove: () => update({ ...defaultRange }) },
     ].filter((chip): chip is FilterChip => Boolean(chip));
 
-    const reset = () => update({ search: '', endorsed: null, ...defaultRange });
+    const reset = () => update({ search: '', statuses: [], ...defaultRange });
 
-    // Every row here can be acted on, so every row gets a checkbox.
-    const pageChecked = documents.data.length > 0 && documents.data.every((row) => selection.has(row.id));
-    const pagePartly = !pageChecked && documents.data.some((row) => selection.has(row.id));
+    // Only For Receiving rows can go into a logbook, so only they get a checkbox.
+    const pageRows = documents.data.filter((row) => row.selectable);
+    const pageChecked = pageRows.length > 0 && pageRows.every((row) => selection.has(row.id));
+    const pagePartly = !pageChecked && pageRows.some((row) => selection.has(row.id));
     const morePages = documents.total > documents.data.length;
-    const togglePage = (on: boolean) => (on ? selection.add(documents.data) : selection.remove(documents.data.map((row) => row.id)));
+    const togglePage = (on: boolean) => (on ? selection.add(pageRows) : selection.remove(pageRows.map((row) => row.id)));
 
     const selectAllMatching = async () => {
         setSelectingAll(true);
@@ -164,7 +152,7 @@ export default function Pending({ documents, filters: initial, facets, defaultRa
             selection.add(rows);
 
             if (total > rows.length) {
-                toast.warning(`Selected the first ${maxSelection}`, { description: `${total} match; one batch can hold up to ${maxSelection}.` });
+                toast.warning(`Selected the first ${maxSelection}`, { description: `${total} match; one logbook can hold up to ${maxSelection}.` });
             }
         } catch {
             toast.error('Could not select all matching documents. Please try again.');
@@ -173,15 +161,13 @@ export default function Pending({ documents, filters: initial, facets, defaultRa
         }
     };
 
-    const selectedIds = selection.items.map((row) => row.id);
-
-    const count = selection.size;
+    const logbookUrl = generateLogbook.url({ query: { selected_items: selection.items.map((row) => row.id).join(',') } });
     const columnCount = 3 + COLUMNS.filter((column) => isVisible(column.id)).length;
     const emptyKind = TYPE_TABS.find((tab) => tab.value === filters.type)?.empty ?? 'documents';
 
     return (
-        <AppLayout title="Pending">
-            <Head title="Pending" />
+        <AppLayout title="Processed">
+            <Head title="Processed" />
 
             <div className="relative overflow-clip rounded-xl border bg-card shadow-sm">
                 {loading && (
@@ -198,10 +184,8 @@ export default function Pending({ documents, filters: initial, facets, defaultRa
                 />
 
                 {selecting ? (
-                    <SelectionBar count={count} onClear={selection.clear} onReview={() => setReviewing(true)} onShowFilters={() => setShowFilters(true)}>
-                        <BulkActionButton icon={CircleCheckBig} label="Close" shortcut="c" onClick={() => setClosing(true)} />
-                        <BulkActionButton icon={UserRoundCheck} label="Endorse" shortcut="e" onClick={() => setEndorsing(true)} />
-                        <BulkActionButton icon={Send} label="Forward" shortcut="f" variant="primary" onClick={() => setForwarding(true)} />
+                    <SelectionBar count={selection.size} onClear={selection.clear} onReview={() => setReviewing(true)} onShowFilters={() => setShowFilters(true)}>
+                        <BulkActionButton icon={NotebookText} label="Generate logbook" shortcut="l" variant="primary" href={logbookUrl} newTab />
                     </SelectionBar>
                 ) : (
                     <>
@@ -210,21 +194,13 @@ export default function Pending({ documents, filters: initial, facets, defaultRa
                                 value={filters.search}
                                 onChange={(search) => update({ search })}
                                 placeholder="Search subject or control no.…"
-                                label="Search pending documents"
+                                label="Search processed documents"
                                 loading={loading}
                                 resultCount={filters.search.trim() === initial.search ? documents.total : undefined}
                                 className="w-full sm:max-w-md sm:min-w-72 sm:flex-1"
                             />
-                            <Segmented
-                                label="Endorsed"
-                                value={filters.endorsed ?? 'all'}
-                                onChange={(value) => update({ endorsed: value === 'me' ? 'me' : null })}
-                                options={[
-                                    { value: 'all', label: 'Anyone' },
-                                    { value: 'me', label: 'To me', count: facets.endorsed.me },
-                                ]}
-                            />
-                            <DateRangeFilter label="Since" value={{ from: filters.from, to: filters.to }} onChange={({ from, to }) => update({ from, to })} />
+                            <FacetedFilter title="Status" icon={CircleDot} options={statusFacet} value={filters.statuses} onChange={(statuses) => update({ statuses })} />
+                            <DateRangeFilter label="Processed" value={{ from: filters.from, to: filters.to }} onChange={({ from, to }) => update({ from, to })} />
                             <div className="ml-auto flex items-center gap-2">
                                 {selection.size > 0 && (
                                     <Button size="sm" onClick={() => setShowFilters(false)} className="h-9 bg-emerald-600 text-white hover:bg-emerald-700">
@@ -251,11 +227,11 @@ export default function Pending({ documents, filters: initial, facets, defaultRa
                     {documents.data.length === 0 ? (
                         <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
                             <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                                <Hourglass className="size-5" />
+                                <Send className="size-5" />
                             </div>
-                            <p className="text-sm font-medium">{chips.length > 0 ? `No ${emptyKind} match these filters` : `No ${emptyKind} on process in the last 30 days`}</p>
+                            <p className="text-sm font-medium">{chips.length > 0 ? `No ${emptyKind} match these filters` : `No processed ${emptyKind}`}</p>
                             <p className="text-sm text-muted-foreground">
-                                {chips.length > 0 ? 'Try fewer filters.' : 'Older ones show under a wider date range.'}
+                                {chips.length > 0 ? 'Try fewer filters.' : 'Documents your office forwards or closes show here.'}
                             </p>
                             {chips.length > 0 && (
                                 <Button variant="outline" size="sm" onClick={reset} className="mt-2">
@@ -271,8 +247,8 @@ export default function Pending({ documents, filters: initial, facets, defaultRa
                                         <Checkbox
                                             checked={pageChecked ? true : pagePartly ? 'indeterminate' : false}
                                             onCheckedChange={(checked) => togglePage(checked === true)}
-                                            disabled={selection.full && !pageChecked && !pagePartly}
-                                            aria-label="Select every document on this page"
+                                            disabled={pageRows.length === 0 || (selection.full && !pageChecked && !pagePartly)}
+                                            aria-label="Select every For Receiving document on this page"
                                             className={CHECKBOX}
                                         />
                                     </TableHead>
@@ -280,13 +256,13 @@ export default function Pending({ documents, filters: initial, facets, defaultRa
                                         Control no.
                                     </SortableHead>
                                     {isVisible('subject') && <TableHead>Subject</TableHead>}
-                                    {isVisible('from') && <TableHead>From</TableHead>}
-                                    {isVisible('since') && (
-                                        <SortableHead column="updated_at" sort={filters.sort} onSort={(sort) => update({ sort })}>
-                                            Since
+                                    {isVisible('processed') && (
+                                        <SortableHead column="processed_at" sort={filters.sort} onSort={(sort) => update({ sort })}>
+                                            Processed
                                         </SortableHead>
                                     )}
-                                    {isVisible('endorsed_to') && <TableHead>Endorsed to</TableHead>}
+                                    {isVisible('processed_by') && <TableHead>Processed by</TableHead>}
+                                    {isVisible('now_at') && <TableHead>Now at</TableHead>}
                                     <TableHead className="pr-4 text-right">
                                         <span className="sr-only">Actions</span>
                                     </TableHead>
@@ -296,7 +272,7 @@ export default function Pending({ documents, filters: initial, facets, defaultRa
                                 {pageChecked && morePages && (
                                     <TableRow className="bg-emerald-50 hover:bg-emerald-50 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/30">
                                         <TableCell colSpan={columnCount} className="py-2 text-center text-sm">
-                                            All {documents.data.length} on this page are selected.{' '}
+                                            All {pageRows.length} For Receiving on this page are selected.{' '}
                                             <button
                                                 type="button"
                                                 onClick={selectAllMatching}
@@ -304,7 +280,7 @@ export default function Pending({ documents, filters: initial, facets, defaultRa
                                                 className="inline-flex items-center gap-1 font-medium text-emerald-700 underline-offset-2 hover:underline disabled:opacity-50 dark:text-emerald-400"
                                             >
                                                 {selectingAll && <Loader2 className="size-3.5 animate-spin" />}
-                                                Select all {documents.total}
+                                                Select every match
                                             </button>
                                         </TableCell>
                                     </TableRow>
@@ -319,14 +295,15 @@ export default function Pending({ documents, filters: initial, facets, defaultRa
                                             <Checkbox
                                                 checked={selection.has(row.id)}
                                                 onCheckedChange={(checked) => selection.toggle(row, checked === true)}
-                                                disabled={selection.full && !selection.has(row.id)}
+                                                disabled={!row.selectable || (selection.full && !selection.has(row.id))}
                                                 aria-label={`Select ${row.control_no}`}
+                                                title={row.selectable ? undefined : 'Only For Receiving documents go into a logbook'}
                                                 className={cn(CHECKBOX, 'mt-0.5')}
                                             />
                                         </TableCell>
                                         <TableCell className="align-top">
                                             <a
-                                                href={pendingUrl(row.control_no)}
+                                                href={documentUrl(row.control_no)}
                                                 target="_blank"
                                                 rel="noopener"
                                                 title="Open in a new tab"
@@ -362,33 +339,29 @@ export default function Pending({ documents, filters: initial, facets, defaultRa
                                                 )}
                                             </TableCell>
                                         )}
-                                        {isVisible('from') && (
-                                            <TableCell className="max-w-48 align-top text-sm whitespace-normal">
-                                                {row.from?.name ?? row.from?.code ?? <span className="text-muted-foreground">—</span>}
-                                            </TableCell>
-                                        )}
-                                        {isVisible('since') && (
+                                        {isVisible('processed') && (
                                             <TableCell className="align-top text-sm whitespace-nowrap">
-                                                {row.since ? (
+                                                {row.processed_at ? (
                                                     <>
-                                                        <p>{dateFormat.format(new Date(row.since))}</p>
-                                                        <p className="text-xs text-muted-foreground">{waited(row.since)}</p>
+                                                        <p>{dateFormat.format(new Date(row.processed_at))}</p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {row.step && `${row.step} · `}
+                                                            {timeFormat.format(new Date(row.processed_at))}
+                                                        </p>
                                                     </>
                                                 ) : (
                                                     '—'
                                                 )}
                                             </TableCell>
                                         )}
-                                        {isVisible('endorsed_to') && (
+                                        {isVisible('processed_by') && (
                                             <TableCell className="max-w-44 min-w-32 align-top text-sm whitespace-normal wrap-break-word">
-                                                {row.endorsed_to ? (
-                                                    <>
-                                                        {row.endorsed_to}
-                                                        {row.endorsed_to_me && <Tag className="ml-1.5 bg-emerald-600 text-white">You</Tag>}
-                                                    </>
-                                                ) : (
-                                                    <span className="text-muted-foreground">—</span>
-                                                )}
+                                                {row.processed_by ?? <span className="text-muted-foreground">—</span>}
+                                            </TableCell>
+                                        )}
+                                        {isVisible('now_at') && (
+                                            <TableCell className="max-w-48 align-top text-sm whitespace-normal">
+                                                {row.now_at.name ?? row.now_at.code ?? <span className="text-muted-foreground">—</span>}
                                             </TableCell>
                                         )}
                                         <TableCell className="pr-4 align-top">
@@ -397,7 +370,7 @@ export default function Pending({ documents, filters: initial, facets, defaultRa
                                                     <IconAction label="Routing history" onClick={() => setTracking(row)}>
                                                         <History />
                                                     </IconAction>
-                                                    <IconAction label="Open document" href={pendingUrl(row.control_no)}>
+                                                    <IconAction label="Open document" href={documentUrl(row.control_no)}>
                                                         <ExternalLink />
                                                     </IconAction>
                                                 </div>
@@ -415,16 +388,6 @@ export default function Pending({ documents, filters: initial, facets, defaultRa
 
             <TrackingDialog document={tracking} onClose={() => setTracking(null)} />
             <SelectionDialog open={reviewing} onOpenChange={setReviewing} items={selection.items} onRemove={(id) => selection.remove([id])} onClear={selection.clear} />
-            <ForwardDialog
-                open={forwarding}
-                onOpenChange={setForwarding}
-                documents={selection.items}
-                offices={offices}
-                onForwarded={selection.clear}
-                action={forwardRoute()}
-            />
-            <EndorseDialog open={endorsing} onOpenChange={setEndorsing} documentIds={selectedIds} onDone={selection.clear} />
-            <CloseDialog open={closing} onOpenChange={setClosing} documents={selection.items} passwordThreshold={closePasswordThreshold} onDone={selection.clear} />
         </AppLayout>
     );
 }
@@ -448,34 +411,6 @@ function IconAction({ label, onClick, href, children }: { label: string; onClick
             </TooltipTrigger>
             <TooltipContent>{label}</TooltipContent>
         </Tooltip>
-    );
-}
-
-/** A small one-of-several switch for the toolbar, with optional counts. */
-function Segmented({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: { value: string; label: string; count?: number }[] }) {
-    return (
-        <div role="radiogroup" aria-label={label} className="inline-flex h-9 items-center rounded-md border bg-background p-0.5 shadow-xs">
-            {options.map((option) => {
-                const on = option.value === value;
-
-                return (
-                    <button
-                        key={option.value}
-                        type="button"
-                        role="radio"
-                        aria-checked={on}
-                        onClick={() => onChange(option.value)}
-                        className={cn(
-                            'flex h-full items-center gap-1.5 rounded-sm px-2.5 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
-                            on ? 'bg-emerald-600 font-medium text-white' : 'text-muted-foreground hover:text-foreground',
-                        )}
-                    >
-                        {option.label}
-                        {option.count !== undefined && <span className={cn('text-xs tabular-nums', on ? 'text-white/80' : 'text-muted-foreground')}>{option.count}</span>}
-                    </button>
-                );
-            })}
-        </div>
     );
 }
 

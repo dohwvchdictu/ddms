@@ -77,22 +77,22 @@ class RoutingLogbookController extends Controller
     protected function filters(Request $request): array
     {
         $perPage = (int) $request->query('per_page', self::PER_PAGE);
-        // The last 7 days (today included) unless asked otherwise, the date picker's "Last 7 days";
-        // `from=`/`to=` left empty on purpose means any date.
-        $from = $request->has('from') ? self::date($request->query('from')) : self::defaultRange()['from'];
-        $to = $request->has('to') ? self::date($request->query('to')) : self::defaultRange()['to'];
 
         return [
             'receipt' => in_array($request->query('receipt'), RoutingLogbook::RECEIPTS, true) ? $request->query('receipt') : 'all',
             'search' => trim((string) $request->query('search', '')),
-            'from' => $from,
-            'to' => $to,
+            ...self::dateRange($request),
             'sort' => in_array($request->query('sort'), self::SORTS, true) ? $request->query('sort') : self::SORTS[0],
             'per_page' => in_array($perPage, self::PER_PAGE_OPTIONS, true) ? $perPage : self::PER_PAGE,
         ];
     }
 
-    /** @return array{from: string, to: string} */
+    /**
+     * The last 7 days (the date picker's "Last 7 days"): the logbook is watched
+     * for what just went out, so it starts narrower than the other lists.
+     *
+     * @return array{from: string, to: string}
+     */
     protected static function defaultRange(): array
     {
         return ['from' => now()->subDays(6)->toDateString(), 'to' => now()->toDateString()];

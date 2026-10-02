@@ -1,7 +1,7 @@
 import { Head, usePoll } from '@inertiajs/react';
 import { BookOpen, Check, ExternalLink, Undo2 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import DateRangeFilter, { describeRange } from '@/components/data-table/date-range-filter';
+import DateRangeFilter, { describeRange, isSameRange, rangeQuery, type DateRangeValue } from '@/components/data-table/date-range-filter';
 import FilterChips, { type FilterChip } from '@/components/data-table/filter-chips';
 import ListTabs from '@/components/data-table/list-tabs';
 import SortableHead from '@/components/data-table/sortable-head';
@@ -50,7 +50,7 @@ interface Props {
     filters: Filters;
     counts: Record<Receipt, number>;
     /** The last 7 days: what the page shows with no dates in the URL. */
-    defaultRange: { from: string; to: string };
+    defaultRange: DateRangeValue;
     perPageOptions: number[];
 }
 
@@ -80,17 +80,12 @@ const timeFormat = new Intl.DateTimeFormat('en-PH', { hour: 'numeric', minute: '
 const stamp = (iso: string) => `${dateFormat.format(new Date(iso))} · ${timeFormat.format(new Date(iso))}`;
 
 export default function RoutingLogbook({ entries, filters: initial, counts, defaultRange, perPageOptions }: Props) {
-    const isDefaultRange = (filters: Filters) => filters.from === defaultRange.from && filters.to === defaultRange.to;
-
-    // The default range is left out of the URL; any other range, "any date"
-    // included, is sent as is (empty means no bound).
     const toUrl = (filters: Filters) =>
         routingLogbook.url({
             query: {
                 receipt: filters.receipt === 'all' ? undefined : filters.receipt,
                 search: filters.search.trim() || undefined,
-                from: isDefaultRange(filters) ? undefined : (filters.from ?? ''),
-                to: isDefaultRange(filters) ? undefined : (filters.to ?? ''),
+                ...rangeQuery(filters, defaultRange),
                 sort: filters.sort === DEFAULT_SORT ? undefined : filters.sort,
                 per_page: filters.per_page === DEFAULT_PER_PAGE ? undefined : filters.per_page,
             },
@@ -104,7 +99,7 @@ export default function RoutingLogbook({ entries, filters: initial, counts, defa
 
     const chips: FilterChip[] = [
         filters.search && { key: 'search', label: 'Search', value: `“${filters.search}”`, onRemove: () => update({ search: '' }) },
-        !isDefaultRange(filters) && { key: 'forwarded', label: 'Forwarded', value: describeRange(filters), onRemove: () => update(defaultRange) },
+        !isSameRange(filters, defaultRange) && { key: 'forwarded', label: 'Forwarded', value: describeRange(filters), onRemove: () => update({ ...defaultRange }) },
     ].filter((chip): chip is FilterChip => Boolean(chip));
 
     const reset = () => update({ search: '', ...defaultRange });

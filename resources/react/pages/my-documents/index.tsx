@@ -2,7 +2,7 @@ import { Head } from '@inertiajs/react';
 import { CircleDot, ExternalLink, FileSearch, History, Loader2, NotebookText, Printer, Send, TriangleAlert } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
-import DateRangeFilter, { describeRange, type DateRangeValue } from '@/components/data-table/date-range-filter';
+import DateRangeFilter, { describeRange, isSameRange, rangeQuery, type DateRangeValue } from '@/components/data-table/date-range-filter';
 import FacetedFilter, { type FacetOption } from '@/components/data-table/faceted-filter';
 import BulkActionButton from '@/components/data-table/bulk-action-button';
 import FilterChips, { type FilterChip } from '@/components/data-table/filter-chips';
@@ -56,6 +56,8 @@ interface Props {
     filters: Filters;
     facets: Facets;
     statusOptions: string[];
+    /** The last 30 days: what the list shows with no dates in the URL. */
+    defaultRange: DateRangeValue;
     perPageOptions: number[];
     offices: Office[];
     /** Most documents one batch may hold (the server's forward limit). */
@@ -84,30 +86,20 @@ const COLUMNS = [
 const dateFormat = new Intl.DateTimeFormat('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
 const timeFormat = new Intl.DateTimeFormat('en-PH', { hour: 'numeric', minute: '2-digit' });
 
-/** The list opens on the past month (the server's default), worked out here the same way. */
-function defaultRange(): DateRangeValue {
-    const today = new Date();
-    const ymd = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-
-    return { from: ymd(new Date(today.getFullYear(), today.getMonth() - 1, today.getDate())), to: ymd(today) };
-}
-
 const list = (values: string[]) => (values.length ? values.join(',') : undefined);
 
-/** The query for a set of filters. Dates are always sent, so a cleared one stays cleared. */
-const toQuery = (filters: Filters) => ({
+/** The query for a set of filters. */
+const toQuery = (filters: Filters, defaultRange: DateRangeValue) => ({
     type: filters.type === 'all' ? undefined : filters.type,
     search: filters.search.trim() || undefined,
     status: list(filters.statuses),
-    from: filters.from ?? '',
-    to: filters.to ?? '',
+    ...rangeQuery(filters, defaultRange),
     sort: filters.sort === DEFAULT_SORT ? undefined : filters.sort,
     per_page: filters.per_page === DEFAULT_PER_PAGE ? undefined : filters.per_page,
 });
 
-const toUrl = (filters: Filters) => myDocuments.url({ query: toQuery(filters) });
-
-export default function MyDocuments({ documents, filters: initial, facets, statusOptions, perPageOptions, offices, maxSelection }: Props) {
+export default function MyDocuments({ documents, filters: initial, facets, statusOptions, defaultRange, perPageOptions, offices, maxSelection }: Props) {
+    const toUrl = (filters: Filters) => myDocuments.url({ query: toQuery(filters, defaultRange) });
     const { filters, update, loading } = useListFilters(initial, toUrl, { debounce: ['search'] });
     const { preferences, isVisible, toggleColumn, setDense } = useTablePreferences('my-documents');
     const [tracking, setTracking] = useState<Row | null>(null);
@@ -132,15 +124,13 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
         display: <StatusBadge status={status} />,
     }));
     // The filters in effect, as removable chips. The default date range isn't one.
-    const range = defaultRange();
-    const customRange = filters.from !== range.from || filters.to !== range.to;
     const chips: FilterChip[] = [
         filters.search && { key: 'search', label: 'Search', value: `“${filters.search}”`, onRemove: () => update({ search: '' }) },
         filters.statuses.length > 0 && { key: 'status', label: 'Status', value: filters.statuses.join(', '), onRemove: () => update({ statuses: [] }) },
-        customRange && { key: 'created', label: 'Created', value: describeRange(filters), onRemove: () => update({ from: range.from, to: range.to }) },
+        !isSameRange(filters, defaultRange) && { key: 'created', label: 'Created', value: describeRange(filters), onRemove: () => update({ ...defaultRange }) },
     ].filter((chip): chip is FilterChip => Boolean(chip));
 
-    const reset = () => update({ search: '', statuses: [], ...range });
+    const reset = () => update({ search: '', statuses: [], ...defaultRange });
 
     // Header checkbox: this page's selectable rows.
     const pageRows = documents.data.filter((row) => row.selectable);
@@ -170,7 +160,7 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
         setSelectingAll(true);
 
         try {
-            const { rows, total } = await getJson<{ rows: Row[]; total: number }>(selectableRoute.url({ query: toQuery(filters) }));
+            const { rows, total } = await getJson<{ rows: Row[]; total: number }>(selectableRoute.url({ query: toQuery(filters, defaultRange) }));
             const fresh = rows.filter((row) => !selection.has(row.id));
             const room = maxSelection - selection.size;
             selection.add(rows);
@@ -545,7 +535,7 @@ function EmptyState({ filtered, onReset, kind }: { filtered: boolean; onReset: (
             </div>
             <p className="text-sm font-medium">No {kind} found</p>
             <p className="text-sm text-muted-foreground">
-                {filtered ? 'Nothing matches these filters.' : 'Nothing was encoded in the past month. Try a wider date range.'}
+                {filtered ? 'Nothing matches these filters.' : 'Nothing was encoded in the last 30 days. Try a wider date range.'}
             </p>
             {filtered && (
                 <Button variant="outline" size="sm" onClick={onReset} className="mt-2">

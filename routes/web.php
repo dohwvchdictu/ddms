@@ -9,6 +9,7 @@ use App\Http\Controllers\DocumentTrackingController;
 use App\Http\Controllers\DocumentViewController;
 use App\Http\Controllers\IncomingController;
 use App\Http\Controllers\PendingController;
+use App\Http\Controllers\ProcessedController;
 use App\Http\Controllers\EmployeePhotoController;
 use App\Http\Controllers\MiscController;
 use App\Http\Controllers\MyDocumentsController;
@@ -22,7 +23,6 @@ use App\Livewire\Report\InternalDocuments;
 use App\Livewire\Report\PerUnit;
 use App\Livewire\Report\TurnaroundTime;
 use App\Livewire\Status\Closed;
-use App\Livewire\Status\Forwarded;
 use App\Livewire\Views\QrReceive;
 use Illuminate\Support\Facades\Route;
 
@@ -83,7 +83,8 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::post('/status-pending/close', [PendingController::class, 'close'])->name('pending.close');
     // Merged into Pending's "To me" switch; kept so bookmarks and older links still land.
     Route::permanentRedirect('/status-endorsed', '/status-pending?endorsed=me');
-    Route::get('/status-forwarded', Forwarded::class);
+    Route::get('/status-forwarded', [ProcessedController::class, 'index'])->name('processed');
+    Route::get('/status-forwarded/selectable', [ProcessedController::class, 'selectable'])->name('processed.selectable');
     Route::get('/status-closed', Closed::class);
 
     /** View Document */

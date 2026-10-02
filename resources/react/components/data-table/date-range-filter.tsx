@@ -74,6 +74,17 @@ export function describeRange({ from, to }: DateRangeValue): string {
     return 'Any date';
 }
 
+export const isSameRange = (a: DateRangeValue, b: DateRangeValue) => a.from === b.from && a.to === b.to;
+
+/**
+ * A list's dates for its URL. The list's default range (the server's, when no
+ * dates are given) is left out; any other range is sent as is, a missing bound
+ * as empty, so "Any date" stays any date instead of falling back to the default.
+ */
+export function rangeQuery(value: DateRangeValue, defaultRange: DateRangeValue): { from?: string; to?: string } {
+    return isSameRange(value, defaultRange) ? {} : { from: value.from ?? '', to: value.to ?? '' };
+}
+
 /**
  * One button for a date range: presets down the side, a two-month calendar to
  * pick any range, applied when both ends are chosen.

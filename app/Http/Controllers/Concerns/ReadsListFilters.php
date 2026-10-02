@@ -28,6 +28,33 @@ trait ReadsListFilters
             : null;
     }
 
+    /**
+     * The list's date range from the query string. With no dates given at all
+     * it is the default range; an explicitly blank date (`from=`) means no bound.
+     *
+     * @return array{from: string|null, to: string|null}
+     */
+    protected static function dateRange(Request $request): array
+    {
+        if (! $request->has('from') && ! $request->has('to')) {
+            return static::defaultRange();
+        }
+
+        return ['from' => self::date($request->query('from')), 'to' => self::date($request->query('to'))];
+    }
+
+    /**
+     * Where a list's dates start: the last 30 days, today included (the date
+     * picker's "Last 30 days"). Sent to the page as `defaultRange`, so it can
+     * tell the default from a picked range. A list may override it.
+     *
+     * @return array{from: string, to: string}
+     */
+    protected static function defaultRange(): array
+    {
+        return ['from' => now()->subDays(29)->toDateString(), 'to' => now()->toDateString()];
+    }
+
     /** @param  array<string, mixed>|null  $employee */
     protected static function employeeName(?array $employee): ?string
     {
