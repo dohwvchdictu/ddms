@@ -1,15 +1,15 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\TransmittalFormController::__invoke
  * @see app/Http/Controllers/TransmittalFormController.php:22
  * @route '/print-transmittal-form/{control_no}'
  */
-export const form = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: form.url(args, options),
+const TransmittalFormController = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: TransmittalFormController.url(args, options),
     method: 'get',
 })
 
-form.definition = {
+TransmittalFormController.definition = {
     methods: ["get","head"],
     url: '/print-transmittal-form/{control_no}',
 } satisfies RouteDefinition<["get","head"]>
@@ -19,7 +19,7 @@ form.definition = {
  * @see app/Http/Controllers/TransmittalFormController.php:22
  * @route '/print-transmittal-form/{control_no}'
  */
-form.url = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions) => {
+TransmittalFormController.url = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { control_no: args }
     }
@@ -37,7 +37,7 @@ form.url = (args: { control_no: string | number } | [control_no: string | number
                         control_no: args.control_no,
                 }
 
-    return form.definition.url
+    return TransmittalFormController.definition.url
             .replace('{control_no}', parsedArgs.control_no.toString())
             .replace(/\/+$/, '') + queryParams(options)
 }
@@ -47,8 +47,8 @@ form.url = (args: { control_no: string | number } | [control_no: string | number
  * @see app/Http/Controllers/TransmittalFormController.php:22
  * @route '/print-transmittal-form/{control_no}'
  */
-form.get = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: form.url(args, options),
+TransmittalFormController.get = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: TransmittalFormController.url(args, options),
     method: 'get',
 })
 /**
@@ -56,12 +56,8 @@ form.get = (args: { control_no: string | number } | [control_no: string | number
  * @see app/Http/Controllers/TransmittalFormController.php:22
  * @route '/print-transmittal-form/{control_no}'
  */
-form.head = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
-    url: form.url(args, options),
+TransmittalFormController.head = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: TransmittalFormController.url(args, options),
     method: 'head',
 })
-const transmittal = {
-    form: Object.assign(form, form),
-}
-
-export default transmittal
+export default TransmittalFormController

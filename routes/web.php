@@ -16,6 +16,7 @@ use App\Http\Controllers\MiscController;
 use App\Http\Controllers\MyDocumentsController;
 use App\Http\Controllers\OfficeEmployeesController;
 use App\Http\Controllers\RoutingLogbookController;
+use App\Http\Controllers\TransmittalFormController;
 use App\Livewire\Report\DocumentStatus;
 use App\Livewire\Report\Employees;
 use App\Livewire\Report\ExternalDocuments;
@@ -119,7 +120,7 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::get('/print-external-documents-report', [MiscController::class, 'printExternalDocumentsReport'])->name('print.external.documents');
 
     /** Printing of Transmittal */
-    Route::get('/print-transmittal-form/{control_no}', [MiscController::class, 'printTransmittalForm'])->name('print.transmittal.form');
+    Route::get('/print-transmittal-form/{control_no}', TransmittalFormController::class)->name('print.transmittal.form');
     Route::get('/inbox/generate-logbook', [MiscController::class, 'generateLogbook'])->name('inbox.generate-logbook');
 
     /** User Photo */

@@ -27,6 +27,7 @@ import { useSelection } from '@/hooks/use-selection';
 import { useTablePreferences } from '@/hooks/use-table-preferences';
 import AppLayout from '@/layouts/app-layout';
 import { getJson } from '@/lib/fetch-json';
+import { printTransmittalForm } from '@/lib/print-transmittal-form';
 import { cn } from '@/lib/utils';
 import { myDocuments } from '@/routes';
 import { generateLogbook } from '@/routes/inbox';
@@ -427,7 +428,7 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                                         )}
                                         <TableCell className="pr-4 align-top">
                                             <div className="flex justify-end">
-                                                <RowActions row={row} onTrack={() => setTracking(row)} />
+                                                <RowActions row={row} onTrack={() => setTracking(row)} onPrint={() => printTransmittalForm(row.control_no)} />
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -440,8 +441,7 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                 <Pagination page={documents} />
             </div>
 
-            <TrackingDialog document={tracking} onClose={() => setTracking(null)} />
-            <SelectionDialog
+            <TrackingDialog document={tracking} onClose={() => setTracking(null)} />            <SelectionDialog
                 open={reviewing}
                 onOpenChange={setReviewing}
                 items={selection.items}
@@ -481,7 +481,7 @@ function Highlight({ text, term }: { text: string; term: string }) {
 }
 
 /** A row's actions as one group of icon buttons. */
-function RowActions({ row, onTrack }: { row: Row; onTrack: () => void }) {
+function RowActions({ row, onTrack, onPrint }: { row: Row; onTrack: () => void; onPrint: () => void }) {
     return (
         <div role="group" aria-label={`Actions for ${row.control_no}`} className="inline-flex divide-x overflow-hidden rounded-md border bg-background shadow-xs">
             <IconAction label="Routing history" onClick={onTrack}>
@@ -491,7 +491,7 @@ function RowActions({ row, onTrack }: { row: Row; onTrack: () => void }) {
                 <ExternalLink />
             </IconAction>
             {row.can_print && (
-                <IconAction label="Print transmittal form" href={`/print-transmittal-form/${encodeURIComponent(row.control_no)}`}>
+                <IconAction label="Print transmittal form" onClick={onPrint}>
                     <Printer />
                 </IconAction>
             )}

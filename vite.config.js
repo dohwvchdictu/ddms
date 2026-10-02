@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import tailwindcss3 from 'tailwindcss3';
 import autoprefixer from 'autoprefixer';
-import { getLocalIP } from './vite.shared.js';
+import { devCors, getLocalIP } from './vite.shared.js';
 
 // Legacy Blade / Livewire / Preline UI (Tailwind 3). The React UI is built
 // separately by vite.react.config.ts. PostCSS is configured inline rather
@@ -10,6 +10,7 @@ import { getLocalIP } from './vite.shared.js';
 export default defineConfig({
     server: {
         host: '0.0.0.0',
+        cors: devCors,
         hmr: {
             host: getLocalIP(),
         },

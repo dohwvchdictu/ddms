@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { wayfinder } from '@laravel/vite-plugin-wayfinder';
 import { fileURLToPath, URL } from 'node:url';
-import { getLocalIP } from './vite.shared.js';
+import { devCors, getLocalIP } from './vite.shared.js';
 
 // React + Inertia UI (Tailwind 4). Kept apart from the legacy build in
 // vite.config.js: its own hot file, build directory, port and CSS pipeline.
@@ -13,6 +13,7 @@ export default defineConfig({
         host: '0.0.0.0',
         port: 5174,
         strictPort: true,
+        cors: devCors,
         hmr: {
             host: getLocalIP(),
         },

@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/app-layout';
+import { printTransmittalForm } from '@/lib/print-transmittal-form';
 import { cn } from '@/lib/utils';
 import { longDate, parseDay } from '@/lib/working-days';
 import { dashboard, incoming, myDocuments, pending } from '@/routes';
@@ -148,7 +149,7 @@ export default function ShowDocument({ document, timeline, attachments, attachab
     /** Secondary actions: icon buttons with a tooltip, beside the one main action. */
     const tools: { key: string; label: string; icon: LucideIcon; show: boolean; onClick?: () => void; href?: string }[] = [
         { key: 'history', label: 'Routing history', icon: History, show: true, onClick: () => setTracking(true) },
-        { key: 'print', label: 'Print transmittal form', icon: Printer, show: can.print, href: `/print-transmittal-form/${encodeURIComponent(document.control_no)}` },
+        { key: 'print', label: 'Print transmittal form', icon: Printer, show: can.print, onClick: () => printTransmittalForm(document.control_no) },
     ];
 
     /** Rarely used or destructive: kept in the ⋮ menu so they can't be hit by accident. */
@@ -327,8 +328,7 @@ export default function ShowDocument({ document, timeline, attachments, attachab
             )}
 
             {/* The same routing history window as the lists and search. */}
-            <TrackingDialog document={tracking ? document : null} onClose={() => setTracking(false)} showOpenLink={false} />
-            {can.return && (
+            <TrackingDialog document={tracking ? document : null} onClose={() => setTracking(false)} showOpenLink={false} />            {can.return && (
                 <ReturnDialog open={returning} onOpenChange={setReturning} documentId={document.id} controlNo={document.control_no} offices={offices} sender={sender} />
             )}
             <ConfirmDialog

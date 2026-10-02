@@ -3,11 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Document;
-use App\Models\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class MiscController extends Controller
 {
@@ -25,12 +23,8 @@ class MiscController extends Controller
 
     public $user = [];
     public $id;
-    public $assigned_to;
     public $office;
-    public $destination;
     public $offices = [];
-    public $responseOffices;
-    public $selected_office;
 
     public function mount()
     {
@@ -71,48 +65,6 @@ class MiscController extends Controller
             ->all();
 
         return true;
-    }
-
-    public function lookUpOffice($assigned_to)
-    {
-        $this->selected_office = $this->assigned_to ?? $assigned_to;
-
-        // Ensure responseOffices is loaded
-        if (!$this->responseOffices) {
-            $this->responseOffices = Http::get(config('services.api.base_url') . 'public/get-offices')->json();
-        }
-
-        $result = array_filter($this->responseOffices['officeList'], function ($office) {
-            return $office['id'] == $this->selected_office;
-        });
-
-        $findOffice = $result[$this->selected_office - 1];
-        return $findOffice['officeName'];
-    }
-
-    public function printTransmittalForm($control_no)
-    {
-        /** User Information */
-        $user = session('user');
-        $office = $user['office']['officeName'] ?? '';
-        /** End User Information */
-
-        /** Both relations are eager-loaded because the form prints `classification`. */
-        $document = Document::with(['category', 'citizencharter'])->where('control_no', $control_no)->first();
-        $log = Log::where('document_id', $document->id)->where('action_id', 7)->first();
-        $this->destination = $log->assigned_to ?? null;
-        $destination = $this->lookUpOffice($this->destination);
-
-        // Make Barcode object of Code128 encoding.
-        $barcode = (new \Picqer\Barcode\Types\TypeCode128())->getBarcode($control_no);
-
-        // Output the barcode as HTML in the browser with a HTML Renderer
-        $renderer = new \Picqer\Barcode\Renderers\HtmlRenderer();
-        $barcodeImg = $renderer->render($barcode);
-
-        $qrCode = QrCode::size(110)->generate(url('/document/qr-receive/' . $control_no));
-
-        return view('print.transmittal-form', compact('user', 'office', 'destination', 'document', 'barcodeImg', 'qrCode'));
     }
 
     public function filterOffice($id)

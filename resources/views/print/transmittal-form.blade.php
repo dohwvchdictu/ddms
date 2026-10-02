@@ -24,7 +24,8 @@
 
 </head>
 
-<body onload="window.print()" style="font-size: 10px;">
+{{-- ?embed=1: previewed inside the app's dialog, which prints it on request instead of on load. --}}
+<body @unless (request()->boolean('embed')) onload="window.print()" @endunless style="font-size: 10px;">
     <div class="container-fluid">
         <div class="row">
             <div class="col text-center">
