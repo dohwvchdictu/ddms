@@ -1,4 +1,5 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
+import attachments from './attachments'
 /**
 * @see \App\Http\Controllers\DocumentSearchController::__invoke
  * @see app/Http/Controllers/DocumentSearchController.php:20
@@ -247,12 +248,131 @@ created.head = (args: { document: number | { id: number } } | [document: number 
     url: created.url(args, options),
     method: 'head',
 })
+
+/**
+* @see \App\Http\Controllers\DocumentViewController::subject
+ * @see app/Http/Controllers/DocumentViewController.php:119
+ * @route '/documents/{document}/subject'
+ */
+export const subject = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: subject.url(args, options),
+    method: 'patch',
+})
+
+subject.definition = {
+    methods: ["patch"],
+    url: '/documents/{document}/subject',
+} satisfies RouteDefinition<["patch"]>
+
+/**
+* @see \App\Http\Controllers\DocumentViewController::subject
+ * @see app/Http/Controllers/DocumentViewController.php:119
+ * @route '/documents/{document}/subject'
+ */
+subject.url = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { document: args }
+    }
+
+            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+            args = { document: args.id }
+        }
+    
+    if (Array.isArray(args)) {
+        args = {
+                    document: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        document: typeof args.document === 'object'
+                ? args.document.id
+                : args.document,
+                }
+
+    return subject.definition.url
+            .replace('{document}', parsedArgs.document.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\DocumentViewController::subject
+ * @see app/Http/Controllers/DocumentViewController.php:119
+ * @route '/documents/{document}/subject'
+ */
+subject.patch = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: subject.url(args, options),
+    method: 'patch',
+})
+
+/**
+* @see \App\Http\Controllers\DocumentViewController::destroy
+ * @see app/Http/Controllers/DocumentViewController.php:134
+ * @route '/documents/{document}'
+ */
+export const destroy = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+    url: destroy.url(args, options),
+    method: 'delete',
+})
+
+destroy.definition = {
+    methods: ["delete"],
+    url: '/documents/{document}',
+} satisfies RouteDefinition<["delete"]>
+
+/**
+* @see \App\Http\Controllers\DocumentViewController::destroy
+ * @see app/Http/Controllers/DocumentViewController.php:134
+ * @route '/documents/{document}'
+ */
+destroy.url = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { document: args }
+    }
+
+            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+            args = { document: args.id }
+        }
+    
+    if (Array.isArray(args)) {
+        args = {
+                    document: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        document: typeof args.document === 'object'
+                ? args.document.id
+                : args.document,
+                }
+
+    return destroy.definition.url
+            .replace('{document}', parsedArgs.document.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\DocumentViewController::destroy
+ * @see app/Http/Controllers/DocumentViewController.php:134
+ * @route '/documents/{document}'
+ */
+destroy.delete = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+    url: destroy.url(args, options),
+    method: 'delete',
+})
 const documents = {
     search: Object.assign(search, search),
 tracking: Object.assign(tracking, tracking),
 create: Object.assign(create, create),
 store: Object.assign(store, store),
 created: Object.assign(created, created),
+subject: Object.assign(subject, subject),
+destroy: Object.assign(destroy, destroy),
+attachments: Object.assign(attachments, attachments),
 }
 
 export default documents

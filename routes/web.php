@@ -6,14 +6,12 @@ use App\Http\Controllers\DashboardDocumentsController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentSearchController;
 use App\Http\Controllers\DocumentTrackingController;
+use App\Http\Controllers\DocumentViewController;
 use App\Http\Controllers\EmployeePhotoController;
 use App\Http\Controllers\MiscController;
 use App\Http\Controllers\MyDocumentsController;
 use App\Http\Controllers\OfficeEmployeesController;
 use App\Livewire\Documents\NewBundle;
-use App\Livewire\Inbox\MyBundles;
-use App\Livewire\Inbox\MyPayments;
-use App\Livewire\Inbox\MyPurchaseRequests;
 use App\Livewire\Report\DocumentStatus;
 use App\Livewire\Report\Employees;
 use App\Livewire\Report\ExternalDocuments;
@@ -25,7 +23,6 @@ use App\Livewire\Status\Endorsed;
 use App\Livewire\Status\Forwarded;
 use App\Livewire\Status\Incoming;
 use App\Livewire\Status\Pending;
-use App\Livewire\Views\DocumentDetail;
 use App\Livewire\Views\IncomingDetail;
 use App\Livewire\Views\PendingDetail;
 use App\Livewire\Views\QrReceive;
@@ -73,9 +70,9 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::get('/offices/{office}/employees', OfficeEmployeesController::class)
         ->whereNumber('office')
         ->name('offices.employees');
-    Route::get('/my-bundles', MyBundles::class);
-    Route::get('/my-purchase-requests', MyPurchaseRequests::class);
-    Route::get('/my-payments', MyPayments::class);
+    // Now tabs of My Documents; kept so bookmarks and older redirects still land.
+    Route::permanentRedirect('/my-purchase-requests', '/my-documents?type=purchase_requests');
+    Route::permanentRedirect('/my-payments', '/my-documents?type=payments');
 
     /** Status of Documents */
     Route::get('/status-incoming', Incoming::class);
@@ -85,7 +82,19 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::get('/status-closed', Closed::class);
 
     /** View Document */
-    Route::get('/document/view/{control_no}', DocumentDetail::class)->name('document.view');
+    Route::get('/document/view/{control_no}', [DocumentViewController::class, 'show'])->name('document.view');
+    Route::patch('/documents/{document}/subject', [DocumentViewController::class, 'updateSubject'])
+        ->whereNumber('document')
+        ->name('documents.subject');
+    Route::delete('/documents/{document}', [DocumentViewController::class, 'destroy'])
+        ->whereNumber('document')
+        ->name('documents.destroy');
+    Route::post('/documents/{document}/attachments', [DocumentViewController::class, 'attach'])
+        ->whereNumber('document')
+        ->name('documents.attachments.store');
+    Route::delete('/documents/{document}/attachments/{attachment}', [DocumentViewController::class, 'detach'])
+        ->whereNumber(['document', 'attachment'])
+        ->name('documents.attachments.destroy');
     Route::get('/document/incoming/{control_no}', IncomingDetail::class)->name('document.incoming');
     Route::get('/document/pending/{control_no}', PendingDetail::class)->name('document.pending');
     Route::get('/document/qr-receive/{control_no}', QrReceive::class)->name('document.qr-receive');

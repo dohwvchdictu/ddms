@@ -15,7 +15,8 @@ import { forward } from '@/routes/my-documents';
 interface ForwardDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    documents: DocumentRow[];
+    /** Only the id and control number are used, so any document list fits. */
+    documents: Pick<DocumentRow, 'id' | 'control_no'>[];
     offices: Office[];
     /** Called once the server has forwarded them; the list reloads by itself. */
     onForwarded: () => void;

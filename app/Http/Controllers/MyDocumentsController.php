@@ -140,7 +140,7 @@ class MyDocumentsController extends Controller
      * opens on the last month, as the Livewire page did; an explicitly blank
      * date (`from=`) means no bound.
      *
-     * @return array{search: string, statuses: list<string>, from: string|null, to: string|null, sort: string, per_page: int}
+     * @return array{type: string, search: string, statuses: list<string>, from: string|null, to: string|null, sort: string, per_page: int}
      */
     protected function filters(Request $request): array
     {
@@ -148,6 +148,8 @@ class MyDocumentsController extends Controller
         $perPage = (int) $request->query('per_page', self::PER_PAGE);
 
         return [
+            // The tab: everything unless one kind is picked.
+            'type' => in_array($request->query('type'), OfficeDocuments::TYPES, true) ? $request->query('type') : 'all',
             'search' => trim((string) $request->query('search', '')),
             'statuses' => self::list($request, 'status', OfficeDocuments::STATUSES),
             'from' => $dated ? self::date($request->query('from')) : now()->subMonth()->toDateString(),

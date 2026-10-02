@@ -6,6 +6,7 @@ import DocumentTrackingController from './DocumentTrackingController'
 import DocumentController from './DocumentController'
 import MyDocumentsController from './MyDocumentsController'
 import OfficeEmployeesController from './OfficeEmployeesController'
+import DocumentViewController from './DocumentViewController'
 import MiscController from './MiscController'
 import EmployeePhotoController from './EmployeePhotoController'
 const Controllers = {
@@ -17,6 +18,7 @@ DocumentTrackingController: Object.assign(DocumentTrackingController, DocumentTr
 DocumentController: Object.assign(DocumentController, DocumentController),
 MyDocumentsController: Object.assign(MyDocumentsController, MyDocumentsController),
 OfficeEmployeesController: Object.assign(OfficeEmployeesController, OfficeEmployeesController),
+DocumentViewController: Object.assign(DocumentViewController, DocumentViewController),
 MiscController: Object.assign(MiscController, MiscController),
 EmployeePhotoController: Object.assign(EmployeePhotoController, EmployeePhotoController),
 }

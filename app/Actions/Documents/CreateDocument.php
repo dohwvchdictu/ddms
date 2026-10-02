@@ -100,19 +100,17 @@ class CreateDocument
     }
 
     /**
-     * Which "My Documents" list a new document belongs on: purchase requests
-     * and payments have their own; everything else, charter transactions
-     * included, goes on the general list.
+     * The My Documents tab a new document belongs on: purchase requests and
+     * payments have their own; everything else, charter transactions included,
+     * opens on the default tab.
      */
     public static function listPath(Document $document): string
     {
-        $name = $document->category_id
-            ? (string) Category::whereKey($document->category_id)->value('name')
-            : '';
+        $categoryId = (int) $document->category_id;
 
         return match (true) {
-            str_contains($name, 'Purchase') => '/my-purchase-requests',
-            str_contains($name, 'Payment') => '/my-payments',
+            $categoryId && in_array($categoryId, OfficeDocuments::purchaseCategoryIds(), true) => '/my-documents?type=purchase_requests',
+            $categoryId && in_array($categoryId, OfficeDocuments::paymentCategoryIds(), true) => '/my-documents?type=payments',
             default => '/my-documents',
         };
     }

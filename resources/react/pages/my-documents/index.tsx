@@ -1,11 +1,12 @@
 import { Head } from '@inertiajs/react';
-import { CircleDot, Eye, FileSearch, Loader2, NotebookText, Printer, Send, TriangleAlert } from 'lucide-react';
+import { CircleDot, ExternalLink, FileSearch, History, Loader2, NotebookText, Printer, Send, TriangleAlert } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import DateRangeFilter, { describeRange, type DateRangeValue } from '@/components/data-table/date-range-filter';
 import FacetedFilter, { type FacetOption } from '@/components/data-table/faceted-filter';
 import BulkActionButton from '@/components/data-table/bulk-action-button';
 import FilterChips, { type FilterChip } from '@/components/data-table/filter-chips';
+import ListTabs from '@/components/data-table/list-tabs';
 import SelectionBar from '@/components/data-table/selection-bar';
 import SortableHead from '@/components/data-table/sortable-head';
 import ViewOptions from '@/components/data-table/view-options';
@@ -15,6 +16,7 @@ import type { DocumentRow as Row, Office } from '@/components/my-documents/types
 import Pagination from '@/components/pagination';
 import SearchInput from '@/components/search-input';
 import StatusBadge from '@/components/status-badge';
+import { documentUrl } from '@/components/document-tracking';
 import TrackingDialog from '@/components/tracking-dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -31,7 +33,10 @@ import { generateLogbook } from '@/routes/inbox';
 import { selectable as selectableRoute } from '@/routes/my-documents';
 import type { Paginated } from '@/types';
 
+type DocumentType = 'all' | 'documents' | 'purchase_requests' | 'payments';
+
 interface Filters {
+    type: DocumentType;
     search: string;
     statuses: string[];
     from: string | null;
@@ -43,6 +48,7 @@ interface Filters {
 
 interface Facets {
     statuses: Record<string, number>;
+    types: Record<DocumentType, number>;
 }
 
 interface Props {
@@ -55,6 +61,14 @@ interface Props {
     /** Most documents one batch may hold (the server's forward limit). */
     maxSelection: number;
 }
+
+/** The tabs, in order; `empty` names them in the "No … found" message. */
+const TYPE_TABS: { value: DocumentType; label: string; empty: string }[] = [
+    { value: 'all', label: 'All', empty: 'documents' },
+    { value: 'documents', label: 'Documents', empty: 'documents' },
+    { value: 'purchase_requests', label: 'Purchase Requests', empty: 'purchase requests' },
+    { value: 'payments', label: 'Payments', empty: 'payments' },
+];
 
 const DEFAULT_SORT = '-created_at';
 const DEFAULT_PER_PAGE = 25;
@@ -82,6 +96,7 @@ const list = (values: string[]) => (values.length ? values.join(',') : undefined
 
 /** The query for a set of filters. Dates are always sent, so a cleared one stays cleared. */
 const toQuery = (filters: Filters) => ({
+    type: filters.type === 'all' ? undefined : filters.type,
     search: filters.search.trim() || undefined,
     status: list(filters.statuses),
     from: filters.from ?? '',
@@ -191,6 +206,14 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                     </div>
                 )}
 
+                {/* Tabs: the kinds of document. They keep the other filters; the selection survives them too. */}
+                <ListTabs
+                    label="Document type"
+                    value={filters.type}
+                    onChange={(type) => update({ type: type as DocumentType })}
+                    tabs={TYPE_TABS.map((tab) => ({ ...tab, count: facets.types[tab.value] }))}
+                />
+
                 {/* Toolbar: the filters, or (while something is selected) what to do with the selection. */}
                 {selecting ? (
                     <SelectionBar
@@ -277,7 +300,7 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
 
                 <div className={cn('transition-opacity', loading && 'pointer-events-none opacity-60')} aria-busy={loading}>
                     {documents.data.length === 0 ? (
-                        <EmptyState filtered={chips.length > 0} onReset={reset} />
+                        <EmptyState filtered={chips.length > 0} onReset={reset} kind={TYPE_TABS.find((tab) => tab.value === filters.type)?.empty ?? 'documents'} />
                     ) : (
                         <Table className={cn(preferences.dense ? '[&_td]:py-1.5' : '[&_td]:py-3')}>
                             <TableHeader>
@@ -328,10 +351,9 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                                     <TableRow
                                         key={row.id}
                                         data-state={selection.has(row.id) ? 'selected' : undefined}
-                                        className="cursor-pointer data-[state=selected]:bg-emerald-50/60 dark:data-[state=selected]:bg-emerald-950/20"
-                                        onClick={() => setTracking(row)}
+                                        className="data-[state=selected]:bg-emerald-50/60 dark:data-[state=selected]:bg-emerald-950/20"
                                     >
-                                        <TableCell className="pl-4 align-top" onClick={(event) => event.stopPropagation()}>
+                                        <TableCell className="pl-4 align-top">
                                             {row.selectable ? (
                                                 <Checkbox
                                                     checked={selection.has(row.id)}
@@ -346,20 +368,19 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                                             )}
                                         </TableCell>
                                         <TableCell className="align-top">
-                                            {/* The real control for keyboard and screen-reader users. */}
-                                            <button
-                                                type="button"
-                                                onClick={(event) => {
-                                                    event.stopPropagation();
-                                                    setTracking(row);
-                                                }}
-                                                className="rounded font-mono text-xs font-semibold text-emerald-700 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 dark:text-emerald-400"
-                                                aria-label={`Show tracking for ${row.control_no}`}
+                                            {/* A new tab, so the list and its filters stay where they are. */}
+                                            <a
+                                                href={documentUrl(row.control_no)}
+                                                target="_blank"
+                                                rel="noopener"
+                                                title="Open in a new tab"
+                                                className="inline-flex items-center gap-1 rounded font-mono text-sm font-semibold text-emerald-700 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 dark:text-emerald-400"
                                             >
                                                 {row.control_no}
-                                            </button>
+                                                <ExternalLink className="size-3" aria-hidden="true" />
+                                            </a>
                                             <div className="mt-1.5 flex flex-wrap gap-1">
-                                                <StatusBadge status={row.status} />
+                                                <StatusBadge status={row.status} className="px-1.5 py-0 text-[0.65rem] leading-4" />
                                                 {row.turnaround_days !== null && (
                                                     <Tag title="Turnaround time">
                                                         TAT {row.turnaround_days} {row.turnaround_days === 1 ? 'day' : 'days'}
@@ -412,25 +433,13 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                                             </TableCell>
                                         )}
                                         {isVisible('encoded_by') && (
-                                            <TableCell className="max-w-44 truncate align-top text-sm" title={row.encoded_by ?? undefined}>
+                                            <TableCell className="max-w-44 min-w-32 align-top text-sm whitespace-normal wrap-break-word">
                                                 {row.encoded_by ?? <span className="text-muted-foreground">—</span>}
                                             </TableCell>
                                         )}
                                         <TableCell className="pr-4 align-top">
-                                            {/* Stop the row's click: these leave the page. */}
-                                            <div className="flex justify-end gap-1" onClick={(event) => event.stopPropagation()}>
-                                                <RowAction label="View document" href={`/document/view/${encodeURIComponent(row.control_no)}`}>
-                                                    <Eye />
-                                                </RowAction>
-                                                {row.can_print && (
-                                                    <RowAction
-                                                        label="Print transmittal form"
-                                                        href={`/print-transmittal-form/${encodeURIComponent(row.control_no)}`}
-                                                        newTab
-                                                    >
-                                                        <Printer />
-                                                    </RowAction>
-                                                )}
+                                            <div className="flex justify-end">
+                                                <RowActions row={row} onTrack={() => setTracking(row)} />
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -483,15 +492,38 @@ function Highlight({ text, term }: { text: string; term: string }) {
     );
 }
 
-function RowAction({ label, href, newTab = false, children }: { label: string; href: string; newTab?: boolean; children: ReactNode }) {
+/** A row's actions as one group of icon buttons. */
+function RowActions({ row, onTrack }: { row: Row; onTrack: () => void }) {
+    return (
+        <div role="group" aria-label={`Actions for ${row.control_no}`} className="inline-flex divide-x overflow-hidden rounded-md border bg-background shadow-xs">
+            <IconAction label="Routing history" onClick={onTrack}>
+                <History />
+            </IconAction>
+            <IconAction label="Open document" href={documentUrl(row.control_no)}>
+                <ExternalLink />
+            </IconAction>
+            {row.can_print && (
+                <IconAction label="Print transmittal form" href={`/print-transmittal-form/${encodeURIComponent(row.control_no)}`}>
+                    <Printer />
+                </IconAction>
+            )}
+        </div>
+    );
+}
+
+/** One button in the group: an icon, named by its tooltip. Links open in a new tab. */
+function IconAction({ label, onClick, href, children }: { label: string; onClick?: () => void; href?: string; children: ReactNode }) {
     return (
         <Tooltip>
             <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon-sm" asChild>
-                    {/* Plain links: both pages are still Livewire / Blade. */}
-                    <a href={href} aria-label={label} {...(newTab ? { target: '_blank', rel: 'noopener' } : {})}>
-                        {children}
-                    </a>
+                <Button variant="ghost" size="icon-sm" onClick={onClick} asChild={!!href} aria-label={label} className="rounded-none">
+                    {href ? (
+                        <a href={href} target="_blank" rel="noopener">
+                            {children}
+                        </a>
+                    ) : (
+                        children
+                    )}
                 </Button>
             </TooltipTrigger>
             <TooltipContent>{label}</TooltipContent>
@@ -507,13 +539,13 @@ function Tag({ children, className, title }: { children: ReactNode; className?: 
     );
 }
 
-function EmptyState({ filtered, onReset }: { filtered: boolean; onReset: () => void }) {
+function EmptyState({ filtered, onReset, kind }: { filtered: boolean; onReset: () => void; kind: string }) {
     return (
         <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
             <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
                 <FileSearch className="size-5" />
             </div>
-            <p className="text-sm font-medium">No documents found</p>
+            <p className="text-sm font-medium">No {kind} found</p>
             <p className="text-sm text-muted-foreground">
                 {filtered ? 'Nothing matches these filters.' : 'Nothing was encoded in the past month. Try a wider date range.'}
             </p>

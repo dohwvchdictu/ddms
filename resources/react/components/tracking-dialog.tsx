@@ -5,10 +5,12 @@ interface TrackingDialogProps {
     /** The document to show; null closes the dialog. */
     document: { id: number; control_no: string } | null;
     onClose: () => void;
+    /** Hide "Open document", e.g. on that document's own page. */
+    showOpenLink?: boolean;
 }
 
 /** A document's routing trail in its own window, opened from a list row. */
-export default function TrackingDialog({ document, onClose }: TrackingDialogProps) {
+export default function TrackingDialog({ document, onClose, showOpenLink = true }: TrackingDialogProps) {
     return (
         <Dialog open={document !== null} onOpenChange={(open) => !open && onClose()}>
             <DialogContent showCloseButton={false} className="top-[8%] translate-y-0 gap-0 overflow-hidden p-0 shadow-2xl sm:max-w-2xl">
@@ -21,6 +23,7 @@ export default function TrackingDialog({ document, onClose }: TrackingDialogProp
                         onBack={onClose}
                         backLabel="Close"
                         hint="Press Esc to close."
+                        showOpenLink={showOpenLink}
                     />
                 )}
             </DialogContent>

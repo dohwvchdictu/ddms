@@ -15,10 +15,8 @@ import {
     Inbox,
     Network,
     Send,
-    ShoppingCart,
     Timer,
     UserRoundCheck,
-    Wallet,
     type LucideIcon,
 } from 'lucide-react';
 import type { SidebarCounts } from '@/types';
@@ -71,15 +69,12 @@ export const groups: NavGroup[] = [
     },
     {
         // The counterpart to Inbox: what the office encoded and sends out.
-        // Purchase Requests and Payments fold into My Documents as filters
-        // when that list moves to React.
+        // Purchase requests and payments are tabs on My Documents.
         title: 'Outbox',
         icon: FolderOpen,
         defaultOpen: true,
         items: [
             { title: 'My Documents', href: '/my-documents', icon: Files },
-            { title: 'Purchase Requests', href: '/my-purchase-requests', icon: ShoppingCart, legacy: true },
-            { title: 'Payments', href: '/my-payments', icon: Wallet, legacy: true },
             { title: 'Routing Logbook', href: '/routing-logbook', icon: BookOpen, legacy: true },
         ],
     },

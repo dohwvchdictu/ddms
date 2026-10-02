@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
 /**
-* @see \App\Livewire\Views\DocumentDetail::__invoke
- * @see app/Livewire/Views/DocumentDetail.php:7
+* @see \App\Http\Controllers\DocumentViewController::view
+ * @see app/Http/Controllers/DocumentViewController.php:30
  * @route '/document/view/{control_no}'
  */
 export const view = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -15,8 +15,8 @@ view.definition = {
 } satisfies RouteDefinition<["get","head"]>
 
 /**
-* @see \App\Livewire\Views\DocumentDetail::__invoke
- * @see app/Livewire/Views/DocumentDetail.php:7
+* @see \App\Http\Controllers\DocumentViewController::view
+ * @see app/Http/Controllers/DocumentViewController.php:30
  * @route '/document/view/{control_no}'
  */
 view.url = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -43,8 +43,8 @@ view.url = (args: { control_no: string | number } | [control_no: string | number
 }
 
 /**
-* @see \App\Livewire\Views\DocumentDetail::__invoke
- * @see app/Livewire/Views/DocumentDetail.php:7
+* @see \App\Http\Controllers\DocumentViewController::view
+ * @see app/Http/Controllers/DocumentViewController.php:30
  * @route '/document/view/{control_no}'
  */
 view.get = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -52,8 +52,8 @@ view.get = (args: { control_no: string | number } | [control_no: string | number
     method: 'get',
 })
 /**
-* @see \App\Livewire\Views\DocumentDetail::__invoke
- * @see app/Livewire/Views/DocumentDetail.php:7
+* @see \App\Http\Controllers\DocumentViewController::view
+ * @see app/Http/Controllers/DocumentViewController.php:30
  * @route '/document/view/{control_no}'
  */
 view.head = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({

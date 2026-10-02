@@ -1,22 +1,9 @@
-import { ArrowLeft, ArrowRight, Building2, Clock, ExternalLink, FileText, MapPin, MessageSquareText, RefreshCw, SearchX, UserRound, UserRoundCheck } from 'lucide-react';
-import { useEffect, useState, type ReactNode } from 'react';
+import { ArrowLeft, ExternalLink, RefreshCw, SearchX } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import DocumentTimeline, { type TimelineRow } from '@/components/document-timeline';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { tracking as trackingRoute } from '@/routes/documents';
-
-interface TimelineRow {
-    key: string;
-    action: string;
-    /** A Tailwind 3 class stored on the action, e.g. "bg-teal-100". */
-    color: string;
-    created_at: string | null;
-    description: string | null;
-    offices: { label: string; name: string }[];
-    endorsed_to: string | null;
-    user: string | null;
-    remarks: string | null;
-    elapsed: string | null;
-}
 
 interface Tracking {
     document: {
@@ -41,80 +28,27 @@ export const STATUS_STYLES: Record<string, string> = {
     Closed: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300',
 };
 
-/**
- * Action colours live in the database as Tailwind 3 classes ("bg-teal-100").
- * Tailwind 4 only builds classes it can see in this code, so map the colour
- * name to class strings written out in full here.
- */
-const ACTION_TONES: Record<string, string> = {
-    teal: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-300',
-    amber: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300',
-    yellow: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-300',
-    red: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300',
-    gray: 'bg-neutral-100 text-neutral-700 dark:bg-neutral-500/20 dark:text-neutral-300',
-    cyan: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-500/20 dark:text-cyan-300',
-    violet: 'bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300',
-    indigo: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300',
-    blue: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
-    sky: 'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300',
-    pink: 'bg-pink-100 text-pink-700 dark:bg-pink-500/20 dark:text-pink-300',
-    emerald: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300',
-};
-
-function actionTone(color: string): string {
-    const name = /bg-([a-z]+)-\d+/.exec(color)?.[1] ?? 'gray';
-
-    return ACTION_TONES[name] ?? ACTION_TONES.gray;
-}
-
 const dateFormat = new Intl.DateTimeFormat('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
-const timeFormat = new Intl.DateTimeFormat('en-PH', { hour: 'numeric', minute: '2-digit' });
-
-function titleCase(value: string): string {
-    return value.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
 
 export function documentUrl(controlNo: string): string {
     return `/document/view/${encodeURIComponent(controlNo)}`;
 }
 
-function Detail({ icon: Icon, label, children }: { icon: typeof Clock; label: string; children: ReactNode }) {
-    return (
-        <p className="flex items-start gap-2 text-sm">
-            <Icon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-            <span className="min-w-0">
-                <span className="text-muted-foreground">{label}: </span>
-                {children}
-            </span>
-        </p>
-    );
-}
-
-function Offices({ offices }: { offices: TimelineRow['offices'] }) {
-    const from = offices.find((office) => office.label === 'From');
-    const to = offices.find((office) => office.label === 'To');
-
-    // A hop with both ends reads as one line: From → To.
-    if (from && to) {
-        return (
-            <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm">
-                <Building2 className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-                <span>{from.name}</span>
-                <ArrowRight className="size-3.5 shrink-0 text-emerald-600" aria-label="to" />
-                <span className="font-medium">{to.name}</span>
-            </p>
-        );
+/**
+ * Where a document is, worded by its status. The location is the newest step's
+ * office, which for a document still For Receiving is where it is *going*: it
+ * isn't there until that office receives it.
+ */
+export function describeLocation(status: string, location: string | null): { label: string; office: string | null } {
+    if (status === 'For Receiving') {
+        return { label: 'Forwarded to', office: location };
     }
 
-    return (
-        <>
-            {offices.map((office) => (
-                <Detail key={office.label} icon={Building2} label={office.label}>
-                    {office.name}
-                </Detail>
-            ))}
-        </>
-    );
+    if (status === 'Returned') {
+        return { label: 'Returned to', office: location };
+    }
+
+    return { label: 'Currently at', office: location };
 }
 
 function Skeleton() {
@@ -143,6 +77,15 @@ interface DocumentTrackingProps {
     backLabel?: string;
     /** Keyboard hint in the footer. */
     hint?: string;
+    /** The footer's "Open document" button; off when already on that document's page. */
+    showOpenLink?: boolean;
+}
+
+/** One line: "Currently at X", or "Forwarded to X · awaiting receipt" while in transit. */
+function locationText(status: string, location: string): string {
+    const { label } = describeLocation(status, location);
+
+    return status === 'For Receiving' ? `${label} ${location} · awaiting receipt` : `${label} ${location}`;
 }
 
 /** The routing trail of one document, shown in place of the search results. */
@@ -152,6 +95,7 @@ export default function DocumentTracking({
     onBack,
     backLabel = 'Results',
     hint = 'Press Backspace or Esc to go back.',
+    showOpenLink = true,
 }: DocumentTrackingProps) {
     const [data, setData] = useState<Tracking | null>(null);
     const [failed, setFailed] = useState(false);
@@ -217,47 +161,26 @@ export default function DocumentTracking({
                     <Skeleton />
                 ) : (
                     <div className="space-y-5 p-5">
-                        {/* Summary */}
-                        <section className="rounded-lg border bg-muted/30 p-4">
-                            <div className="flex items-start gap-3">
-                                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400">
-                                    <FileText className="size-5" aria-hidden="true" />
+                        {/* Summary: category and status, the subject, then where it is and since when. */}
+                        <section className="space-y-1.5 border-b pb-4">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-xs font-medium text-muted-foreground">{document.classification}</span>
+                                <span
+                                    className={cn('rounded-full px-1.5 text-[0.65rem] leading-4 font-medium', STATUS_STYLES[document.status] ?? STATUS_STYLES.Created)}
+                                >
+                                    {document.status}
                                 </span>
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <span
-                                            className={cn(
-                                                'rounded-full px-2 py-0.5 text-xs font-medium',
-                                                STATUS_STYLES[document.status] ?? STATUS_STYLES.Created,
-                                            )}
-                                        >
-                                            {document.status}
-                                        </span>
-                                        <span className="truncate text-xs text-muted-foreground">{document.classification}</span>
-                                    </div>
-                                    <h3 className="mt-1.5 text-sm leading-snug font-semibold">{document.subject}</h3>
-                                </div>
                             </div>
-
-                            <dl className="mt-4 grid gap-3 border-t pt-3 text-sm sm:grid-cols-3">
-                                <div>
-                                    <dt className="text-xs text-muted-foreground">Currently at</dt>
-                                    <dd className="mt-0.5 flex items-center gap-1.5 font-medium">
-                                        <MapPin className="size-3.5 shrink-0 text-emerald-600" aria-hidden="true" />
-                                        <span className="truncate">{document.current_location ?? '—'}</span>
-                                    </dd>
-                                </div>
-                                <div>
-                                    <dt className="text-xs text-muted-foreground">Created</dt>
-                                    <dd className="mt-0.5 font-medium">
-                                        {document.created_at ? dateFormat.format(new Date(document.created_at)) : '—'}
-                                    </dd>
-                                </div>
-                                <div>
-                                    <dt className="text-xs text-muted-foreground">Turnaround time</dt>
-                                    <dd className="mt-0.5 font-medium">{document.turnaroundtime ?? '—'}</dd>
-                                </div>
-                            </dl>
+                            <h3 className="text-sm leading-snug font-semibold">{document.subject}</h3>
+                            <p className="text-xs text-muted-foreground">
+                                {[
+                                    document.current_location && locationText(document.status, document.current_location),
+                                    document.created_at && `Created ${dateFormat.format(new Date(document.created_at))}`,
+                                    document.turnaroundtime && `Turnaround ${document.turnaroundtime}`,
+                                ]
+                                    .filter(Boolean)
+                                    .join(' · ')}
+                            </p>
                         </section>
 
                         {/* Timeline, newest first */}
@@ -266,76 +189,7 @@ export default function DocumentTracking({
                                 Routing history · {data.timeline.length} {data.timeline.length === 1 ? 'step' : 'steps'}
                             </h4>
 
-                            {data.timeline.length === 0 ? (
-                                <p className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-                                    No tracking information is available for this document yet.
-                                </p>
-                            ) : (
-                                <ol className="relative">
-                                    {data.timeline.map((row, index) => {
-                                        const date = row.created_at ? new Date(row.created_at) : null;
-                                        const last = index === data.timeline.length - 1;
-
-                                        return (
-                                            <li key={row.key} className="relative flex gap-4 pb-6 last:pb-0">
-                                                {/* Rail and dot; the newest step is highlighted. */}
-                                                {!last && (
-                                                    <span aria-hidden="true" className="absolute top-4 bottom-0 left-[5px] w-px bg-border" />
-                                                )}
-                                                <span
-                                                    aria-hidden="true"
-                                                    className={cn(
-                                                        'relative mt-1.5 size-[11px] shrink-0 rounded-full ring-4 ring-background',
-                                                        index === 0 ? 'bg-emerald-500' : 'bg-neutral-300 dark:bg-neutral-600',
-                                                    )}
-                                                />
-
-                                                <div className="min-w-0 flex-1 space-y-1.5">
-                                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                                        <span className={cn('rounded-md px-2 py-0.5 text-xs font-medium', actionTone(row.color))}>
-                                                            {titleCase(row.action)}
-                                                        </span>
-                                                        {date && (
-                                                            <time dateTime={row.created_at!} className="text-xs text-muted-foreground">
-                                                                {dateFormat.format(date)} · {timeFormat.format(date)}
-                                                            </time>
-                                                        )}
-                                                        {row.elapsed && (
-                                                            <span
-                                                                className="ml-auto inline-flex items-center gap-1 text-[0.7rem] text-muted-foreground"
-                                                                title="Time since the previous step"
-                                                            >
-                                                                <Clock className="size-3" aria-hidden="true" />+{row.elapsed}
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    {row.description && <p className="text-sm font-medium">{row.description}</p>}
-
-                                                    <Offices offices={row.offices} />
-
-                                                    {row.endorsed_to && (
-                                                        <Detail icon={UserRoundCheck} label="Endorsed to">
-                                                            {row.endorsed_to}
-                                                        </Detail>
-                                                    )}
-                                                    {row.user && (
-                                                        <Detail icon={UserRound} label="By">
-                                                            {row.user}
-                                                        </Detail>
-                                                    )}
-                                                    {row.remarks && (
-                                                        <p className="flex gap-2 rounded-md border-l-2 border-emerald-500/60 bg-muted/50 px-3 py-2 text-sm">
-                                                            <MessageSquareText className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-                                                            <span className="min-w-0 break-words">{row.remarks}</span>
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </li>
-                                        );
-                                    })}
-                                </ol>
-                            )}
+                            <DocumentTimeline rows={data.timeline} />
                         </section>
                     </div>
                 )}
@@ -343,12 +197,14 @@ export default function DocumentTracking({
 
             <div className="flex items-center justify-between gap-2 border-t bg-muted/40 px-4 py-2.5">
                 <p className="hidden text-xs text-muted-foreground sm:block">{hint}</p>
-                <Button asChild size="sm" className="ml-auto">
-                    <a href={documentUrl(controlNo)}>
-                        Open document
-                        <ExternalLink />
-                    </a>
-                </Button>
+                {showOpenLink && (
+                    <Button asChild size="sm" className="ml-auto">
+                        <a href={documentUrl(controlNo)}>
+                            Open document
+                            <ExternalLink />
+                        </a>
+                    </Button>
+                )}
             </div>
         </div>
     );

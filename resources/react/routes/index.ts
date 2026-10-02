@@ -172,7 +172,7 @@ routingLogbook.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => 
 })
 
 /**
- * @see routes/web.php:114
+ * @see routes/web.php:123
  * @route '/logout'
  */
 export const logout = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -186,7 +186,7 @@ logout.definition = {
 } satisfies RouteDefinition<["post"]>
 
 /**
- * @see routes/web.php:114
+ * @see routes/web.php:123
  * @route '/logout'
  */
 logout.url = (options?: RouteQueryOptions) => {
@@ -194,7 +194,7 @@ logout.url = (options?: RouteQueryOptions) => {
 }
 
 /**
- * @see routes/web.php:114
+ * @see routes/web.php:123
  * @route '/logout'
  */
 logout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({

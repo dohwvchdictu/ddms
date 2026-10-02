@@ -55,8 +55,6 @@ class Navigation
                 'defaultOpen' => true,
                 'items' => [
                     ['title' => 'My Documents', 'href' => '/my-documents', 'icon' => 'files'],
-                    ['title' => 'Purchase Requests', 'href' => '/my-purchase-requests', 'icon' => 'shopping-cart'],
-                    ['title' => 'Payments', 'href' => '/my-payments', 'icon' => 'wallet'],
                     ['title' => 'Routing Logbook', 'href' => '/routing-logbook', 'icon' => 'book-open'],
                 ],
             ],

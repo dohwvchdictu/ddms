@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Documents\CreateDocument;
 use App\Actions\Documents\OfficeDocuments;
 use App\Actions\Navigation\SidebarCounts;
 use App\Http\Controllers\MyDocumentsController;
@@ -67,6 +68,7 @@ class MyDocumentsTest extends TestCase
     protected static function filters(array $overrides = []): array
     {
         return [
+            'type' => 'all',
             'search' => '',
             'statuses' => [],
             'from' => '2026-09-01',
@@ -148,7 +150,9 @@ class MyDocumentsTest extends TestCase
 
         $facets = app(OfficeDocuments::class)->facets(self::OFFICE, self::filters(['statuses' => ['Closed'], 'search' => 'Memorandum']));
 
-        $this->assertSame(['statuses' => ['Created' => 1, 'For Receiving' => 0, 'On Process' => 0, 'Returned' => 0, 'Closed' => 1]], $facets);
+        $this->assertSame(['Created' => 1, 'For Receiving' => 0, 'On Process' => 0, 'Returned' => 0, 'Closed' => 1], $facets['statuses']);
+        // The tabs honour the search and status filters too: only DC2 is a closed memorandum.
+        $this->assertSame(['all' => 1, 'documents' => 1, 'purchase_requests' => 0, 'payments' => 0], $facets['types']);
     }
 
     public function test_rows_carry_what_the_table_shows(): void
@@ -167,22 +171,72 @@ class MyDocumentsTest extends TestCase
                 ->where('documents.data.0.turnaround_days', null));
     }
 
-    public function test_purchase_requests_and_payments_are_left_out(): void
+    /** A purchase request, a payment and a plain document, or a skip when the categories are missing. */
+    protected function oneOfEachType(): array
     {
         $purchase = Category::where('name', 'like', '%Purchase%')->value('id');
+        $payment = Category::where('name', 'like', '%Payment%')->where('name', 'not like', '%Purchase%')->value('id');
 
-        if ($purchase === null) {
-            $this->markTestSkipped('No purchase request category in this database.');
+        if ($purchase === null || $payment === null) {
+            $this->markTestSkipped('No purchase request or payment category in this database.');
         }
 
-        $this->saveDocument(['category_id' => $purchase]);
-        $kept = $this->saveDocument(['control_no' => 'DC3720261001093001']);
+        return [
+            'purchase_requests' => $this->saveDocument(['control_no' => 'DC3720261001093001', 'category_id' => $purchase]),
+            'payments' => $this->saveDocument(['control_no' => 'DC3720261001093002', 'category_id' => $payment]),
+            'documents' => $this->saveDocument(['control_no' => 'DC3720261001093003']),
+        ];
+    }
+
+    public function test_each_tab_lists_its_own_kind_and_all_lists_everything(): void
+    {
+        $documents = $this->oneOfEachType();
+
+        foreach (['purchase_requests', 'payments', 'documents'] as $type) {
+            $this->signedIn()
+                ->get("/my-documents?type={$type}")
+                ->assertInertia(fn (Assert $page) => $page
+                    ->where('filters.type', $type)
+                    ->where('documents.total', 1)
+                    ->where('documents.data.0.control_no', $documents[$type]->control_no)
+                    ->where('facets.types', ['all' => 3, 'documents' => 1, 'purchase_requests' => 1, 'payments' => 1]));
+        }
 
         $this->signedIn()
             ->get('/my-documents')
-            ->assertInertia(fn (Assert $page) => $page
-                ->where('documents.total', 1)
-                ->where('documents.data.0.control_no', $kept->control_no));
+            ->assertInertia(fn (Assert $page) => $page->where('filters.type', 'all')->where('documents.total', 3));
+    }
+
+    public function test_an_unknown_type_falls_back_to_all(): void
+    {
+        $this->signedIn()
+            ->get('/my-documents?type=receipts')
+            ->assertInertia(fn (Assert $page) => $page->where('filters.type', 'all'));
+    }
+
+    public function test_a_purchase_request_can_be_forwarded(): void
+    {
+        $purchase = $this->oneOfEachType()['purchase_requests'];
+
+        $this->assertSame(
+            [$purchase->id],
+            app(OfficeDocuments::class)->forwardable(self::OFFICE)->where('documents.id', $purchase->id)->pluck('documents.id')->all(),
+        );
+    }
+
+    public function test_the_old_lists_redirect_to_their_tabs(): void
+    {
+        $this->signedIn()->get('/my-purchase-requests')->assertStatus(301)->assertRedirect('/my-documents?type=purchase_requests');
+        $this->signedIn()->get('/my-payments')->assertStatus(301)->assertRedirect('/my-documents?type=payments');
+    }
+
+    public function test_a_new_document_lands_on_its_tab(): void
+    {
+        $documents = $this->oneOfEachType();
+
+        $this->assertSame('/my-documents?type=purchase_requests', CreateDocument::listPath($documents['purchase_requests']));
+        $this->assertSame('/my-documents?type=payments', CreateDocument::listPath($documents['payments']));
+        $this->assertSame('/my-documents', CreateDocument::listPath($documents['documents']));
     }
 
     public function test_another_offices_documents_are_not_listed(): void
