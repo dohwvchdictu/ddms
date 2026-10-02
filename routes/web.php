@@ -13,6 +13,7 @@ use App\Http\Controllers\EmployeePhotoController;
 use App\Http\Controllers\MiscController;
 use App\Http\Controllers\MyDocumentsController;
 use App\Http\Controllers\OfficeEmployeesController;
+use App\Http\Controllers\RoutingLogbookController;
 use App\Livewire\Documents\NewBundle;
 use App\Livewire\Report\DocumentStatus;
 use App\Livewire\Report\Employees;
@@ -23,7 +24,6 @@ use App\Livewire\Report\TurnaroundTime;
 use App\Livewire\Status\Closed;
 use App\Livewire\Status\Forwarded;
 use App\Livewire\Views\QrReceive;
-use App\Livewire\Views\RoutingLogbook;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -106,7 +106,7 @@ Route::middleware(['jwt.auth'])->group(function () {
         ->name('documents.return');
     Route::get('/document/pending/{control_no}', [DocumentViewController::class, 'showPending'])->name('document.pending');
     Route::get('/document/qr-receive/{control_no}', QrReceive::class)->name('document.qr-receive');
-    Route::get('/routing-logbook', RoutingLogbook::class)->name('routing-logbook');
+    Route::get('/routing-logbook', [RoutingLogbookController::class, 'index'])->name('routing-logbook');
 
     /** Reports */
     Route::get('/report-status-of-documents', DocumentStatus::class);

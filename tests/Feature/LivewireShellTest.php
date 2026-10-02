@@ -47,7 +47,7 @@ class LivewireShellTest extends TestCase
 
     public function test_a_livewire_page_gets_the_new_header_and_sidebar(): void
     {
-        $response = $this->signedIn()->get('/routing-logbook')->assertOk();
+        $response = $this->signedIn()->get('/status-forwarded')->assertOk();
 
         $response->assertSee('Digital Document Management System')
             ->assertSee('Hi, <span class="font-semibold">Juan</span>', false)
@@ -56,11 +56,13 @@ class LivewireShellTest extends TestCase
             ->assertSee('id="hs-application-sidebar"', false)
             ->assertSee('id="document-search"', false)
             // The old Livewire chrome is gone.
-            ->assertDontSee('Document Tracking Information System')
             ->assertDontSee('document-search-modal');
 
+        // The page's own <title> may still carry the old name; the chrome must not.
+        $this->assertStringNotContainsString('Document Tracking Information System', preg_replace('#<title>.*?</title>#s', '', $response->getContent()));
+
         // The current page is marked, and the menu lists every page.
-        $this->assertMatchesRegularExpression('#href="/routing-logbook"[^>]*aria-current="page"#', $response->getContent());
+        $this->assertMatchesRegularExpression('#href="/status-forwarded"[^>]*aria-current="page"#', $response->getContent());
         $this->assertDoesNotMatchRegularExpression('#href="/dashboard"[^>]*aria-current="page"#', $response->getContent());
 
         foreach (Navigation::groups() as $group) {
@@ -73,7 +75,7 @@ class LivewireShellTest extends TestCase
     public function test_the_badges_come_from_the_shared_counts(): void
     {
         $this->signedIn()
-            ->get('/routing-logbook')
+            ->get('/status-forwarded')
             ->assertSee('data-title="Incoming · 4"', false)
             ->assertSee('data-title="Pending · 2"', false)
             ->assertSee('data-title="Inbox · 6"', false)

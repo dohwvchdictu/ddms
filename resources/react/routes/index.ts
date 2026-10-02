@@ -215,8 +215,8 @@ pending.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 })
 
 /**
-* @see \App\Livewire\Views\RoutingLogbook::__invoke
- * @see app/Livewire/Views/RoutingLogbook.php:7
+* @see \App\Http\Controllers\RoutingLogbookController::routingLogbook
+ * @see app/Http/Controllers/RoutingLogbookController.php:27
  * @route '/routing-logbook'
  */
 export const routingLogbook = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -230,8 +230,8 @@ routingLogbook.definition = {
 } satisfies RouteDefinition<["get","head"]>
 
 /**
-* @see \App\Livewire\Views\RoutingLogbook::__invoke
- * @see app/Livewire/Views/RoutingLogbook.php:7
+* @see \App\Http\Controllers\RoutingLogbookController::routingLogbook
+ * @see app/Http/Controllers/RoutingLogbookController.php:27
  * @route '/routing-logbook'
  */
 routingLogbook.url = (options?: RouteQueryOptions) => {
@@ -239,8 +239,8 @@ routingLogbook.url = (options?: RouteQueryOptions) => {
 }
 
 /**
-* @see \App\Livewire\Views\RoutingLogbook::__invoke
- * @see app/Livewire/Views/RoutingLogbook.php:7
+* @see \App\Http\Controllers\RoutingLogbookController::routingLogbook
+ * @see app/Http/Controllers/RoutingLogbookController.php:27
  * @route '/routing-logbook'
  */
 routingLogbook.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -248,8 +248,8 @@ routingLogbook.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     method: 'get',
 })
 /**
-* @see \App\Livewire\Views\RoutingLogbook::__invoke
- * @see app/Livewire/Views/RoutingLogbook.php:7
+* @see \App\Http\Controllers\RoutingLogbookController::routingLogbook
+ * @see app/Http/Controllers/RoutingLogbookController.php:27
  * @route '/routing-logbook'
  */
 routingLogbook.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

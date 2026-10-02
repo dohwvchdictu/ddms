@@ -9,6 +9,7 @@ import OfficeEmployeesController from './OfficeEmployeesController'
 import IncomingController from './IncomingController'
 import PendingController from './PendingController'
 import DocumentViewController from './DocumentViewController'
+import RoutingLogbookController from './RoutingLogbookController'
 import MiscController from './MiscController'
 import EmployeePhotoController from './EmployeePhotoController'
 const Controllers = {
@@ -23,6 +24,7 @@ OfficeEmployeesController: Object.assign(OfficeEmployeesController, OfficeEmploy
 IncomingController: Object.assign(IncomingController, IncomingController),
 PendingController: Object.assign(PendingController, PendingController),
 DocumentViewController: Object.assign(DocumentViewController, DocumentViewController),
+RoutingLogbookController: Object.assign(RoutingLogbookController, RoutingLogbookController),
 MiscController: Object.assign(MiscController, MiscController),
 EmployeePhotoController: Object.assign(EmployeePhotoController, EmployeePhotoController),
 }

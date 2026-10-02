@@ -74,7 +74,7 @@ export const groups: NavGroup[] = [
         defaultOpen: true,
         items: [
             { title: 'My Documents', href: '/my-documents', icon: Files },
-            { title: 'Routing Logbook', href: '/routing-logbook', icon: BookOpen, legacy: true },
+            { title: 'Routing Logbook', href: '/routing-logbook', icon: BookOpen },
         ],
     },
     {
