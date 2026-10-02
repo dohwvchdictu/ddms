@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\MiscController::status
- * @see app/Http/Controllers/MiscController.php:191
+ * @see app/Http/Controllers/MiscController.php:196
  * @route '/print-document-status-report'
  */
 export const status = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ status.definition = {
 
 /**
 * @see \App\Http\Controllers\MiscController::status
- * @see app/Http/Controllers/MiscController.php:191
+ * @see app/Http/Controllers/MiscController.php:196
  * @route '/print-document-status-report'
  */
 status.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ status.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\MiscController::status
- * @see app/Http/Controllers/MiscController.php:191
+ * @see app/Http/Controllers/MiscController.php:196
  * @route '/print-document-status-report'
  */
 status.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ status.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\MiscController::status
- * @see app/Http/Controllers/MiscController.php:191
+ * @see app/Http/Controllers/MiscController.php:196
  * @route '/print-document-status-report'
  */
 status.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

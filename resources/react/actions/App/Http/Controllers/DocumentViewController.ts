@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\DocumentViewController::show
- * @see app/Http/Controllers/DocumentViewController.php:44
+ * @see app/Http/Controllers/DocumentViewController.php:59
  * @route '/document/view/{control_no}'
  */
 export const show = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::show
- * @see app/Http/Controllers/DocumentViewController.php:44
+ * @see app/Http/Controllers/DocumentViewController.php:59
  * @route '/document/view/{control_no}'
  */
 show.url = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -44,7 +44,7 @@ show.url = (args: { control_no: string | number } | [control_no: string | number
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::show
- * @see app/Http/Controllers/DocumentViewController.php:44
+ * @see app/Http/Controllers/DocumentViewController.php:59
  * @route '/document/view/{control_no}'
  */
 show.get = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -53,7 +53,7 @@ show.get = (args: { control_no: string | number } | [control_no: string | number
 })
 /**
 * @see \App\Http\Controllers\DocumentViewController::show
- * @see app/Http/Controllers/DocumentViewController.php:44
+ * @see app/Http/Controllers/DocumentViewController.php:59
  * @route '/document/view/{control_no}'
  */
 show.head = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -63,7 +63,7 @@ show.head = (args: { control_no: string | number } | [control_no: string | numbe
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::updateSubject
- * @see app/Http/Controllers/DocumentViewController.php:145
+ * @see app/Http/Controllers/DocumentViewController.php:160
  * @route '/documents/{document}/subject'
  */
 export const updateSubject = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -78,7 +78,7 @@ updateSubject.definition = {
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::updateSubject
- * @see app/Http/Controllers/DocumentViewController.php:145
+ * @see app/Http/Controllers/DocumentViewController.php:160
  * @route '/documents/{document}/subject'
  */
 updateSubject.url = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -111,7 +111,7 @@ updateSubject.url = (args: { document: number | { id: number } } | [document: nu
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::updateSubject
- * @see app/Http/Controllers/DocumentViewController.php:145
+ * @see app/Http/Controllers/DocumentViewController.php:160
  * @route '/documents/{document}/subject'
  */
 updateSubject.patch = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -121,7 +121,7 @@ updateSubject.patch = (args: { document: number | { id: number } } | [document: 
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::destroy
- * @see app/Http/Controllers/DocumentViewController.php:160
+ * @see app/Http/Controllers/DocumentViewController.php:175
  * @route '/documents/{document}'
  */
 export const destroy = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -136,7 +136,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::destroy
- * @see app/Http/Controllers/DocumentViewController.php:160
+ * @see app/Http/Controllers/DocumentViewController.php:175
  * @route '/documents/{document}'
  */
 destroy.url = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -169,7 +169,7 @@ destroy.url = (args: { document: number | { id: number } } | [document: number |
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::destroy
- * @see app/Http/Controllers/DocumentViewController.php:160
+ * @see app/Http/Controllers/DocumentViewController.php:175
  * @route '/documents/{document}'
  */
 destroy.delete = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -179,7 +179,7 @@ destroy.delete = (args: { document: number | { id: number } } | [document: numbe
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::attach
- * @see app/Http/Controllers/DocumentViewController.php:180
+ * @see app/Http/Controllers/DocumentViewController.php:195
  * @route '/documents/{document}/attachments'
  */
 export const attach = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -194,7 +194,7 @@ attach.definition = {
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::attach
- * @see app/Http/Controllers/DocumentViewController.php:180
+ * @see app/Http/Controllers/DocumentViewController.php:195
  * @route '/documents/{document}/attachments'
  */
 attach.url = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -227,7 +227,7 @@ attach.url = (args: { document: number | { id: number } } | [document: number | 
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::attach
- * @see app/Http/Controllers/DocumentViewController.php:180
+ * @see app/Http/Controllers/DocumentViewController.php:195
  * @route '/documents/{document}/attachments'
  */
 attach.post = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -237,7 +237,7 @@ attach.post = (args: { document: number | { id: number } } | [document: number |
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::detach
- * @see app/Http/Controllers/DocumentViewController.php:231
+ * @see app/Http/Controllers/DocumentViewController.php:246
  * @route '/documents/{document}/attachments/{attachment}'
  */
 export const detach = (args: { document: number | { id: number }, attachment: number | { id: number } } | [document: number | { id: number }, attachment: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -252,7 +252,7 @@ detach.definition = {
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::detach
- * @see app/Http/Controllers/DocumentViewController.php:231
+ * @see app/Http/Controllers/DocumentViewController.php:246
  * @route '/documents/{document}/attachments/{attachment}'
  */
 detach.url = (args: { document: number | { id: number }, attachment: number | { id: number } } | [document: number | { id: number }, attachment: number | { id: number } ], options?: RouteQueryOptions) => {
@@ -282,7 +282,7 @@ detach.url = (args: { document: number | { id: number }, attachment: number | { 
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::detach
- * @see app/Http/Controllers/DocumentViewController.php:231
+ * @see app/Http/Controllers/DocumentViewController.php:246
  * @route '/documents/{document}/attachments/{attachment}'
  */
 detach.delete = (args: { document: number | { id: number }, attachment: number | { id: number } } | [document: number | { id: number }, attachment: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -354,7 +354,7 @@ showIncoming.head = (args: { control_no: string | number } | [control_no: string
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::returnDocument
- * @see app/Http/Controllers/DocumentViewController.php:262
+ * @see app/Http/Controllers/DocumentViewController.php:277
  * @route '/documents/{document}/return'
  */
 export const returnDocument = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -369,7 +369,7 @@ returnDocument.definition = {
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::returnDocument
- * @see app/Http/Controllers/DocumentViewController.php:262
+ * @see app/Http/Controllers/DocumentViewController.php:277
  * @route '/documents/{document}/return'
  */
 returnDocument.url = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -402,7 +402,7 @@ returnDocument.url = (args: { document: number | { id: number } } | [document: n
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::returnDocument
- * @see app/Http/Controllers/DocumentViewController.php:262
+ * @see app/Http/Controllers/DocumentViewController.php:277
  * @route '/documents/{document}/return'
  */
 returnDocument.post = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -412,7 +412,7 @@ returnDocument.post = (args: { document: number | { id: number } } | [document: 
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::showPending
- * @see app/Http/Controllers/DocumentViewController.php:39
+ * @see app/Http/Controllers/DocumentViewController.php:54
  * @route '/document/pending/{control_no}'
  */
 export const showPending = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -427,7 +427,7 @@ showPending.definition = {
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::showPending
- * @see app/Http/Controllers/DocumentViewController.php:39
+ * @see app/Http/Controllers/DocumentViewController.php:54
  * @route '/document/pending/{control_no}'
  */
 showPending.url = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -455,7 +455,7 @@ showPending.url = (args: { control_no: string | number } | [control_no: string |
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::showPending
- * @see app/Http/Controllers/DocumentViewController.php:39
+ * @see app/Http/Controllers/DocumentViewController.php:54
  * @route '/document/pending/{control_no}'
  */
 showPending.get = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -464,13 +464,75 @@ showPending.get = (args: { control_no: string | number } | [control_no: string |
 })
 /**
 * @see \App\Http\Controllers\DocumentViewController::showPending
- * @see app/Http/Controllers/DocumentViewController.php:39
+ * @see app/Http/Controllers/DocumentViewController.php:54
  * @route '/document/pending/{control_no}'
  */
 showPending.head = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: showPending.url(args, options),
     method: 'head',
 })
-const DocumentViewController = { show, updateSubject, destroy, attach, detach, showIncoming, returnDocument, showPending }
+
+/**
+* @see \App\Http\Controllers\DocumentViewController::qrReceive
+ * @see app/Http/Controllers/DocumentViewController.php:45
+ * @route '/document/qr-receive/{control_no}'
+ */
+export const qrReceive = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: qrReceive.url(args, options),
+    method: 'get',
+})
+
+qrReceive.definition = {
+    methods: ["get","head"],
+    url: '/document/qr-receive/{control_no}',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\DocumentViewController::qrReceive
+ * @see app/Http/Controllers/DocumentViewController.php:45
+ * @route '/document/qr-receive/{control_no}'
+ */
+qrReceive.url = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { control_no: args }
+    }
+
+    
+    if (Array.isArray(args)) {
+        args = {
+                    control_no: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        control_no: args.control_no,
+                }
+
+    return qrReceive.definition.url
+            .replace('{control_no}', parsedArgs.control_no.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\DocumentViewController::qrReceive
+ * @see app/Http/Controllers/DocumentViewController.php:45
+ * @route '/document/qr-receive/{control_no}'
+ */
+qrReceive.get = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: qrReceive.url(args, options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\DocumentViewController::qrReceive
+ * @see app/Http/Controllers/DocumentViewController.php:45
+ * @route '/document/qr-receive/{control_no}'
+ */
+qrReceive.head = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: qrReceive.url(args, options),
+    method: 'head',
+})
+const DocumentViewController = { show, updateSubject, destroy, attach, detach, showIncoming, returnDocument, showPending, qrReceive }
 
 export default DocumentViewController

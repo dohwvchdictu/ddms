@@ -258,6 +258,49 @@ processed.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 })
 
 /**
+* @see \App\Http\Controllers\ClosedController::closed
+ * @see app/Http/Controllers/ClosedController.php:27
+ * @route '/status-closed'
+ */
+export const closed = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: closed.url(options),
+    method: 'get',
+})
+
+closed.definition = {
+    methods: ["get","head"],
+    url: '/status-closed',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\ClosedController::closed
+ * @see app/Http/Controllers/ClosedController.php:27
+ * @route '/status-closed'
+ */
+closed.url = (options?: RouteQueryOptions) => {
+    return closed.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\ClosedController::closed
+ * @see app/Http/Controllers/ClosedController.php:27
+ * @route '/status-closed'
+ */
+closed.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: closed.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\ClosedController::closed
+ * @see app/Http/Controllers/ClosedController.php:27
+ * @route '/status-closed'
+ */
+closed.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: closed.url(options),
+    method: 'head',
+})
+
+/**
 * @see \App\Http\Controllers\RoutingLogbookController::routingLogbook
  * @see app/Http/Controllers/RoutingLogbookController.php:27
  * @route '/routing-logbook'
@@ -301,7 +344,7 @@ routingLogbook.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => 
 })
 
 /**
- * @see routes/web.php:132
+ * @see routes/web.php:129
  * @route '/logout'
  */
 export const logout = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -315,7 +358,7 @@ logout.definition = {
 } satisfies RouteDefinition<["post"]>
 
 /**
- * @see routes/web.php:132
+ * @see routes/web.php:129
  * @route '/logout'
  */
 logout.url = (options?: RouteQueryOptions) => {
@@ -323,7 +366,7 @@ logout.url = (options?: RouteQueryOptions) => {
 }
 
 /**
- * @see routes/web.php:132
+ * @see routes/web.php:129
  * @route '/logout'
  */
 logout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({

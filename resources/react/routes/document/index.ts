@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\DocumentViewController::view
- * @see app/Http/Controllers/DocumentViewController.php:44
+ * @see app/Http/Controllers/DocumentViewController.php:59
  * @route '/document/view/{control_no}'
  */
 export const view = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ view.definition = {
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::view
- * @see app/Http/Controllers/DocumentViewController.php:44
+ * @see app/Http/Controllers/DocumentViewController.php:59
  * @route '/document/view/{control_no}'
  */
 view.url = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -44,7 +44,7 @@ view.url = (args: { control_no: string | number } | [control_no: string | number
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::view
- * @see app/Http/Controllers/DocumentViewController.php:44
+ * @see app/Http/Controllers/DocumentViewController.php:59
  * @route '/document/view/{control_no}'
  */
 view.get = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -53,7 +53,7 @@ view.get = (args: { control_no: string | number } | [control_no: string | number
 })
 /**
 * @see \App\Http\Controllers\DocumentViewController::view
- * @see app/Http/Controllers/DocumentViewController.php:44
+ * @see app/Http/Controllers/DocumentViewController.php:59
  * @route '/document/view/{control_no}'
  */
 view.head = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -125,7 +125,7 @@ incoming.head = (args: { control_no: string | number } | [control_no: string | n
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::pending
- * @see app/Http/Controllers/DocumentViewController.php:39
+ * @see app/Http/Controllers/DocumentViewController.php:54
  * @route '/document/pending/{control_no}'
  */
 export const pending = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -140,7 +140,7 @@ pending.definition = {
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::pending
- * @see app/Http/Controllers/DocumentViewController.php:39
+ * @see app/Http/Controllers/DocumentViewController.php:54
  * @route '/document/pending/{control_no}'
  */
 pending.url = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -168,7 +168,7 @@ pending.url = (args: { control_no: string | number } | [control_no: string | num
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::pending
- * @see app/Http/Controllers/DocumentViewController.php:39
+ * @see app/Http/Controllers/DocumentViewController.php:54
  * @route '/document/pending/{control_no}'
  */
 pending.get = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -177,7 +177,7 @@ pending.get = (args: { control_no: string | number } | [control_no: string | num
 })
 /**
 * @see \App\Http\Controllers\DocumentViewController::pending
- * @see app/Http/Controllers/DocumentViewController.php:39
+ * @see app/Http/Controllers/DocumentViewController.php:54
  * @route '/document/pending/{control_no}'
  */
 pending.head = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -186,8 +186,8 @@ pending.head = (args: { control_no: string | number } | [control_no: string | nu
 })
 
 /**
-* @see \App\Livewire\Views\QrReceive::__invoke
- * @see app/Livewire/Views/QrReceive.php:7
+* @see \App\Http\Controllers\DocumentViewController::qrReceive
+ * @see app/Http/Controllers/DocumentViewController.php:45
  * @route '/document/qr-receive/{control_no}'
  */
 export const qrReceive = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -201,8 +201,8 @@ qrReceive.definition = {
 } satisfies RouteDefinition<["get","head"]>
 
 /**
-* @see \App\Livewire\Views\QrReceive::__invoke
- * @see app/Livewire/Views/QrReceive.php:7
+* @see \App\Http\Controllers\DocumentViewController::qrReceive
+ * @see app/Http/Controllers/DocumentViewController.php:45
  * @route '/document/qr-receive/{control_no}'
  */
 qrReceive.url = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -229,8 +229,8 @@ qrReceive.url = (args: { control_no: string | number } | [control_no: string | n
 }
 
 /**
-* @see \App\Livewire\Views\QrReceive::__invoke
- * @see app/Livewire/Views/QrReceive.php:7
+* @see \App\Http\Controllers\DocumentViewController::qrReceive
+ * @see app/Http/Controllers/DocumentViewController.php:45
  * @route '/document/qr-receive/{control_no}'
  */
 qrReceive.get = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -238,8 +238,8 @@ qrReceive.get = (args: { control_no: string | number } | [control_no: string | n
     method: 'get',
 })
 /**
-* @see \App\Livewire\Views\QrReceive::__invoke
- * @see app/Livewire/Views/QrReceive.php:7
+* @see \App\Http\Controllers\DocumentViewController::qrReceive
+ * @see app/Http/Controllers/DocumentViewController.php:45
  * @route '/document/qr-receive/{control_no}'
  */
 qrReceive.head = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({

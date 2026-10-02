@@ -112,7 +112,7 @@ class MiscController extends Controller
 
         $qrCode = QrCode::size(110)->generate(url('/document/qr-receive/' . $control_no));
 
-        return view('livewire.partials.transmittal-form', compact('user', 'office', 'destination', 'document', 'barcodeImg', 'qrCode'));
+        return view('print.transmittal-form', compact('user', 'office', 'destination', 'document', 'barcodeImg', 'qrCode'));
     }
 
     public function filterOffice($id)
@@ -158,6 +158,11 @@ class MiscController extends Controller
                 $query->with(['action', 'user'])->orderBy('created_at', 'asc');
             }])
                 ->whereIn('id', $selectedItems)
+                // Only what this office forwarded: the ids come from the URL, so
+                // another office's documents could otherwise be printed.
+                ->whereHas('logs', fn ($query) => $query
+                    ->where('office_id', session('user')['office']['id'])
+                    ->where('action_id', self::ACTION_FORWARDED))
                 ->orderBy('created_at', 'desc')
                 ->get();
         }
@@ -185,7 +190,7 @@ class MiscController extends Controller
         // Group documents by assigned_to after processing all documents
         $documentsArray = collect($documentsData)->groupBy('assigned_to');
 
-        return view('livewire.partials.logbook', compact('documentsArray', 'offices'));
+        return view('print.logbook', compact('documentsArray', 'offices'));
     }
 
     public function printDocumentStatusReport(Request $request)

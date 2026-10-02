@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\ClosedController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardDocumentsController;
 use App\Http\Controllers\DocumentController;
@@ -15,15 +16,12 @@ use App\Http\Controllers\MiscController;
 use App\Http\Controllers\MyDocumentsController;
 use App\Http\Controllers\OfficeEmployeesController;
 use App\Http\Controllers\RoutingLogbookController;
-use App\Livewire\Documents\NewBundle;
 use App\Livewire\Report\DocumentStatus;
 use App\Livewire\Report\Employees;
 use App\Livewire\Report\ExternalDocuments;
 use App\Livewire\Report\InternalDocuments;
 use App\Livewire\Report\PerUnit;
 use App\Livewire\Report\TurnaroundTime;
-use App\Livewire\Status\Closed;
-use App\Livewire\Views\QrReceive;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -58,7 +56,6 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::get('/new-document/{document}/saved', [DocumentController::class, 'created'])
         ->whereNumber('document')
         ->name('documents.created');
-    Route::get('/new-bundle', NewBundle::class);
 
     /** My Documents */
     Route::get('/my-documents', MyDocumentsController::class)->name('my-documents');
@@ -85,7 +82,7 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::permanentRedirect('/status-endorsed', '/status-pending?endorsed=me');
     Route::get('/status-forwarded', [ProcessedController::class, 'index'])->name('processed');
     Route::get('/status-forwarded/selectable', [ProcessedController::class, 'selectable'])->name('processed.selectable');
-    Route::get('/status-closed', Closed::class);
+    Route::get('/status-closed', [ClosedController::class, 'index'])->name('closed');
 
     /** View Document */
     Route::get('/document/view/{control_no}', [DocumentViewController::class, 'show'])->name('document.view');
@@ -106,7 +103,7 @@ Route::middleware(['jwt.auth'])->group(function () {
         ->whereNumber('document')
         ->name('documents.return');
     Route::get('/document/pending/{control_no}', [DocumentViewController::class, 'showPending'])->name('document.pending');
-    Route::get('/document/qr-receive/{control_no}', QrReceive::class)->name('document.qr-receive');
+    Route::get('/document/qr-receive/{control_no}', [DocumentViewController::class, 'qrReceive'])->name('document.qr-receive');
     Route::get('/routing-logbook', [RoutingLogbookController::class, 'index'])->name('routing-logbook');
 
     /** Reports */

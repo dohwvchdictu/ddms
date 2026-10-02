@@ -36,6 +36,21 @@ class DocumentViewController extends Controller
     }
 
     /** The document page reached from Pending: the same page, with Pending in its trail. */
+    /**
+     * Where the QR code on a printed transmittal form lands. Replaces Livewire
+     * Views\QrReceive: when this office can receive the document it opens the
+     * incoming page (with Receive); otherwise the plain document view, which
+     * shows where it is and its status. The URL stays, so printed codes still work.
+     */
+    public function qrReceive(string $controlNo): RedirectResponse
+    {
+        $document = Document::where('control_no', $controlNo)->firstOrFail();
+
+        return redirect(DocumentPermissions::for($document)->canReceive()
+            ? route('document.incoming', $controlNo)
+            : route('document.view', $controlNo));
+    }
+
     public function showPending(string $controlNo, DocumentTracking $tracking, ApiService $api): Response
     {
         return $this->show($controlNo, $tracking, $api, 'pending');

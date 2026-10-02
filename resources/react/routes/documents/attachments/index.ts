@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\DocumentViewController::store
- * @see app/Http/Controllers/DocumentViewController.php:180
+ * @see app/Http/Controllers/DocumentViewController.php:195
  * @route '/documents/{document}/attachments'
  */
 export const store = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::store
- * @see app/Http/Controllers/DocumentViewController.php:180
+ * @see app/Http/Controllers/DocumentViewController.php:195
  * @route '/documents/{document}/attachments'
  */
 store.url = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -49,7 +49,7 @@ store.url = (args: { document: number | { id: number } } | [document: number | {
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::store
- * @see app/Http/Controllers/DocumentViewController.php:180
+ * @see app/Http/Controllers/DocumentViewController.php:195
  * @route '/documents/{document}/attachments'
  */
 store.post = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -59,7 +59,7 @@ store.post = (args: { document: number | { id: number } } | [document: number | 
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::destroy
- * @see app/Http/Controllers/DocumentViewController.php:231
+ * @see app/Http/Controllers/DocumentViewController.php:246
  * @route '/documents/{document}/attachments/{attachment}'
  */
 export const destroy = (args: { document: number | { id: number }, attachment: number | { id: number } } | [document: number | { id: number }, attachment: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -74,7 +74,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::destroy
- * @see app/Http/Controllers/DocumentViewController.php:231
+ * @see app/Http/Controllers/DocumentViewController.php:246
  * @route '/documents/{document}/attachments/{attachment}'
  */
 destroy.url = (args: { document: number | { id: number }, attachment: number | { id: number } } | [document: number | { id: number }, attachment: number | { id: number } ], options?: RouteQueryOptions) => {
@@ -104,7 +104,7 @@ destroy.url = (args: { document: number | { id: number }, attachment: number | {
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::destroy
- * @see app/Http/Controllers/DocumentViewController.php:231
+ * @see app/Http/Controllers/DocumentViewController.php:246
  * @route '/documents/{document}/attachments/{attachment}'
  */
 destroy.delete = (args: { document: number | { id: number }, attachment: number | { id: number } } | [document: number | { id: number }, attachment: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({

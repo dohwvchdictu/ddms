@@ -83,7 +83,7 @@ export const groups: NavGroup[] = [
         defaultOpen: false,
         items: [
             { title: 'Processed', href: '/status-forwarded', icon: Send },
-            { title: 'Closed', href: '/status-closed', icon: CircleCheckBig, legacy: true },
+            { title: 'Closed', href: '/status-closed', icon: CircleCheckBig },
         ],
     },
     {
