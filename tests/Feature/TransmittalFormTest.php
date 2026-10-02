@@ -119,12 +119,18 @@ class TransmittalFormTest extends TestCase
             ->assertDontSee('Dela Cruz, Juan');
     }
 
-    public function test_it_prints_itself_on_load_except_when_previewed_in_the_dialog(): void
+    public function test_it_prints_itself_on_load_without_needing_the_internet(): void
     {
         $document = $this->forwarded();
 
-        $this->signedIn()->get("/print-transmittal-form/{$document->control_no}")->assertSee('onload="window.print()"', false);
-        $this->signedIn()->get("/print-transmittal-form/{$document->control_no}?embed=1")->assertDontSee('onload="window.print()"', false);
+        $this->signedIn()
+            ->get("/print-transmittal-form/{$document->control_no}")
+            ->assertSee('<title>DDMS - Document Tracking Form</title>', false)
+            ->assertSee('onload="window.print()"', false)
+            ->assertSee('vendor/bootstrap-5.3.3/bootstrap.min.css')
+            ->assertDontSee('cdn.jsdelivr.net');
+
+        $this->assertFileExists(public_path('vendor/bootstrap-5.3.3/bootstrap.min.css'));
     }
 
     public function test_a_document_forwarded_again_prints_its_latest_destination(): void

@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>DTIS - Transmittal Form</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <title>DDMS - Document Tracking Form</title>
+    {{-- Served from here, not a CDN, so the form still prints without internet. Same file as bootstrap@5.3.3. --}}
+    <link href="{{ asset('vendor/bootstrap-5.3.3/bootstrap.min.css') }}" rel="stylesheet">
     <link rel="icon" href="{!! asset('/img/doh.ico') !!}" />
     <style>
         @page {
@@ -24,8 +24,7 @@
 
 </head>
 
-{{-- ?embed=1: previewed inside the app's dialog, which prints it on request instead of on load. --}}
-<body @unless (request()->boolean('embed')) onload="window.print()" @endunless style="font-size: 10px;">
+<body onload="window.print()" style="font-size: 10px;">
     <div class="container-fluid">
         <div class="row">
             <div class="col text-center">
@@ -175,9 +174,6 @@
                 records@dohwv.com &middot; (033) 500 - 1030</small>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous">
-    </script>
 </body>
 
 </html>
