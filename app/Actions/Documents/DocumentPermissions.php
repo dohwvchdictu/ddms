@@ -66,8 +66,29 @@ class DocumentPermissions
         return (bool) $this->document->is_bundle && $this->holds();
     }
 
+    /** Sent to this office and waiting: forwarded here, or returned here. */
+    public function canReceive(): bool
+    {
+        return $this->officeId !== null
+            && $this->document->bundle_id === null
+            && (string) $this->document->assigned_to === (string) $this->officeId
+            && in_array($this->document->status, IncomingDocuments::STATUSES, true);
+    }
+
+    /** A waiting document can be sent back, unless this office is where it started. */
+    public function canReturn(): bool
+    {
+        return $this->canReceive() && (string) $this->document->office_id !== (string) $this->officeId;
+    }
+
+    /**
+     * The transmittal form goes with the paper copy, so only the office that
+     * encoded and sent the document prints it, as on the Livewire pages.
+     */
     public function canPrint(): bool
     {
-        return in_array($this->document->status, self::PRINTABLE_STATUSES, true);
+        return $this->officeId !== null
+            && (string) $this->document->office_id === (string) $this->officeId
+            && in_array($this->document->status, self::PRINTABLE_STATUSES, true);
     }
 }

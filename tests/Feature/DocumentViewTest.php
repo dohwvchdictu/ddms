@@ -110,7 +110,7 @@ class DocumentViewTest extends TestCase
                 ->where('document.origin', 'Knowledge Management and ICT Unit')
                 ->where('document.encoded_by', 'Juan Dela Cruz')
                 ->where('document.required_days', Document::DEFAULT_REQUIRED_DAYS)
-                ->where('can', ['forward' => true, 'delete' => true, 'edit_subject' => true, 'manage_attachments' => false, 'print' => false])
+                ->where('can', ['forward' => true, 'delete' => true, 'edit_subject' => true, 'manage_attachments' => false, 'print' => false, 'receive' => false, 'return' => false])
                 ->has('timeline')
                 ->has('offices', 2));
     }
@@ -123,7 +123,7 @@ class DocumentViewTest extends TestCase
             ->get("/document/view/{$document->control_no}")
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->where('can', ['forward' => false, 'delete' => false, 'edit_subject' => false, 'manage_attachments' => false, 'print' => false]));
+                ->where('can', ['forward' => false, 'delete' => false, 'edit_subject' => false, 'manage_attachments' => false, 'print' => false, 'receive' => false, 'return' => false]));
 
         $this->signedIn(self::OTHER_OFFICE)->patch("/documents/{$document->id}/subject", ['subject' => 'Someone else rewrote this'])->assertForbidden();
         $this->signedIn(self::OTHER_OFFICE)->delete("/documents/{$document->id}")->assertForbidden();
@@ -207,5 +207,89 @@ class DocumentViewTest extends TestCase
             ->assertSessionHasErrors('document_ids');
 
         $this->assertNull($elsewhere->fresh()->bundle_id);
+    }
+
+    /** A document another office sent here, waiting to be received. */
+    protected function sentHere(array $overrides = []): Document
+    {
+        $document = $this->saveDocument([
+            'office_id' => self::OTHER_OFFICE,
+            'assigned_to' => self::OFFICE,
+            'status' => 'For Receiving',
+            ...$overrides,
+        ]);
+        Log::create(['action_id' => 3, 'document_id' => $document->id, 'user_id' => 9, 'office_id' => self::OTHER_OFFICE, 'assigned_to' => self::OFFICE, 'description' => 'Forwarded']);
+
+        return $document;
+    }
+
+    public function test_the_incoming_address_opens_the_same_page_with_receive_and_return(): void
+    {
+        $document = $this->sentHere();
+
+        $this->signedIn()
+            ->get("/document/incoming/{$document->control_no}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('documents/show')
+                ->where('context', 'incoming')
+                ->where('can.receive', true)
+                ->where('can.return', true)
+                ->where('can.forward', false)
+                // The transmittal form is the sender's to print.
+                ->where('can.print', false)
+                ->where('sender', self::OTHER_OFFICE));
+    }
+
+    public function test_receiving_from_the_page_moves_it_to_pending(): void
+    {
+        $document = $this->sentHere(['endorsed_to' => 7]);
+
+        $this->signedIn()
+            ->from("/document/incoming/{$document->control_no}")
+            ->post('/status-incoming/receive', ['document_ids' => [$document->id]])
+            ->assertRedirect("/document/incoming/{$document->control_no}");
+
+        $this->assertSame('On Process', $document->fresh()->status);
+        $this->assertDatabaseHas('logs', ['document_id' => $document->id, 'office_id' => self::OFFICE, 'endorsed_to' => 7]);
+    }
+
+    public function test_returning_sends_it_back_with_the_reason(): void
+    {
+        $bundle = $this->sentHere(['is_bundle' => true]);
+        $inside = $this->saveDocument(['office_id' => self::OTHER_OFFICE, 'assigned_to' => self::OFFICE, 'status' => 'For Receiving', 'bundle_id' => $bundle->id]);
+
+        $this->signedIn()
+            ->post("/documents/{$bundle->id}/return", ['office_id' => 12, 'remarks' => 'Missing signature on page 2'])
+            ->assertRedirect(route('incoming'));
+
+        foreach ([$bundle, $inside] as $document) {
+            $fresh = $document->fresh();
+            $this->assertSame('Returned', $fresh->status);
+            $this->assertSame(12, (int) $fresh->assigned_to);
+        }
+        $this->assertDatabaseHas('logs', ['document_id' => $bundle->id, 'remarks' => 'Missing signature on page 2', 'assigned_to' => 12]);
+    }
+
+    public function test_a_return_needs_an_office_and_a_reason(): void
+    {
+        $document = $this->sentHere();
+
+        $this->signedIn()
+            ->post("/documents/{$document->id}/return", ['office_id' => self::OFFICE, 'remarks' => ''])
+            ->assertSessionHasErrors(['office_id', 'remarks']);
+
+        $this->assertSame('For Receiving', $document->fresh()->status);
+    }
+
+    public function test_a_document_this_office_created_cannot_be_returned(): void
+    {
+        $own = $this->saveDocument(['assigned_to' => self::OFFICE, 'status' => 'Returned']);
+
+        $this->signedIn()
+            ->get("/document/incoming/{$own->control_no}")
+            ->assertInertia(fn (Assert $page) => $page->where('can.receive', true)->where('can.return', false));
+
+        $this->signedIn()->post("/documents/{$own->id}/return", ['office_id' => 12, 'remarks' => 'No'])->assertForbidden();
     }
 }

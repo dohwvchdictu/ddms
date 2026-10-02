@@ -1,13 +1,22 @@
 import { X } from 'lucide-react';
-import type { DocumentRow } from '@/components/my-documents/types';
 import StatusBadge from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
+/** What the review list shows of each pick; any list's rows fit. */
+export interface SelectionItem {
+    id: number;
+    control_no: string;
+    status: string;
+    subject: string;
+    classification: string;
+    created_at?: string | null;
+}
+
 interface SelectionDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    items: DocumentRow[];
+    items: SelectionItem[];
     onRemove: (id: number) => void;
     onClear: () => void;
 }

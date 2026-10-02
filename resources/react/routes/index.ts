@@ -87,7 +87,7 @@ dashboard.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\MyDocumentsController::__invoke
- * @see app/Http/Controllers/MyDocumentsController.php:31
+ * @see app/Http/Controllers/MyDocumentsController.php:34
  * @route '/my-documents'
  */
 export const myDocuments = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -102,7 +102,7 @@ myDocuments.definition = {
 
 /**
 * @see \App\Http\Controllers\MyDocumentsController::__invoke
- * @see app/Http/Controllers/MyDocumentsController.php:31
+ * @see app/Http/Controllers/MyDocumentsController.php:34
  * @route '/my-documents'
  */
 myDocuments.url = (options?: RouteQueryOptions) => {
@@ -111,7 +111,7 @@ myDocuments.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\MyDocumentsController::__invoke
- * @see app/Http/Controllers/MyDocumentsController.php:31
+ * @see app/Http/Controllers/MyDocumentsController.php:34
  * @route '/my-documents'
  */
 myDocuments.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -120,11 +120,54 @@ myDocuments.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\MyDocumentsController::__invoke
- * @see app/Http/Controllers/MyDocumentsController.php:31
+ * @see app/Http/Controllers/MyDocumentsController.php:34
  * @route '/my-documents'
  */
 myDocuments.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: myDocuments.url(options),
+    method: 'head',
+})
+
+/**
+* @see \App\Http\Controllers\IncomingController::incoming
+ * @see app/Http/Controllers/IncomingController.php:32
+ * @route '/status-incoming'
+ */
+export const incoming = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: incoming.url(options),
+    method: 'get',
+})
+
+incoming.definition = {
+    methods: ["get","head"],
+    url: '/status-incoming',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\IncomingController::incoming
+ * @see app/Http/Controllers/IncomingController.php:32
+ * @route '/status-incoming'
+ */
+incoming.url = (options?: RouteQueryOptions) => {
+    return incoming.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\IncomingController::incoming
+ * @see app/Http/Controllers/IncomingController.php:32
+ * @route '/status-incoming'
+ */
+incoming.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: incoming.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\IncomingController::incoming
+ * @see app/Http/Controllers/IncomingController.php:32
+ * @route '/status-incoming'
+ */
+incoming.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: incoming.url(options),
     method: 'head',
 })
 
@@ -172,7 +215,7 @@ routingLogbook.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => 
 })
 
 /**
- * @see routes/web.php:123
+ * @see routes/web.php:127
  * @route '/logout'
  */
 export const logout = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -186,7 +229,7 @@ logout.definition = {
 } satisfies RouteDefinition<["post"]>
 
 /**
- * @see routes/web.php:123
+ * @see routes/web.php:127
  * @route '/logout'
  */
 logout.url = (options?: RouteQueryOptions) => {
@@ -194,7 +237,7 @@ logout.url = (options?: RouteQueryOptions) => {
 }
 
 /**
- * @see routes/web.php:123
+ * @see routes/web.php:127
  * @route '/logout'
  */
 logout.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({

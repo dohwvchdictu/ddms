@@ -35,12 +35,12 @@ interface Props {
 }
 
 /** Same order, names and colours as the dashboard cards. */
-const FILTERS: { key: Filter; label: string; description: string; dot: string }[] = [
-    { key: 'for_action', label: 'For Action', description: 'Waiting to be received by their office.', dot: 'bg-indigo-500' },
-    { key: 'pending', label: 'Pending', description: 'Received and still in process.', dot: 'bg-sky-500' },
-    { key: 'due_soon', label: 'Due Soon', description: 'Deadline within the next 3 working days.', dot: 'bg-yellow-500' },
-    { key: 'due_today', label: 'Due Today', description: 'Deadline is today.', dot: 'bg-orange-500' },
-    { key: 'overdue', label: 'Overdue', description: 'Past the required days and still not acted upon.', dot: 'bg-red-500' },
+const FILTERS: { key: Filter; label: string; dot: string }[] = [
+    { key: 'for_action', label: 'For Action', dot: 'bg-indigo-500' },
+    { key: 'pending', label: 'Pending', dot: 'bg-sky-500' },
+    { key: 'due_soon', label: 'Due Soon', dot: 'bg-yellow-500' },
+    { key: 'due_today', label: 'Due Today', dot: 'bg-orange-500' },
+    { key: 'overdue', label: 'Overdue', dot: 'bg-red-500' },
 ];
 
 const number = new Intl.NumberFormat('en-PH');
@@ -105,17 +105,10 @@ export default function DashboardDocuments({ filter, search, documents, counts }
         documentsRoute({ query: { filter: key, ...(search ? { search } : {}) } });
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Home', href: dashboard() }, { title: current.label }]}>
-            <Head title={`${current.label} documents`} />
-
-            <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">{current.label}</h1>
-                    <p className="text-sm text-muted-foreground">
-                        {current.description} {number.format(counts[filter])} open documents across DOH Western Visayas.
-                    </p>
-                </div>
-
+        <AppLayout
+            breadcrumbs={[{ title: 'Home', href: dashboard() }, { title: current.label }]}
+            title={current.label}
+            actions={
                 <SearchInput
                     value={query}
                     onChange={setQuery}
@@ -125,7 +118,9 @@ export default function DashboardDocuments({ filter, search, documents, counts }
                     resultCount={search && query.trim() === search ? documents.total : undefined}
                     className="w-full sm:w-80"
                 />
-            </div>
+            }
+        >
+            <Head title={`${current.label} documents`} />
 
             {/* Filter tabs: switch card without going back to the dashboard. */}
             <div role="tablist" aria-label="Filter" className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1">

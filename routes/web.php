@@ -7,6 +7,7 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentSearchController;
 use App\Http\Controllers\DocumentTrackingController;
 use App\Http\Controllers\DocumentViewController;
+use App\Http\Controllers\IncomingController;
 use App\Http\Controllers\EmployeePhotoController;
 use App\Http\Controllers\MiscController;
 use App\Http\Controllers\MyDocumentsController;
@@ -21,9 +22,7 @@ use App\Livewire\Report\TurnaroundTime;
 use App\Livewire\Status\Closed;
 use App\Livewire\Status\Endorsed;
 use App\Livewire\Status\Forwarded;
-use App\Livewire\Status\Incoming;
 use App\Livewire\Status\Pending;
-use App\Livewire\Views\IncomingDetail;
 use App\Livewire\Views\PendingDetail;
 use App\Livewire\Views\QrReceive;
 use App\Livewire\Views\RoutingLogbook;
@@ -75,7 +74,9 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::permanentRedirect('/my-payments', '/my-documents?type=payments');
 
     /** Status of Documents */
-    Route::get('/status-incoming', Incoming::class);
+    Route::get('/status-incoming', [IncomingController::class, 'index'])->name('incoming');
+    Route::get('/status-incoming/selectable', [IncomingController::class, 'selectable'])->name('incoming.selectable');
+    Route::post('/status-incoming/receive', [IncomingController::class, 'receive'])->name('incoming.receive');
     Route::get('/status-pending', Pending::class);
     Route::get('/status-endorsed', Endorsed::class);
     Route::get('/status-forwarded', Forwarded::class);
@@ -95,7 +96,10 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::delete('/documents/{document}/attachments/{attachment}', [DocumentViewController::class, 'detach'])
         ->whereNumber(['document', 'attachment'])
         ->name('documents.attachments.destroy');
-    Route::get('/document/incoming/{control_no}', IncomingDetail::class)->name('document.incoming');
+    Route::get('/document/incoming/{control_no}', [DocumentViewController::class, 'showIncoming'])->name('document.incoming');
+    Route::post('/documents/{document}/return', [DocumentViewController::class, 'returnDocument'])
+        ->whereNumber('document')
+        ->name('documents.return');
     Route::get('/document/pending/{control_no}', PendingDetail::class)->name('document.pending');
     Route::get('/document/qr-receive/{control_no}', QrReceive::class)->name('document.qr-receive');
     Route::get('/routing-logbook', RoutingLogbook::class)->name('routing-logbook');

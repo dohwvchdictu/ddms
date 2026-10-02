@@ -57,10 +57,8 @@ const toOptions = (items: Option[]) => items.map((item) => ({ value: String(item
 
 export default function CreateDocumentPage(props: Props) {
     return (
-        <AppLayout breadcrumbs={[{ title: 'Home', href: dashboard() }, { title: 'New Document' }]}>
+        <AppLayout title="New Document">
             <Head title="New Document" />
-
-            <h1 className="text-2xl font-semibold tracking-tight">New Document</h1>
 
             <DocumentForm {...props} />
         </AppLayout>

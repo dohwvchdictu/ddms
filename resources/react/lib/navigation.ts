@@ -62,7 +62,7 @@ export const groups: NavGroup[] = [
         defaultOpen: true,
         badge: 'total',
         items: [
-            { title: 'Incoming', href: '/status-incoming', icon: ArrowDownToLine, legacy: true, badge: 'incoming' },
+            { title: 'Incoming', href: '/status-incoming', icon: ArrowDownToLine, badge: 'incoming' },
             { title: 'Pending', href: '/status-pending', icon: Hourglass, legacy: true, badge: 'pending' },
             { title: 'Endorsed', href: '/status-endorsed', icon: UserRoundCheck, legacy: true, badge: 'endorsed' },
         ],
@@ -101,3 +101,11 @@ export const groups: NavGroup[] = [
         ],
     },
 ];
+
+/** The menu item a URL belongs to (the page itself or one under it), for page titles to borrow its icon. */
+export function findNavItem(url: string): NavItem | undefined {
+    const path = url.split('?')[0];
+    const items = [...primary, newDocument, ...groups.flatMap((group) => group.items)];
+
+    return items.find((item) => path === item.href || path.startsWith(`${item.href}/`));
+}

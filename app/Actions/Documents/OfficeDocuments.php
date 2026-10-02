@@ -2,8 +2,8 @@
 
 namespace App\Actions\Documents;
 
-use App\Models\Category;
 use App\Models\Document;
+use App\Support\DocumentTypes;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -23,7 +23,7 @@ class OfficeDocuments
     public const SELECTABLE_STATUSES = ['Created', 'For Receiving'];
 
     /** The list's tabs: everything, or one kind of document. */
-    public const TYPES = ['all', 'documents', 'purchase_requests', 'payments'];
+    public const TYPES = DocumentTypes::TYPES;
 
     /**
      * Whether a row gets a checkbox. A bundle's attachments travel with it, so
@@ -57,9 +57,9 @@ class OfficeDocuments
     {
         $search = trim((string) ($filters['search'] ?? ''));
         $statuses = array_values(array_intersect($filters['statuses'] ?? [], self::STATUSES));
-        $type = in_array($filters['type'] ?? null, self::TYPES, true) ? $filters['type'] : 'all';
+        $type = DocumentTypes::normalize($filters['type'] ?? null);
 
-        return $this->ofType(Document::query()->where('documents.office_id', $officeId), $type)
+        return DocumentTypes::apply(Document::query()->where('documents.office_id', $officeId), $type)
             ->when($search !== '', fn (Builder $query) => $query->where(function (Builder $where) use ($search) {
                 $where->where('documents.control_no', 'like', "%{$search}%")
                     ->orWhere('documents.subject', 'like', "%{$search}%");
@@ -79,24 +79,6 @@ class OfficeDocuments
      */
     public function facets(int|string $officeId, array $filters): array
     {
-        // One grouped count for the tabs; purchase is checked before payment, the
-        // same precedence ofType() gives a category that matched both.
-        $purchase = self::idList(self::purchaseCategoryIds());
-        $payment = self::idList(self::paymentCategoryIds());
-        $kinds = $this->query($officeId, [...$filters, 'type' => 'all'])->toBase()
-            ->selectRaw("case
-                when documents.category_id in ({$purchase}) then 'purchase_requests'
-                when documents.category_id in ({$payment}) then 'payments'
-                else 'documents' end as kind, count(*) as total")
-            ->groupBy('kind')
-            ->pluck('total', 'kind');
-
-        $types = [
-            'documents' => (int) ($kinds['documents'] ?? 0),
-            'purchase_requests' => (int) ($kinds['purchase_requests'] ?? 0),
-            'payments' => (int) ($kinds['payments'] ?? 0),
-        ];
-
         $statuses = $this->query($officeId, [...$filters, 'statuses' => []])->toBase()
             ->selectRaw('documents.status as value, count(*) as total')
             ->groupBy('documents.status')
@@ -105,49 +87,19 @@ class OfficeDocuments
         return [
             // Every status, in workflow order, zeros included, so the list doesn't reshuffle.
             'statuses' => array_combine(self::STATUSES, array_map(fn ($status) => (int) ($statuses[$status] ?? 0), self::STATUSES)),
-            'types' => ['all' => array_sum($types), ...$types],
+            'types' => DocumentTypes::counts($this->query($officeId, [...$filters, 'type' => 'all'])),
         ];
-    }
-
-    /** Narrows a query to one tab's kind of document. */
-    protected function ofType(Builder $query, string $type): Builder
-    {
-        $purchase = self::purchaseCategoryIds();
-        $payment = array_values(array_diff(self::paymentCategoryIds(), $purchase));
-
-        return match ($type) {
-            'purchase_requests' => $query->whereIn('documents.category_id', $purchase ?: [0]),
-            'payments' => $query->whereIn('documents.category_id', $payment ?: [0]),
-            // NULL NOT IN (...) is never true in SQL, so uncategorised documents
-            // (Citizen's Charter transactions) have to be let in explicitly.
-            'documents' => $query->where(fn (Builder $where) => $where
-                ->whereNotIn('documents.category_id', [...$purchase, ...$payment] ?: [0])
-                ->orWhereNull('documents.category_id')),
-            default => $query,
-        };
     }
 
     /** @return list<int> */
     public static function purchaseCategoryIds(): array
     {
-        return self::categoryIds('%Purchase%');
+        return DocumentTypes::purchaseCategoryIds();
     }
 
     /** @return list<int> */
     public static function paymentCategoryIds(): array
     {
-        return self::categoryIds('%Payment%');
-    }
-
-    /** @return list<int> */
-    protected static function categoryIds(string $like): array
-    {
-        return Category::where('name', 'like', $like)->pluck('id')->map(fn ($id) => (int) $id)->all();
-    }
-
-    /** Integer ids for an SQL IN (...) list; never empty, which would be a syntax error. */
-    protected static function idList(array $ids): string
-    {
-        return $ids ? implode(',', array_map('intval', $ids)) : '0';
+        return DocumentTypes::paymentCategoryIds();
     }
 }

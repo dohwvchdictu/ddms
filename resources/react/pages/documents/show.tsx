@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { EllipsisVertical, ExternalLink, History, PackagePlus, Printer, Send, Trash2, X, type LucideIcon } from 'lucide-react';
+import { EllipsisVertical, ExternalLink, History, PackageCheck, PackagePlus, Printer, Send, Trash2, Undo2, X, type LucideIcon } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { destroy, detach, show } from '@/actions/App/Http/Controllers/DocumentViewController';
 import ConfirmDialog from '@/components/confirm-dialog';
@@ -7,6 +7,7 @@ import CopyButton from '@/components/copy-button';
 import ListTabs from '@/components/data-table/list-tabs';
 import DescriptionList, { type DescriptionItem } from '@/components/description-list';
 import AttachDialog, { type Attachable } from '@/components/document-view/attach-dialog';
+import ReturnDialog from '@/components/document-view/return-dialog';
 import SubjectEditor from '@/components/document-view/subject-editor';
 import { type TimelineRow } from '@/components/document-timeline';
 import { describeLocation } from '@/components/document-tracking';
@@ -20,7 +21,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { longDate, parseDay } from '@/lib/working-days';
-import { dashboard, myDocuments } from '@/routes';
+import { dashboard, incoming, myDocuments } from '@/routes';
+import { receive } from '@/routes/incoming';
 
 interface DocumentDetails {
     id: number;
@@ -59,14 +61,32 @@ interface Props {
     timeline: TimelineRow[];
     attachments: Attachment[];
     attachable: Attachable[];
-    can: { forward: boolean; delete: boolean; edit_subject: boolean; manage_attachments: boolean; print: boolean };
+    can: {
+        forward: boolean;
+        delete: boolean;
+        edit_subject: boolean;
+        manage_attachments: boolean;
+        print: boolean;
+        receive: boolean;
+        return: boolean;
+    };
     offices: Office[];
     subjectMax: number;
+    /** Which list it was opened from: decides the breadcrumb trail. */
+    context: 'documents' | 'incoming';
+    /** The office that sent it here; Return picks it by default. */
+    sender: number | null;
 }
+
+/** The trail back to the list the document was opened from. */
+const TRAILS = {
+    documents: { title: 'My Documents', href: () => myDocuments() },
+    incoming: { title: 'Incoming', href: () => incoming() },
+};
 
 const dateTime = new Intl.DateTimeFormat('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 
-export default function ShowDocument({ document, timeline, attachments, attachable, can, offices, subjectMax }: Props) {
+export default function ShowDocument({ document, timeline, attachments, attachable, can, offices, subjectMax, context, sender }: Props) {
     const [forwarding, setForwarding] = useState(false);
     const [attaching, setAttaching] = useState(false);
     const [deleting, setDeleting] = useState(false);
@@ -74,6 +94,23 @@ export default function ShowDocument({ document, timeline, attachments, attachab
     const [busy, setBusy] = useState(false);
     const [tracking, setTracking] = useState(false);
     const [tab, setTab] = useState('bundle');
+    const [confirmingReceive, setConfirmingReceive] = useState(false);
+    const [returning, setReturning] = useState(false);
+
+    // Receiving reloads this page: the document is now on process here.
+    const receiveDocument = () =>
+        router.post(
+            receive.url(),
+            { document_ids: [document.id] },
+            {
+                preserveScroll: true,
+                onStart: () => setBusy(true),
+                onFinish: () => {
+                    setBusy(false);
+                    setConfirmingReceive(false);
+                },
+            },
+        );
 
     const kind = document.is_bundle ? 'bundle' : 'document';
 
@@ -157,7 +194,9 @@ export default function ShowDocument({ document, timeline, attachments, attachab
     const current = tabs.find((section) => section.value === tab) ?? tabs[0];
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Home', href: dashboard() }, { title: 'My Documents', href: myDocuments() }, { title: document.control_no }]}>
+        <AppLayout
+            breadcrumbs={[{ title: 'Home', href: dashboard() }, { title: TRAILS[context].title, href: TRAILS[context].href() }, { title: document.control_no }]}
+        >
             <Head title={document.control_no} />
 
             {/* Summary: what it is, what it says, where it stands. */}
@@ -208,6 +247,18 @@ export default function ShowDocument({ document, timeline, attachments, attachab
                                 Add to bundle
                             </Button>
                         )}
+                        {can.return && (
+                            <Button variant="outline" onClick={() => setReturning(true)}>
+                                <Undo2 />
+                                Return
+                            </Button>
+                        )}
+                        {can.receive && (
+                            <Button onClick={() => setConfirmingReceive(true)} className="bg-emerald-600 text-white hover:bg-emerald-700">
+                                <PackageCheck />
+                                Receive
+                            </Button>
+                        )}
                         {can.forward && (
                             <Button onClick={() => setForwarding(true)} className="bg-emerald-600 text-white hover:bg-emerald-700">
                                 <Send />
@@ -255,6 +306,22 @@ export default function ShowDocument({ document, timeline, attachments, attachab
 
             {/* The same routing history window as the lists and search. */}
             <TrackingDialog document={tracking ? document : null} onClose={() => setTracking(false)} showOpenLink={false} />
+            {can.return && (
+                <ReturnDialog open={returning} onOpenChange={setReturning} documentId={document.id} controlNo={document.control_no} offices={offices} sender={sender} />
+            )}
+            <ConfirmDialog
+                open={confirmingReceive}
+                onOpenChange={setConfirmingReceive}
+                title={`Receive this ${kind}?`}
+                description={
+                    document.is_bundle
+                        ? `${document.control_no} and the documents in it move to your Pending list.`
+                        : `${document.control_no} moves to your Pending list.`
+                }
+                confirmLabel="Receive"
+                onConfirm={receiveDocument}
+                busy={busy}
+            />
             <ForwardDialog open={forwarding} onOpenChange={setForwarding} documents={[document]} offices={offices} onForwarded={() => setForwarding(false)} />
             {can.manage_attachments && (
                 <AttachDialog open={attaching} onOpenChange={setAttaching} bundleId={document.id} bundleControlNo={document.control_no} candidates={attachable} />

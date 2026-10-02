@@ -6,6 +6,7 @@ use App\Actions\Dashboard\DeadlineCounts;
 use App\Actions\Documents\CreateDocument;
 use App\Actions\Documents\DocumentPermissions;
 use App\Actions\Documents\DocumentTracking;
+use App\Actions\Documents\ReturnDocument;
 use App\Models\Action;
 use App\Models\Document;
 use App\Models\Log;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -27,7 +29,13 @@ class DocumentViewController extends Controller
 {
     public const SUBJECT_MAX = 500;
 
-    public function show(string $controlNo, DocumentTracking $tracking, ApiService $api): Response
+    /** The document page reached from Incoming: the same page, with Incoming in its trail. */
+    public function showIncoming(string $controlNo, DocumentTracking $tracking, ApiService $api): Response
+    {
+        return $this->show($controlNo, $tracking, $api, 'incoming');
+    }
+
+    public function show(string $controlNo, DocumentTracking $tracking, ApiService $api, string $context = 'documents'): Response
     {
         $document = Document::with(['category', 'citizencharter'])->where('control_no', $controlNo)->firstOrFail();
         $officeId = session('user')['office']['id'] ?? null;
@@ -107,12 +115,21 @@ class DocumentViewController extends Controller
                 'edit_subject' => $can->canEditSubject(),
                 'manage_attachments' => $can->canManageAttachments(),
                 'print' => $can->canPrint(),
+                'receive' => $can->canReceive(),
+                'return' => $can->canReturn(),
             ],
             // Destinations for Forward: active offices only.
             'offices' => collect($api->getActiveOffices())
                 ->map(fn (array $office) => ['id' => $office['id'], 'name' => $office['officeName'] ?? '', 'code' => $office['officeCode'] ?? null])
                 ->values(),
             'subjectMax' => self::SUBJECT_MAX,
+            // Which list it was opened from, for the breadcrumb trail.
+            'context' => $context,
+            // Return goes back to whoever sent it here, unless another office is picked.
+            'sender' => $can->canReturn() ? Log::where('document_id', $document->id)
+                ->where('office_id', '!=', $officeId)
+                ->latest('id')
+                ->value('office_id') : null,
         ]);
     }
 
@@ -231,6 +248,33 @@ class DocumentViewController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Removed from the bundle', 'description' => $attachment->control_no]);
 
         return back();
+    }
+
+    public function returnDocument(Request $request, Document $document, ReturnDocument $return, ApiService $api): SymfonyResponse
+    {
+        abort_unless(DocumentPermissions::for($document)->canReturn(), 403);
+
+        $offices = collect($api->getActiveOffices())->keyBy('id');
+        $officeId = session('user')['office']['id'];
+
+        $data = $request->validate([
+            'office_id' => ['required', Rule::in($offices->keys()->reject(fn ($id) => (string) $id === (string) $officeId)->values()->all())],
+            'remarks' => ['required', 'string', 'min:3', 'max:1000'],
+        ], [
+            'office_id.required' => 'Choose the office to return it to.',
+            'office_id.in' => 'Choose an active office other than yours.',
+            'remarks.required' => 'Say why it is being returned.',
+        ]);
+
+        $to = ['id' => $data['office_id'], 'name' => $offices[$data['office_id']]['officeName'] ?? 'the selected office'];
+        $fromName = collect($api->getOfficesData()['officeList'] ?? [])->firstWhere('id', $officeId)['officeName'] ?? 'this office';
+
+        $return->handle($document, session('user'), $to, $fromName, trim($data['remarks']));
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Returned to ' . $to['name'], 'description' => $document->control_no]);
+
+        // It has left this office; back to the queue.
+        return redirect()->route('incoming');
     }
 
     /**

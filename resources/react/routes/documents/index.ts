@@ -251,7 +251,7 @@ created.head = (args: { document: number | { id: number } } | [document: number 
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::subject
- * @see app/Http/Controllers/DocumentViewController.php:119
+ * @see app/Http/Controllers/DocumentViewController.php:136
  * @route '/documents/{document}/subject'
  */
 export const subject = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -266,7 +266,7 @@ subject.definition = {
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::subject
- * @see app/Http/Controllers/DocumentViewController.php:119
+ * @see app/Http/Controllers/DocumentViewController.php:136
  * @route '/documents/{document}/subject'
  */
 subject.url = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -299,7 +299,7 @@ subject.url = (args: { document: number | { id: number } } | [document: number |
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::subject
- * @see app/Http/Controllers/DocumentViewController.php:119
+ * @see app/Http/Controllers/DocumentViewController.php:136
  * @route '/documents/{document}/subject'
  */
 subject.patch = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -309,7 +309,7 @@ subject.patch = (args: { document: number | { id: number } } | [document: number
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::destroy
- * @see app/Http/Controllers/DocumentViewController.php:134
+ * @see app/Http/Controllers/DocumentViewController.php:151
  * @route '/documents/{document}'
  */
 export const destroy = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -324,7 +324,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::destroy
- * @see app/Http/Controllers/DocumentViewController.php:134
+ * @see app/Http/Controllers/DocumentViewController.php:151
  * @route '/documents/{document}'
  */
 destroy.url = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -357,12 +357,70 @@ destroy.url = (args: { document: number | { id: number } } | [document: number |
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::destroy
- * @see app/Http/Controllers/DocumentViewController.php:134
+ * @see app/Http/Controllers/DocumentViewController.php:151
  * @route '/documents/{document}'
  */
 destroy.delete = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
+})
+
+/**
+* @see \App\Http\Controllers\DocumentViewController::returnMethod
+ * @see app/Http/Controllers/DocumentViewController.php:253
+ * @route '/documents/{document}/return'
+ */
+export const returnMethod = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: returnMethod.url(args, options),
+    method: 'post',
+})
+
+returnMethod.definition = {
+    methods: ["post"],
+    url: '/documents/{document}/return',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\DocumentViewController::returnMethod
+ * @see app/Http/Controllers/DocumentViewController.php:253
+ * @route '/documents/{document}/return'
+ */
+returnMethod.url = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { document: args }
+    }
+
+            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+            args = { document: args.id }
+        }
+    
+    if (Array.isArray(args)) {
+        args = {
+                    document: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        document: typeof args.document === 'object'
+                ? args.document.id
+                : args.document,
+                }
+
+    return returnMethod.definition.url
+            .replace('{document}', parsedArgs.document.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\DocumentViewController::returnMethod
+ * @see app/Http/Controllers/DocumentViewController.php:253
+ * @route '/documents/{document}/return'
+ */
+returnMethod.post = (args: { document: number | { id: number } } | [document: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: returnMethod.url(args, options),
+    method: 'post',
 })
 const documents = {
     search: Object.assign(search, search),
@@ -373,6 +431,7 @@ created: Object.assign(created, created),
 subject: Object.assign(subject, subject),
 destroy: Object.assign(destroy, destroy),
 attachments: Object.assign(attachments, attachments),
+return: Object.assign(returnMethod, returnMethod),
 }
 
 export default documents

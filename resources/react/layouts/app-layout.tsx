@@ -1,5 +1,5 @@
 import { usePage } from '@inertiajs/react';
-import { CircleAlert } from 'lucide-react';
+import { CircleAlert, type LucideIcon } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import AppHeader from '@/components/app-header';
 import AppSidebar from '@/components/app-sidebar';
@@ -7,6 +7,7 @@ import Breadcrumbs, { type Crumb } from '@/components/breadcrumbs';
 import SearchDialog from '@/components/search-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
+import { findNavItem } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
 
 /** Same key as the Livewire layout, so the choice carries across both. */
@@ -27,8 +28,21 @@ function readCollapsed(): boolean {
  * The signed-in app shell: fixed green header, sidebar (an icon rail when
  * collapsed on desktop, a slide-in sheet on mobile) and the page content.
  */
-export default function AppLayout({ children, breadcrumbs }: { children: ReactNode; breadcrumbs?: Crumb[] }) {
-    const { flash } = usePage().props;
+interface AppLayoutProps {
+    children: ReactNode;
+    breadcrumbs?: Crumb[];
+    /** The page title, shown under the breadcrumbs. */
+    title?: string;
+    /** The title's icon; by default the icon of the sidebar item for this page. */
+    icon?: LucideIcon;
+    /** Page-level controls at the right of the title. */
+    actions?: ReactNode;
+}
+
+export default function AppLayout({ children, breadcrumbs, title, icon, actions }: AppLayoutProps) {
+    const { url, props } = usePage();
+    const { flash } = props;
+    const TitleIcon = icon ?? findNavItem(url)?.icon;
     const [collapsed, setCollapsed] = useState(readCollapsed);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
@@ -97,11 +111,26 @@ export default function AppLayout({ children, breadcrumbs }: { children: ReactNo
                 {/* With breadcrumbs, they sit right under the header with a rule below,
                     where the Livewire pages have them, so both kinds of page line up. */}
                 <div className={cn('mx-auto max-w-[85rem] space-y-6 p-4 sm:p-6 lg:p-8', breadcrumbs && 'lg:pt-1.5')}>
-                    {breadcrumbs && (
-                        <div className="space-y-4 sm:space-y-6">
-                            <Breadcrumbs items={breadcrumbs} />
-                            <hr className="border-border" />
-                        </div>
+                    {/* Page header: breadcrumbs directly over the title, one unit, no divider. */}
+                    {(breadcrumbs || title) && (
+                        <header className="space-y-1">
+                            {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
+                            {(title || actions) && (
+                                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                                    {title && (
+                                        <h1 className="flex items-center gap-3 text-2xl font-semibold tracking-tight">
+                                            {TitleIcon && (
+                                                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm shadow-emerald-900/20 dark:bg-emerald-500/20 dark:text-emerald-300">
+                                                    <TitleIcon className="size-5" aria-hidden="true" />
+                                                </span>
+                                            )}
+                                            {title}
+                                        </h1>
+                                    )}
+                                    {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+                                </div>
+                            )}
+                        </header>
                     )}
                     {flash.error && (
                         <Alert variant="destructive">

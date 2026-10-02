@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\MyDocumentsController::__invoke
- * @see app/Http/Controllers/MyDocumentsController.php:31
+ * @see app/Http/Controllers/MyDocumentsController.php:34
  * @route '/my-documents'
  */
 const MyDocumentsController = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ MyDocumentsController.definition = {
 
 /**
 * @see \App\Http\Controllers\MyDocumentsController::__invoke
- * @see app/Http/Controllers/MyDocumentsController.php:31
+ * @see app/Http/Controllers/MyDocumentsController.php:34
  * @route '/my-documents'
  */
 MyDocumentsController.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ MyDocumentsController.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\MyDocumentsController::__invoke
- * @see app/Http/Controllers/MyDocumentsController.php:31
+ * @see app/Http/Controllers/MyDocumentsController.php:34
  * @route '/my-documents'
  */
 MyDocumentsController.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ MyDocumentsController.get = (options?: RouteQueryOptions): RouteDefinition<'get'
 })
 /**
 * @see \App\Http\Controllers\MyDocumentsController::__invoke
- * @see app/Http/Controllers/MyDocumentsController.php:31
+ * @see app/Http/Controllers/MyDocumentsController.php:34
  * @route '/my-documents'
  */
 MyDocumentsController.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ MyDocumentsController.head = (options?: RouteQueryOptions): RouteDefinition<'hea
 
 /**
 * @see \App\Http\Controllers\MyDocumentsController::selectable
- * @see app/Http/Controllers/MyDocumentsController.php:67
+ * @see app/Http/Controllers/MyDocumentsController.php:70
  * @route '/my-documents/selectable'
  */
 export const selectable = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -59,7 +59,7 @@ selectable.definition = {
 
 /**
 * @see \App\Http\Controllers\MyDocumentsController::selectable
- * @see app/Http/Controllers/MyDocumentsController.php:67
+ * @see app/Http/Controllers/MyDocumentsController.php:70
  * @route '/my-documents/selectable'
  */
 selectable.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ selectable.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\MyDocumentsController::selectable
- * @see app/Http/Controllers/MyDocumentsController.php:67
+ * @see app/Http/Controllers/MyDocumentsController.php:70
  * @route '/my-documents/selectable'
  */
 selectable.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -77,7 +77,7 @@ selectable.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\MyDocumentsController::selectable
- * @see app/Http/Controllers/MyDocumentsController.php:67
+ * @see app/Http/Controllers/MyDocumentsController.php:70
  * @route '/my-documents/selectable'
  */
 selectable.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -87,7 +87,7 @@ selectable.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\MyDocumentsController::forward
- * @see app/Http/Controllers/MyDocumentsController.php:82
+ * @see app/Http/Controllers/MyDocumentsController.php:85
  * @route '/my-documents/forward'
  */
 export const forward = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -102,7 +102,7 @@ forward.definition = {
 
 /**
 * @see \App\Http\Controllers\MyDocumentsController::forward
- * @see app/Http/Controllers/MyDocumentsController.php:82
+ * @see app/Http/Controllers/MyDocumentsController.php:85
  * @route '/my-documents/forward'
  */
 forward.url = (options?: RouteQueryOptions) => {
@@ -111,7 +111,7 @@ forward.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\MyDocumentsController::forward
- * @see app/Http/Controllers/MyDocumentsController.php:82
+ * @see app/Http/Controllers/MyDocumentsController.php:85
  * @route '/my-documents/forward'
  */
 forward.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({

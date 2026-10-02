@@ -1,22 +1,20 @@
-import { Head } from '@inertiajs/react';
-import { CircleDot, ExternalLink, FileSearch, History, Loader2, NotebookText, Printer, Send, TriangleAlert } from 'lucide-react';
+import { Head, router } from '@inertiajs/react';
+import { CircleDot, ExternalLink, History, Inbox, Loader2, PackageCheck } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
-import DateRangeFilter, { describeRange, type DateRangeValue } from '@/components/data-table/date-range-filter';
-import FacetedFilter, { type FacetOption } from '@/components/data-table/faceted-filter';
+import ConfirmDialog from '@/components/confirm-dialog';
 import BulkActionButton from '@/components/data-table/bulk-action-button';
+import DateRangeFilter, { describeRange } from '@/components/data-table/date-range-filter';
+import FacetedFilter, { type FacetOption } from '@/components/data-table/faceted-filter';
 import FilterChips, { type FilterChip } from '@/components/data-table/filter-chips';
 import ListTabs from '@/components/data-table/list-tabs';
 import SelectionBar from '@/components/data-table/selection-bar';
 import SortableHead from '@/components/data-table/sortable-head';
 import ViewOptions from '@/components/data-table/view-options';
-import ForwardDialog from '@/components/my-documents/forward-dialog';
 import SelectionDialog from '@/components/my-documents/selection-dialog';
-import type { DocumentRow as Row, Office } from '@/components/my-documents/types';
 import Pagination from '@/components/pagination';
 import SearchInput from '@/components/search-input';
 import StatusBadge from '@/components/status-badge';
-import { documentUrl } from '@/components/document-tracking';
 import TrackingDialog from '@/components/tracking-dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -28,12 +26,28 @@ import { useTablePreferences } from '@/hooks/use-table-preferences';
 import AppLayout from '@/layouts/app-layout';
 import { getJson } from '@/lib/fetch-json';
 import { cn } from '@/lib/utils';
-import { myDocuments } from '@/routes';
-import { generateLogbook } from '@/routes/inbox';
-import { selectable as selectableRoute } from '@/routes/my-documents';
+import { incoming } from '@/routes';
+import { receive, selectable as selectableRoute } from '@/routes/incoming';
 import type { Paginated } from '@/types';
 
 type DocumentType = 'all' | 'documents' | 'purchase_requests' | 'payments';
+
+interface Row {
+    id: number;
+    control_no: string;
+    subject: string;
+    classification: string;
+    charter: string | null;
+    source: string;
+    status: string;
+    is_bundle: boolean;
+    /** The office that sent it here. */
+    from: { code: string | null; name: string | null } | null;
+    /** When it was sent here. */
+    sent_at: string | null;
+    endorsed_to: string | null;
+    endorsed_to_me: boolean;
+}
 
 interface Filters {
     type: DocumentType;
@@ -46,23 +60,18 @@ interface Filters {
     [key: string]: unknown;
 }
 
-interface Facets {
-    statuses: Record<string, number>;
-    types: Record<DocumentType, number>;
-}
-
 interface Props {
     documents: Paginated<Row>;
     filters: Filters;
-    facets: Facets;
+    facets: { statuses: Record<string, number>; types: Record<DocumentType, number> };
     statusOptions: string[];
     perPageOptions: number[];
-    offices: Office[];
-    /** Most documents one batch may hold (the server's forward limit). */
     maxSelection: number;
 }
 
-/** The tabs, in order; `empty` names them in the "No … found" message. */
+const DEFAULT_SORT = 'updated_at';
+const DEFAULT_PER_PAGE = 25;
+
 const TYPE_TABS: { value: DocumentType; label: string; empty: string }[] = [
     { value: 'all', label: 'All', empty: 'documents' },
     { value: 'documents', label: 'Documents', empty: 'documents' },
@@ -70,116 +79,90 @@ const TYPE_TABS: { value: DocumentType; label: string; empty: string }[] = [
     { value: 'payments', label: 'Payments', empty: 'payments' },
 ];
 
-const DEFAULT_SORT = '-created_at';
-const DEFAULT_PER_PAGE = 25;
-
 /** Columns View options can hide; Control no. always shows. */
 const COLUMNS = [
     { id: 'subject', label: 'Subject' },
-    { id: 'destination', label: 'Destination' },
-    { id: 'created', label: 'Created' },
-    { id: 'encoded_by', label: 'Encoded by' },
+    { id: 'from', label: 'From' },
+    { id: 'sent', label: 'Sent' },
+    { id: 'endorsed_to', label: 'Endorsed to' },
 ];
 
 const dateFormat = new Intl.DateTimeFormat('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
-const timeFormat = new Intl.DateTimeFormat('en-PH', { hour: 'numeric', minute: '2-digit' });
+const relative = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
 
-/** The list opens on the past month (the server's default), worked out here the same way. */
-function defaultRange(): DateRangeValue {
-    const today = new Date();
-    const ymd = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+/** "3 days ago", "2 hours ago": how long it has been waiting. */
+function waited(iso: string): string {
+    const minutes = Math.round((new Date(iso).getTime() - Date.now()) / 60000);
 
-    return { from: ymd(new Date(today.getFullYear(), today.getMonth() - 1, today.getDate())), to: ymd(today) };
+    if (Math.abs(minutes) < 60) return relative.format(minutes, 'minute');
+    if (Math.abs(minutes) < 60 * 24) return relative.format(Math.round(minutes / 60), 'hour');
+
+    return relative.format(Math.round(minutes / (60 * 24)), 'day');
 }
 
 const list = (values: string[]) => (values.length ? values.join(',') : undefined);
 
-/** The query for a set of filters. Dates are always sent, so a cleared one stays cleared. */
 const toQuery = (filters: Filters) => ({
     type: filters.type === 'all' ? undefined : filters.type,
     search: filters.search.trim() || undefined,
     status: list(filters.statuses),
-    from: filters.from ?? '',
-    to: filters.to ?? '',
+    from: filters.from ?? undefined,
+    to: filters.to ?? undefined,
     sort: filters.sort === DEFAULT_SORT ? undefined : filters.sort,
     per_page: filters.per_page === DEFAULT_PER_PAGE ? undefined : filters.per_page,
 });
 
-const toUrl = (filters: Filters) => myDocuments.url({ query: toQuery(filters) });
+const toUrl = (filters: Filters) => incoming.url({ query: toQuery(filters) });
 
-export default function MyDocuments({ documents, filters: initial, facets, statusOptions, perPageOptions, offices, maxSelection }: Props) {
+/** The page where a waiting document is received or returned (still Livewire). */
+const incomingUrl = (controlNo: string) => `/document/incoming/${encodeURIComponent(controlNo)}`;
+
+export default function Incoming({ documents, filters: initial, facets, statusOptions, perPageOptions, maxSelection }: Props) {
     const { filters, update, loading } = useListFilters(initial, toUrl, { debounce: ['search'] });
-    const { preferences, isVisible, toggleColumn, setDense } = useTablePreferences('my-documents');
+    const { preferences, isVisible, toggleColumn, setDense } = useTablePreferences('incoming');
     const [tracking, setTracking] = useState<Row | null>(null);
     const [reviewing, setReviewing] = useState(false);
-    const [forwarding, setForwarding] = useState(false);
+    const [confirming, setConfirming] = useState(false);
+    const [receiving, setReceiving] = useState(false);
     const [selectingAll, setSelectingAll] = useState(false);
-    // While something is selected the toolbar shows the selection; "Filters" swaps back to search without dropping it.
     const [showFilters, setShowFilters] = useState(false);
     const selection = useSelection<Row>(maxSelection);
     const selecting = selection.size > 0 && !showFilters;
 
-    // Once the selection is empty, the next one starts on the selection toolbar again.
     if (selection.size === 0 && showFilters) {
         setShowFilters(false);
     }
 
-    // Filter options, each with how many documents it would show.
     const statusFacet: FacetOption[] = statusOptions.map((status) => ({
         value: status,
         label: status,
         count: facets.statuses[status] ?? 0,
         display: <StatusBadge status={status} />,
     }));
-    // The filters in effect, as removable chips. The default date range isn't one.
-    const range = defaultRange();
-    const customRange = filters.from !== range.from || filters.to !== range.to;
+
     const chips: FilterChip[] = [
         filters.search && { key: 'search', label: 'Search', value: `“${filters.search}”`, onRemove: () => update({ search: '' }) },
         filters.statuses.length > 0 && { key: 'status', label: 'Status', value: filters.statuses.join(', '), onRemove: () => update({ statuses: [] }) },
-        customRange && { key: 'created', label: 'Created', value: describeRange(filters), onRemove: () => update({ from: range.from, to: range.to }) },
+        (filters.from || filters.to) && { key: 'sent', label: 'Sent', value: describeRange(filters), onRemove: () => update({ from: null, to: null }) },
     ].filter((chip): chip is FilterChip => Boolean(chip));
 
-    const reset = () => update({ search: '', statuses: [], ...range });
+    const reset = () => update({ search: '', statuses: [], from: null, to: null });
 
-    // Header checkbox: this page's selectable rows.
-    const pageRows = documents.data.filter((row) => row.selectable);
-    const pageChecked = pageRows.length > 0 && pageRows.every((row) => selection.has(row.id));
-    const pagePartly = !pageChecked && pageRows.some((row) => selection.has(row.id));
+    // Every row here can be received, so every row gets a checkbox.
+    const pageChecked = documents.data.length > 0 && documents.data.every((row) => selection.has(row.id));
+    const pagePartly = !pageChecked && documents.data.some((row) => selection.has(row.id));
     const morePages = documents.total > documents.data.length;
+    const togglePage = (on: boolean) => (on ? selection.add(documents.data) : selection.remove(documents.data.map((row) => row.id)));
 
-    // Forward needs every pick still Created; the logbook needs every pick For Receiving.
-    const canForward = selection.size > 0 && selection.items.every((row) => row.status === 'Created');
-    const canLogbook = selection.size > 0 && selection.items.every((row) => row.status === 'For Receiving');
-
-    // How the selection splits by status, in workflow order.
-    const breakdown = statusOptions
-        .map((status) => [status, selection.items.filter((row) => row.status === status).length] as const)
-        .filter(([, count]) => count > 0);
-    const created = breakdown.find(([status]) => status === 'Created')?.[1] ?? 0;
-    const receiving = breakdown.find(([status]) => status === 'For Receiving')?.[1] ?? 0;
-    const mixed = created > 0 && receiving > 0;
-
-    /** Drops every selected row not in this status, to fix a mixed selection in one click. */
-    const keepOnly = (status: string) => selection.remove(selection.items.filter((row) => row.status !== status).map((row) => row.id));
-
-    const togglePage = (on: boolean) => (on ? selection.add(pageRows) : selection.remove(pageRows.map((row) => row.id)));
-
-    // "Select all matching": every selectable row under these filters, not just this page.
     const selectAllMatching = async () => {
         setSelectingAll(true);
 
         try {
             const { rows, total } = await getJson<{ rows: Row[]; total: number }>(selectableRoute.url({ query: toQuery(filters) }));
-            const fresh = rows.filter((row) => !selection.has(row.id));
-            const room = maxSelection - selection.size;
             selection.add(rows);
 
-            // Capped by the server (it sends at most a batch) or by what was already picked.
-            if (total > rows.length || fresh.length > room) {
-                toast.warning(`Selection is full at ${maxSelection} documents`, {
-                    description: `${total} match these filters; one batch can hold up to ${maxSelection}.`,
-                });
+            if (total > rows.length) {
+                toast.warning(`Selected the first ${maxSelection}`, { description: `${total} match; one batch can hold up to ${maxSelection}.` });
             }
         } catch {
             toast.error('Could not select all matching documents. Please try again.');
@@ -188,23 +171,36 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
         }
     };
 
-    const logbookUrl = generateLogbook.url({ query: { selected_items: selection.items.map((row) => row.id).join(',') } });
+    const doReceive = () =>
+        router.post(
+            receive.url(),
+            { document_ids: selection.items.map((row) => row.id) },
+            {
+                preserveScroll: true,
+                onStart: () => setReceiving(true),
+                onSuccess: () => selection.clear(),
+                onFinish: () => {
+                    setReceiving(false);
+                    setConfirming(false);
+                },
+            },
+        );
+
+    const count = selection.size;
     const columnCount = 3 + COLUMNS.filter((column) => isVisible(column.id)).length;
+    const emptyKind = TYPE_TABS.find((tab) => tab.value === filters.type)?.empty ?? 'documents';
 
     return (
-        <AppLayout title="My Documents">
-            <Head title="My Documents" />
+        <AppLayout title="Incoming">
+            <Head title="Incoming" />
 
-            {/* overflow-clip, not -hidden: hidden would make this the scroll box and stop the selection bar sticking. */}
             <div className="relative overflow-clip rounded-xl border bg-card shadow-sm">
-                {/* Reloading: a thin bar runs along the top while the table dims. */}
                 {loading && (
                     <div className="absolute inset-x-0 top-0 z-10 h-0.5 overflow-hidden bg-emerald-100 dark:bg-emerald-950" role="progressbar" aria-label="Loading">
                         <div className="h-full w-1/3 animate-[table-progress_1s_ease-in-out_infinite] bg-emerald-600" />
                     </div>
                 )}
 
-                {/* Tabs: the kinds of document. They keep the other filters; the selection survives them too. */}
                 <ListTabs
                     label="Document type"
                     value={filters.type}
@@ -212,52 +208,9 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                     tabs={TYPE_TABS.map((tab) => ({ ...tab, count: facets.types[tab.value] }))}
                 />
 
-                {/* Toolbar: the filters, or (while something is selected) what to do with the selection. */}
                 {selecting ? (
-                    <SelectionBar
-                        count={selection.size}
-                        onClear={selection.clear}
-                        onReview={() => setReviewing(true)}
-                        // The batch can span several searches: filter on without losing it.
-                        onShowFilters={() => setShowFilters(true)}
-                        notice={
-                            mixed && (
-                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                                    <span className="inline-flex items-center gap-1.5">
-                                        <TriangleAlert className="size-4 shrink-0" aria-hidden="true" />
-                                        Forward takes <strong className="font-semibold">Created</strong> documents and the logbook{' '}
-                                        <strong className="font-semibold">For Receiving</strong> ones. Keep one kind:
-                                    </span>
-                                    <span className="flex flex-wrap gap-1.5">
-                                        <Button size="xs" variant="outline" onClick={() => keepOnly('Created')} className="border-amber-300 bg-background">
-                                            Keep the {created} Created
-                                        </Button>
-                                        <Button size="xs" variant="outline" onClick={() => keepOnly('For Receiving')} className="border-amber-300 bg-background">
-                                            Keep the {receiving} For Receiving
-                                        </Button>
-                                    </span>
-                                </div>
-                            )
-                        }
-                    >
-                        <BulkActionButton
-                            icon={NotebookText}
-                            label="Generate logbook"
-                            shortcut="l"
-                            href={logbookUrl}
-                            newTab
-                            disabled={!canLogbook}
-                            disabledReason="The logbook lists documents that are For Receiving. Untick the Created ones first."
-                        />
-                        <BulkActionButton
-                            icon={Send}
-                            label="Forward"
-                            shortcut="f"
-                            variant="primary"
-                            onClick={() => setForwarding(true)}
-                            disabled={!canForward}
-                            disabledReason="Only Created documents can be forwarded. Untick the For Receiving ones first."
-                        />
+                    <SelectionBar count={count} onClear={selection.clear} onReview={() => setReviewing(true)} onShowFilters={() => setShowFilters(true)}>
+                        <BulkActionButton icon={PackageCheck} label="Receive" shortcut="r" variant="primary" onClick={() => setConfirming(true)} />
                     </SelectionBar>
                 ) : (
                     <>
@@ -266,14 +219,13 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                                 value={filters.search}
                                 onChange={(search) => update({ search })}
                                 placeholder="Search subject or control no.…"
-                                label="Search my documents"
+                                label="Search incoming documents"
                                 loading={loading}
-                                // Only once the results are for what is typed, not a stale count mid-typing.
                                 resultCount={filters.search.trim() === initial.search ? documents.total : undefined}
                                 className="w-full sm:max-w-md sm:min-w-72 sm:flex-1"
                             />
                             <FacetedFilter title="Status" icon={CircleDot} options={statusFacet} value={filters.statuses} onChange={(statuses) => update({ statuses })} />
-                            <DateRangeFilter label="Created" value={{ from: filters.from, to: filters.to }} onChange={({ from, to }) => update({ from, to })} />
+                            <DateRangeFilter label="Sent" value={{ from: filters.from, to: filters.to }} onChange={({ from, to }) => update({ from, to })} />
                             <div className="ml-auto flex items-center gap-2">
                                 {selection.size > 0 && (
                                     <Button size="sm" onClick={() => setShowFilters(false)} className="h-9 bg-emerald-600 text-white hover:bg-emerald-700">
@@ -298,7 +250,20 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
 
                 <div className={cn('transition-opacity', loading && 'pointer-events-none opacity-60')} aria-busy={loading}>
                     {documents.data.length === 0 ? (
-                        <EmptyState filtered={chips.length > 0} onReset={reset} kind={TYPE_TABS.find((tab) => tab.value === filters.type)?.empty ?? 'documents'} />
+                        <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
+                            <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                                <Inbox className="size-5" />
+                            </div>
+                            <p className="text-sm font-medium">{chips.length > 0 ? `No ${emptyKind} match these filters` : `No ${emptyKind} waiting`}</p>
+                            <p className="text-sm text-muted-foreground">
+                                {chips.length > 0 ? 'Try fewer filters.' : 'Documents other offices send you will show here until you receive them.'}
+                            </p>
+                            {chips.length > 0 && (
+                                <Button variant="outline" size="sm" onClick={reset} className="mt-2">
+                                    Reset filters
+                                </Button>
+                            )}
+                        </div>
                     ) : (
                         <Table className={cn(preferences.dense ? '[&_td]:py-1.5' : '[&_td]:py-3')}>
                             <TableHeader>
@@ -307,8 +272,8 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                                         <Checkbox
                                             checked={pageChecked ? true : pagePartly ? 'indeterminate' : false}
                                             onCheckedChange={(checked) => togglePage(checked === true)}
-                                            disabled={pageRows.length === 0 || (selection.full && !pageChecked && !pagePartly)}
-                                            aria-label="Select every selectable document on this page"
+                                            disabled={selection.full && !pageChecked && !pagePartly}
+                                            aria-label="Select every document on this page"
                                             className={CHECKBOX}
                                         />
                                     </TableHead>
@@ -316,13 +281,13 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                                         Control no.
                                     </SortableHead>
                                     {isVisible('subject') && <TableHead>Subject</TableHead>}
-                                    {isVisible('destination') && <TableHead>Destination</TableHead>}
-                                    {isVisible('created') && (
-                                        <SortableHead column="created_at" sort={filters.sort} onSort={(sort) => update({ sort })} firstDirection="desc">
-                                            Created
+                                    {isVisible('from') && <TableHead>From</TableHead>}
+                                    {isVisible('sent') && (
+                                        <SortableHead column="updated_at" sort={filters.sort} onSort={(sort) => update({ sort })}>
+                                            Sent
                                         </SortableHead>
                                     )}
-                                    {isVisible('encoded_by') && <TableHead>Encoded by</TableHead>}
+                                    {isVisible('endorsed_to') && <TableHead>Endorsed to</TableHead>}
                                     <TableHead className="pr-4 text-right">
                                         <span className="sr-only">Actions</span>
                                     </TableHead>
@@ -332,7 +297,7 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                                 {pageChecked && morePages && (
                                     <TableRow className="bg-emerald-50 hover:bg-emerald-50 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/30">
                                         <TableCell colSpan={columnCount} className="py-2 text-center text-sm">
-                                            All selectable documents on this page are selected.{' '}
+                                            All {documents.data.length} on this page are selected.{' '}
                                             <button
                                                 type="button"
                                                 onClick={selectAllMatching}
@@ -340,7 +305,7 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                                                 className="inline-flex items-center gap-1 font-medium text-emerald-700 underline-offset-2 hover:underline disabled:opacity-50 dark:text-emerald-400"
                                             >
                                                 {selectingAll && <Loader2 className="size-3.5 animate-spin" />}
-                                                Select every match on all pages
+                                                Select all {documents.total}
                                             </button>
                                         </TableCell>
                                     </TableRow>
@@ -352,23 +317,17 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                                         className="data-[state=selected]:bg-emerald-50/60 dark:data-[state=selected]:bg-emerald-950/20"
                                     >
                                         <TableCell className="pl-4 align-top">
-                                            {row.selectable ? (
-                                                <Checkbox
-                                                    checked={selection.has(row.id)}
-                                                    onCheckedChange={(checked) => selection.toggle(row, checked === true)}
-                                                    disabled={selection.full && !selection.has(row.id)}
-                                                    aria-label={`Select ${row.control_no}`}
-                                                    className={cn(CHECKBOX, 'mt-0.5')}
-                                                />
-                                            ) : (
-                                                // Not Created / For Receiving, or a bundle attachment (it travels with its bundle).
-                                                <span className="sr-only">Not selectable</span>
-                                            )}
+                                            <Checkbox
+                                                checked={selection.has(row.id)}
+                                                onCheckedChange={(checked) => selection.toggle(row, checked === true)}
+                                                disabled={selection.full && !selection.has(row.id)}
+                                                aria-label={`Select ${row.control_no}`}
+                                                className={cn(CHECKBOX, 'mt-0.5')}
+                                            />
                                         </TableCell>
                                         <TableCell className="align-top">
-                                            {/* A new tab, so the list and its filters stay where they are. */}
                                             <a
-                                                href={documentUrl(row.control_no)}
+                                                href={incomingUrl(row.control_no)}
                                                 target="_blank"
                                                 rel="noopener"
                                                 title="Open in a new tab"
@@ -379,11 +338,6 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                                             </a>
                                             <div className="mt-1.5 flex flex-wrap gap-1">
                                                 <StatusBadge status={row.status} className="px-1.5 py-0 text-[0.65rem] leading-4" />
-                                                {row.turnaround_days !== null && (
-                                                    <Tag title="Turnaround time">
-                                                        TAT {row.turnaround_days} {row.turnaround_days === 1 ? 'day' : 'days'}
-                                                    </Tag>
-                                                )}
                                                 {row.is_bundle && <Tag>Bundle</Tag>}
                                             </div>
                                         </TableCell>
@@ -391,7 +345,7 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                                             <TableCell className="max-w-md min-w-64 align-top whitespace-normal">
                                                 <p className="text-sm font-medium">{row.classification}</p>
                                                 <p className={cn('text-sm text-muted-foreground', preferences.dense ? 'line-clamp-1' : 'line-clamp-2')} title={row.subject}>
-                                                    <Highlight text={row.subject} term={filters.search} />
+                                                    {row.subject}
                                                 </p>
                                                 {!preferences.dense && (
                                                     <div className="mt-1.5 flex flex-wrap gap-1">
@@ -409,35 +363,45 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                                                 )}
                                             </TableCell>
                                         )}
-                                        {isVisible('destination') && (
-                                            <TableCell className="align-top text-sm">
-                                                {row.destination?.code ? (
-                                                    <span title={row.destination.name ?? undefined}>{row.destination.code}</span>
-                                                ) : (
-                                                    <span className="text-muted-foreground">—</span>
-                                                )}
+                                        {isVisible('from') && (
+                                            <TableCell className="max-w-48 align-top text-sm whitespace-normal">
+                                                {row.from?.name ?? row.from?.code ?? <span className="text-muted-foreground">—</span>}
                                             </TableCell>
                                         )}
-                                        {isVisible('created') && (
+                                        {isVisible('sent') && (
                                             <TableCell className="align-top text-sm whitespace-nowrap">
-                                                {row.created_at ? (
+                                                {row.sent_at ? (
                                                     <>
-                                                        <p>{dateFormat.format(new Date(row.created_at))}</p>
-                                                        {!preferences.dense && <p className="text-xs text-muted-foreground">{timeFormat.format(new Date(row.created_at))}</p>}
+                                                        <p>{dateFormat.format(new Date(row.sent_at))}</p>
+                                                        <p className="text-xs text-muted-foreground">{waited(row.sent_at)}</p>
                                                     </>
                                                 ) : (
                                                     '—'
                                                 )}
                                             </TableCell>
                                         )}
-                                        {isVisible('encoded_by') && (
+                                        {isVisible('endorsed_to') && (
                                             <TableCell className="max-w-44 min-w-32 align-top text-sm whitespace-normal wrap-break-word">
-                                                {row.encoded_by ?? <span className="text-muted-foreground">—</span>}
+                                                {row.endorsed_to ? (
+                                                    <>
+                                                        {row.endorsed_to}
+                                                        {row.endorsed_to_me && <Tag className="ml-1.5 bg-emerald-600 text-white">You</Tag>}
+                                                    </>
+                                                ) : (
+                                                    <span className="text-muted-foreground">—</span>
+                                                )}
                                             </TableCell>
                                         )}
                                         <TableCell className="pr-4 align-top">
                                             <div className="flex justify-end">
-                                                <RowActions row={row} onTrack={() => setTracking(row)} />
+                                                <div role="group" aria-label={`Actions for ${row.control_no}`} className="inline-flex divide-x overflow-hidden rounded-md border bg-background shadow-xs">
+                                                    <IconAction label="Routing history" onClick={() => setTracking(row)}>
+                                                        <History />
+                                                    </IconAction>
+                                                    <IconAction label="Open document" href={incomingUrl(row.control_no)}>
+                                                        <ExternalLink />
+                                                    </IconAction>
+                                                </div>
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -451,65 +415,23 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
             </div>
 
             <TrackingDialog document={tracking} onClose={() => setTracking(null)} />
-            <SelectionDialog
-                open={reviewing}
-                onOpenChange={setReviewing}
-                items={selection.items}
-                onRemove={(id) => selection.remove([id])}
-                onClear={selection.clear}
+            <SelectionDialog open={reviewing} onOpenChange={setReviewing} items={selection.items} onRemove={(id) => selection.remove([id])} onClear={selection.clear} />
+            <ConfirmDialog
+                open={confirming}
+                onOpenChange={setConfirming}
+                title={`Receive ${count === 1 ? 'this document' : `${count} documents`}?`}
+                description="They move to your Pending list, and their senders see them as received."
+                confirmLabel="Receive"
+                onConfirm={doReceive}
+                busy={receiving}
             />
-            <ForwardDialog open={forwarding} onOpenChange={setForwarding} documents={selection.items} offices={offices} onForwarded={selection.clear} />
         </AppLayout>
     );
 }
 
 const CHECKBOX = 'data-[state=checked]:border-emerald-600 data-[state=checked]:bg-emerald-600 data-[state=indeterminate]:border-emerald-600 data-[state=indeterminate]:bg-emerald-600 data-[state=indeterminate]:text-white';
 
-/** The search term marked wherever it appears in the text. */
-function Highlight({ text, term }: { text: string; term: string }) {
-    const needle = term.trim();
-
-    if (needle.length < 2) {
-        return <>{text}</>;
-    }
-
-    const parts = text.split(new RegExp(`(${needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'));
-
-    return (
-        <>
-            {parts.map((part, index) =>
-                index % 2 === 1 ? (
-                    <mark key={index} className="rounded-sm bg-yellow-200/70 px-0.5 text-inherit dark:bg-yellow-500/30">
-                        {part}
-                    </mark>
-                ) : (
-                    part
-                ),
-            )}
-        </>
-    );
-}
-
-/** A row's actions as one group of icon buttons. */
-function RowActions({ row, onTrack }: { row: Row; onTrack: () => void }) {
-    return (
-        <div role="group" aria-label={`Actions for ${row.control_no}`} className="inline-flex divide-x overflow-hidden rounded-md border bg-background shadow-xs">
-            <IconAction label="Routing history" onClick={onTrack}>
-                <History />
-            </IconAction>
-            <IconAction label="Open document" href={documentUrl(row.control_no)}>
-                <ExternalLink />
-            </IconAction>
-            {row.can_print && (
-                <IconAction label="Print transmittal form" href={`/print-transmittal-form/${encodeURIComponent(row.control_no)}`}>
-                    <Printer />
-                </IconAction>
-            )}
-        </div>
-    );
-}
-
-/** One button in the group: an icon, named by its tooltip. Links open in a new tab. */
+/** One icon button in a row's action group; links open in a new tab. */
 function IconAction({ label, onClick, href, children }: { label: string; onClick?: () => void; href?: string; children: ReactNode }) {
     return (
         <Tooltip>
@@ -529,29 +451,6 @@ function IconAction({ label, onClick, href, children }: { label: string; onClick
     );
 }
 
-function Tag({ children, className, title }: { children: ReactNode; className?: string; title?: string }) {
-    return (
-        <span title={title} className={cn('inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground', className)}>
-            {children}
-        </span>
-    );
-}
-
-function EmptyState({ filtered, onReset, kind }: { filtered: boolean; onReset: () => void; kind: string }) {
-    return (
-        <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
-            <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                <FileSearch className="size-5" />
-            </div>
-            <p className="text-sm font-medium">No {kind} found</p>
-            <p className="text-sm text-muted-foreground">
-                {filtered ? 'Nothing matches these filters.' : 'Nothing was encoded in the past month. Try a wider date range.'}
-            </p>
-            {filtered && (
-                <Button variant="outline" size="sm" onClick={onReset} className="mt-2">
-                    Reset filters
-                </Button>
-            )}
-        </div>
-    );
+function Tag({ children, className }: { children: ReactNode; className?: string }) {
+    return <span className={cn('inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground', className)}>{children}</span>;
 }

@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\DocumentViewController::view
- * @see app/Http/Controllers/DocumentViewController.php:30
+ * @see app/Http/Controllers/DocumentViewController.php:38
  * @route '/document/view/{control_no}'
  */
 export const view = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ view.definition = {
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::view
- * @see app/Http/Controllers/DocumentViewController.php:30
+ * @see app/Http/Controllers/DocumentViewController.php:38
  * @route '/document/view/{control_no}'
  */
 view.url = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -44,7 +44,7 @@ view.url = (args: { control_no: string | number } | [control_no: string | number
 
 /**
 * @see \App\Http\Controllers\DocumentViewController::view
- * @see app/Http/Controllers/DocumentViewController.php:30
+ * @see app/Http/Controllers/DocumentViewController.php:38
  * @route '/document/view/{control_no}'
  */
 view.get = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -53,7 +53,7 @@ view.get = (args: { control_no: string | number } | [control_no: string | number
 })
 /**
 * @see \App\Http\Controllers\DocumentViewController::view
- * @see app/Http/Controllers/DocumentViewController.php:30
+ * @see app/Http/Controllers/DocumentViewController.php:38
  * @route '/document/view/{control_no}'
  */
 view.head = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -62,8 +62,8 @@ view.head = (args: { control_no: string | number } | [control_no: string | numbe
 })
 
 /**
-* @see \App\Livewire\Views\IncomingDetail::__invoke
- * @see app/Livewire/Views/IncomingDetail.php:7
+* @see \App\Http\Controllers\DocumentViewController::incoming
+ * @see app/Http/Controllers/DocumentViewController.php:33
  * @route '/document/incoming/{control_no}'
  */
 export const incoming = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -77,8 +77,8 @@ incoming.definition = {
 } satisfies RouteDefinition<["get","head"]>
 
 /**
-* @see \App\Livewire\Views\IncomingDetail::__invoke
- * @see app/Livewire/Views/IncomingDetail.php:7
+* @see \App\Http\Controllers\DocumentViewController::incoming
+ * @see app/Http/Controllers/DocumentViewController.php:33
  * @route '/document/incoming/{control_no}'
  */
 incoming.url = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -105,8 +105,8 @@ incoming.url = (args: { control_no: string | number } | [control_no: string | nu
 }
 
 /**
-* @see \App\Livewire\Views\IncomingDetail::__invoke
- * @see app/Livewire/Views/IncomingDetail.php:7
+* @see \App\Http\Controllers\DocumentViewController::incoming
+ * @see app/Http/Controllers/DocumentViewController.php:33
  * @route '/document/incoming/{control_no}'
  */
 incoming.get = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -114,8 +114,8 @@ incoming.get = (args: { control_no: string | number } | [control_no: string | nu
     method: 'get',
 })
 /**
-* @see \App\Livewire\Views\IncomingDetail::__invoke
- * @see app/Livewire/Views/IncomingDetail.php:7
+* @see \App\Http\Controllers\DocumentViewController::incoming
+ * @see app/Http/Controllers/DocumentViewController.php:33
  * @route '/document/incoming/{control_no}'
  */
 incoming.head = (args: { control_no: string | number } | [control_no: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
