@@ -32,18 +32,28 @@ class ProcessedDocuments
     {
         $search = trim((string) ($filters['search'] ?? ''));
         $statuses = array_values(array_intersect($filters['statuses'] ?? [], self::STATUSES));
+        $from = ($filters['from'] ?? null) ? Carbon::parse($filters['from'])->startOfDay() : null;
+        $to = ($filters['to'] ?? null) ? Carbon::parse($filters['to'])->endOfDay() : null;
+
+        // A step here inside the period. Implied by the latest-step filter below
+        // (the latest step is such a step), so it changes no result, but it lets
+        // MySQL start from the period's steps (logs_assigned_action_created_index)
+        // instead of checking every document's latest step one by one.
+        $stepInPeriod = $this->steps($officeId)
+            ->when($from, fn ($query) => $query->where('logs.created_at', '>=', $from))
+            ->when($to, fn ($query) => $query->where('logs.created_at', '<=', $to));
 
         return DocumentTypes::apply(Document::query(), DocumentTypes::normalize($filters['type'] ?? null))
             ->whereNull('documents.bundle_id')
-            ->whereExists($this->steps($officeId))
+            ->whereExists($stepInPeriod)
             ->when($search !== '', fn (Builder $query) => $query->where(function (Builder $where) use ($search) {
                 $where->where('documents.control_no', 'like', "%{$search}%")
                     ->orWhere('documents.subject', 'like', "%{$search}%");
             }))
             ->when($statuses, fn (Builder $query) => $query->whereIn('documents.status', $statuses))
             // On the date shown: its latest step here.
-            ->when($filters['from'] ?? null, fn (Builder $query, string $from) => $query->where($this->latest($officeId, 'created_at'), '>=', Carbon::parse($from)->startOfDay()))
-            ->when($filters['to'] ?? null, fn (Builder $query, string $to) => $query->where($this->latest($officeId, 'created_at'), '<=', Carbon::parse($to)->endOfDay()));
+            ->when($from, fn (Builder $query) => $query->where($this->latest($officeId, 'created_at'), '>=', $from))
+            ->when($to, fn (Builder $query) => $query->where($this->latest($officeId, 'created_at'), '<=', $to));
     }
 
     /** Adds the latest step here: when (`processed_at`), by whom (`processed_by`) and which (`processed_action`). */

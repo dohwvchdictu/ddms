@@ -17,9 +17,11 @@ echo "Database is reachable."
 
 php artisan storage:link --force || true
 
-# Cache config/views at runtime so container env vars are picked up.
-# Route caching is skipped: routes/web.php contains closure routes.
+# Cache config/routes/views at runtime so container env vars are picked up.
+# Closure routes (/logout, the /dtis-admin redirect) cache fine: Laravel
+# serializes them.
 php artisan config:cache
+php artisan route:cache
 php artisan view:cache
 
 if [ "${AUTO_MIGRATE:-true}" = "true" ]; then

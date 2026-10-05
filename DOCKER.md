@@ -147,8 +147,9 @@ that holds them. Keep `APP_URL` in `.env.docker` equal to the public URL
 - `API_BASE_URL` defaults to `host.docker.internal:8081`, which points at the
   machine running Docker. If the offices API runs elsewhere on the network,
   use its real address (e.g. `http://192.168.100.162:8081/`).
-- Route caching is intentionally skipped because `routes/web.php` registers a
-  closure route (`/logout`); convert it to a controller action if you want
-  `php artisan route:cache`.
+- Config, routes and views are cached on every container start
+  (`docker/entrypoint.sh`), so a rebuild or restart picks up route changes.
+  Don't run `php artisan route:cache` in local development (Herd): new routes
+  would be ignored until `php artisan route:clear`.
 - The local dev setup (Herd + Vite) is unaffected: `.env` is still used for
   local development, `.env.docker` only feeds the containers.
