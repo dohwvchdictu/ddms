@@ -1,4 +1,8 @@
-# Running DTIS v2 with Docker
+# Running DDMS with Docker
+
+The server names keep their original DTIS-era names: the domain
+`dtis.dohwv.net`, the database `dtis`, the certificate files `dtis.crt` /
+`dtis.key`, the folder `C:\docker\DTISV2` and the image `dtisv2-app`.
 
 ## Stack
 
@@ -13,7 +17,7 @@
 The `db`, `redis`, and `phpmyadmin` images are downloaded once from Docker Hub
 and cached locally. The `app` image is **not** downloaded — it is built locally
 from the [Dockerfile](Dockerfile) (`pull_policy: build` in the compose file) in
-two stages: a Node 20 stage compiles the Vite/Tailwind assets, then a PHP 8.3
+two stages: a Node stage builds the React (Vite) assets, then a PHP 8.3
 Apache image installs the required extensions (`pdo_mysql`, `gd`, `intl`,
 `zip`, `exif`, `bcmath`, `opcache`, `redis`) and the production Composer
 dependencies.
@@ -41,7 +45,7 @@ dependencies.
    ```
 
    The first build takes several minutes: it downloads the base images
-   (`node:20-alpine`, `php:8.3-apache`, `composer:2`), compiles PHP
+   (`node:22-alpine`, `php:8.3-apache`, `composer:2`), compiles PHP
    extensions, and runs `npm ci` and `composer install`. Later builds reuse
    the cache and are much faster.
 

@@ -20,7 +20,7 @@ class DocumentTrackingTest extends TestCase
 
     public function test_guests_cannot_see_tracking(): void
     {
-        $this->getJson('/documents/1/tracking')->assertRedirect(route('login'));
+        $this->getJson('/documents/1/tracking')->assertUnauthorized();
     }
 
     public function test_an_unknown_document_is_not_found(): void

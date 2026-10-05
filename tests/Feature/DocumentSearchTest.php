@@ -18,7 +18,7 @@ class DocumentSearchTest extends TestCase
 
     public function test_guests_cannot_search(): void
     {
-        $this->getJson('/documents/search?q=memo')->assertRedirect(route('login'));
+        $this->getJson('/documents/search?q=memo')->assertUnauthorized();
     }
 
     public function test_a_query_shorter_than_two_characters_returns_nothing(): void

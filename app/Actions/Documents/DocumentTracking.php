@@ -23,7 +23,7 @@ class DocumentTracking
     public function handle(int $documentId): ?array
     {
         $document = Document::with(['category', 'citizencharter', 'logs' => function ($query) {
-            $query->with(['user', 'action'])
+            $query->with('action')
                 ->orderBy('created_at', 'desc')
                 ->orderBy('id', 'desc'); // tiebreaker for entries sharing a timestamp (Forwarded + For Receiving)
         }])->find($documentId);

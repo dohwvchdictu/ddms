@@ -58,7 +58,6 @@ class DocumentTimeline
     private static function normalize($log): array
     {
         $action = self::get($log, 'action');
-        $user = self::get($log, 'user');
         $createdAt = self::get($log, 'created_at');
 
         return [
@@ -72,7 +71,6 @@ class DocumentTimeline
             'assigned_to' => self::get($log, 'assigned_to'),
             'endorsed_to' => self::get($log, 'endorsed_to'),
             'user_id' => self::get($log, 'user_id'),
-            'user_name' => self::get($user, 'name'),
         ];
     }
 
@@ -159,7 +157,7 @@ class DocumentTimeline
             // Employee names arrive as "first last suffix" and trail a space
             // whenever the suffix is empty, which is most of the directory.
             $endorsedTo = $row['endorsed_to'] ? trim((string) ($user)($row['endorsed_to'])) : null;
-            $actor = trim((string) ($row['user_name'] ?: ($user)($row['user_id'])));
+            $actor = trim((string) ($user)($row['user_id']));
 
             $presented[] = [
                 'key' => 'log-' . ($row['id'] ?? $index),

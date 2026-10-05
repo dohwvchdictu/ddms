@@ -1,4 +1,4 @@
-# Daily MySQL backup for DTIS v2 (Docker setup).
+# Daily MySQL backup for DDMS (Docker setup).
 # Reads MYSQL_ROOT_PASSWORD from .env.docker, dumps the dtis database to
 # $BackupDir, and deletes dumps older than $RetentionDays.
 #

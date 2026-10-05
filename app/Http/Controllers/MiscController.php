@@ -84,7 +84,7 @@ class MiscController extends Controller
         $documents = [];
         if (!empty($selectedItems)) {
             $documents = Document::with(['category', 'citizencharter', 'logs' => function ($query) {
-                $query->with(['action', 'user'])->orderBy('created_at', 'asc');
+                $query->with('action')->orderBy('created_at', 'asc');
             }])
                 ->whereIn('id', $selectedItems)
                 // Only what this office forwarded: the ids come from the URL, so
