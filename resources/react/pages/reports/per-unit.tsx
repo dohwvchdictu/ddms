@@ -31,7 +31,7 @@ interface Filters {
 
 interface Props {
     filters: Filters;
-    /** This year so far: what the report shows with no dates in the URL. */
+    /** The last 30 days: what the report shows with no dates in the URL. */
     defaultRange: DateRangeValue;
     report: {
         total: number;

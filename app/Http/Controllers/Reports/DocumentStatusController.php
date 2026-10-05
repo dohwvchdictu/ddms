@@ -33,14 +33,4 @@ class DocumentStatusController extends Controller
             'printUrl' => route('print.document.status', ['startDate' => $from, 'endDate' => $to]),
         ]);
     }
-
-    /**
-     * This month so far, as the Livewire report opened: the date picker's "This month".
-     *
-     * @return array{from: string, to: string}
-     */
-    protected static function defaultRange(): array
-    {
-        return ['from' => now()->startOfMonth()->toDateString(), 'to' => now()->toDateString()];
-    }
 }

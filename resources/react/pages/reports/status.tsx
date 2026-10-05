@@ -37,7 +37,7 @@ interface Filters extends DateRangeValue {
 
 interface Props {
     filters: Filters;
-    /** This month so far: what the report shows with no dates in the URL. */
+    /** The last 30 days: what the report shows with no dates in the URL. */
     defaultRange: DateRangeValue;
     report: { totals: Totals; offices: OfficeRow[] };
     printUrl: string;
@@ -136,7 +136,7 @@ export default function StatusReport({ filters: initial, defaultRange, report, p
                     <DateRangeFilter label="Period" value={{ from: filters.from, to: filters.to }} onChange={({ from, to }) => update({ from, to })} />
                     {!isSameRange(filters, defaultRange) && (
                         <Button variant="ghost" size="sm" onClick={() => update({ ...defaultRange })} className="text-muted-foreground">
-                            Back to this month
+                            Back to the last 30 days
                         </Button>
                     )}
                     <span className="sr-only" aria-live="polite">

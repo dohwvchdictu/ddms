@@ -107,7 +107,7 @@ class StatusReportTest extends TestCase
         $this->get('/report-status-of-documents')->assertRedirect(route('login'));
     }
 
-    public function test_it_opens_on_this_month_with_the_figures_per_office(): void
+    public function test_it_opens_on_the_last_30_days_with_the_figures_per_office(): void
     {
         // Received and forwarded on: completed.
         $done = $this->document('2026-10-01 08:00:00', 'For Receiving', self::OTHER);
@@ -123,9 +123,9 @@ class StatusReportTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('reports/status')
-                ->where('filters', ['from' => '2026-10-01', 'to' => '2026-10-02'])
-                ->where('defaultRange', ['from' => '2026-10-01', 'to' => '2026-10-02'])
-                ->where('printUrl', route('print.document.status', ['startDate' => '2026-10-01', 'endDate' => '2026-10-02']))
+                ->where('filters', ['from' => '2026-09-03', 'to' => '2026-10-02'])
+                ->where('defaultRange', ['from' => '2026-09-03', 'to' => '2026-10-02'])
+                ->where('printUrl', route('print.document.status', ['startDate' => '2026-09-03', 'endDate' => '2026-10-02']))
                 // Sorted by name: KMICT before RLED.
                 ->where('report.offices.0.code', 'KMICT')
                 ->where('report.offices.0.received', 2)

@@ -104,7 +104,7 @@ class PerUnitReportTest extends TestCase
                 // Live counts for the filter buttons.
                 ->where('report.facets.sources', ['internal' => 2, 'external' => 1])
                 ->where('report.facets.statuses', ['Closed' => 1, 'Created' => 2])
-                ->where('defaultRange', ['from' => '2026-01-01', 'to' => '2026-10-02'])
+                ->where('defaultRange', ['from' => '2026-09-03', 'to' => '2026-10-02'])
                 ->where('report.total', 3)
                 // Most documents first.
                 ->where('report.rows.0', ['name' => $purchase->name, 'count' => 2])

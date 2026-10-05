@@ -38,14 +38,4 @@ class PerUnitController extends Controller
             'sourceOptions' => PerUnitReport::SOURCES,
         ]);
     }
-
-    /**
-     * This year so far, as the Livewire report opened: the date picker's "This year".
-     *
-     * @return array{from: string, to: string}
-     */
-    protected static function defaultRange(): array
-    {
-        return ['from' => now()->startOfYear()->toDateString(), 'to' => now()->toDateString()];
-    }
 }

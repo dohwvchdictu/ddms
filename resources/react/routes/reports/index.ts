@@ -1,4 +1,5 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../wayfinder'
+import turnaroundAcab3a from './turnaround'
 /**
 * @see \App\Http\Controllers\Reports\DocumentStatusController::__invoke
  * @see app/Http/Controllers/Reports/DocumentStatusController.php:19
@@ -170,11 +171,55 @@ perUnit.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: perUnit.url(options),
     method: 'head',
 })
+
+/**
+* @see \App\Http\Controllers\Reports\TurnaroundController::turnaround
+ * @see app/Http/Controllers/Reports/TurnaroundController.php:20
+ * @route '/report-turnaround-time'
+ */
+export const turnaround = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: turnaround.url(options),
+    method: 'get',
+})
+
+turnaround.definition = {
+    methods: ["get","head"],
+    url: '/report-turnaround-time',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\Reports\TurnaroundController::turnaround
+ * @see app/Http/Controllers/Reports/TurnaroundController.php:20
+ * @route '/report-turnaround-time'
+ */
+turnaround.url = (options?: RouteQueryOptions) => {
+    return turnaround.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Reports\TurnaroundController::turnaround
+ * @see app/Http/Controllers/Reports/TurnaroundController.php:20
+ * @route '/report-turnaround-time'
+ */
+turnaround.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: turnaround.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\Reports\TurnaroundController::turnaround
+ * @see app/Http/Controllers/Reports/TurnaroundController.php:20
+ * @route '/report-turnaround-time'
+ */
+turnaround.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: turnaround.url(options),
+    method: 'head',
+})
 const reports = {
     status: Object.assign(status, status),
 endorsements: Object.assign(endorsements, endorsements),
 external: Object.assign(external, external),
 perUnit: Object.assign(perUnit, perUnit),
+turnaround: Object.assign(turnaround, turnaroundAcab3a),
 }
 
 export default reports

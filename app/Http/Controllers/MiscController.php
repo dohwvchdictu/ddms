@@ -128,8 +128,8 @@ class MiscController extends Controller
      */
     public function printDocumentStatusReport(Request $request, DocumentStatusReport $report, ApiService $api)
     {
-        // Default to the current month, as the on-screen report opens.
-        $startDate = $request->query('startDate') ?: now()->startOfMonth()->toDateString();
+        // Default to the last 30 days, as the on-screen report opens.
+        $startDate = $request->query('startDate') ?: now()->subDays(29)->toDateString();
         $endDate = $request->query('endDate') ?: now()->toDateString();
 
         $data = $report->handle($startDate, $endDate, $api->getActiveOffices());
