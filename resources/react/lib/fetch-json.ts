@@ -14,6 +14,9 @@ export async function getJson<T>(url: string, signal?: AbortSignal): Promise<T> 
 
     if (response.status === 401) {
         window.location.assign(login.url());
+
+        // Never settles: the page is leaving, so no error toast should flash first.
+        return new Promise<T>(() => {});
     }
 
     if (!response.ok) {

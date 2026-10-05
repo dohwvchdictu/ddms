@@ -22,14 +22,17 @@ class JwtMiddleware
 
         if (!$token || !$user) {
             // fullUrl(), not url() — otherwise a user bounced off a filtered
-            // report comes back to the unfiltered one after signing in.
-            session(['url.intended' => $request->fullUrl()]);
-            return redirect()->route('login');
+            // report comes back to the unfiltered one after signing in. For a
+            // background request, the page it came from: the JSON URL itself
+            // is no place to land after signing in.
+            session(['url.intended' => $this->wantsJson($request) ? ($request->headers->get('referer') ?: route('dashboard')) : $request->fullUrl()]);
+
+            return $this->signedOut($request);
         }
 
         // Validate user office data
         if (!isset($user['office']['id'])) {
-            return $this->endSession('Invalid user session data. Please login again.');
+            return $this->endSession($request, 'Invalid user session data. Please login again.');
         }
 
         // Identity lives in the Laravel session (SESSION_LIFETIME), not the
@@ -39,11 +42,11 @@ class JwtMiddleware
         // the login rate-limit storm. What the session *does* still need is a
         // ceiling on its own age, and a periodic check that the account behind
         // it is still valid.
-        if ($response = $this->enforceAbsoluteLifetime()) {
+        if ($response = $this->enforceAbsoluteLifetime($request)) {
             return $response;
         }
 
-        if ($response = $this->revalidateAccount($user)) {
+        if ($response = $this->revalidateAccount($request, $user)) {
             return $response;
         }
 
@@ -55,7 +58,7 @@ class JwtMiddleware
      * everyday user is never signed out. This applies a hard ceiling measured
      * from the moment of login.
      */
-    protected function enforceAbsoluteLifetime(): ?Response
+    protected function enforceAbsoluteLifetime(Request $request): ?Response
     {
         $minutes = (int) config('session.absolute_lifetime', 0);
 
@@ -81,7 +84,7 @@ class JwtMiddleware
             'age_minutes' => (int) ((time() - $createdAt) / 60),
         ]);
 
-        return $this->endSession('Your session has expired. Please sign in again.');
+        return $this->endSession($request, 'Your session has expired. Please sign in again.');
     }
 
     /**
@@ -94,7 +97,7 @@ class JwtMiddleware
      * directory cannot answer fails open — an API outage must never sign the
      * whole office out.
      */
-    protected function revalidateAccount(array $user): ?Response
+    protected function revalidateAccount(Request $request, array $user): ?Response
     {
         $interval = (int) config('session.revalidate_minutes', 0);
 
@@ -133,7 +136,7 @@ class JwtMiddleware
                 'employee_id' => $employeeId,
             ]);
 
-            return $this->endSession('Your account is no longer listed in the employee directory. Please contact the HRIS team.');
+            return $this->endSession($request, 'Your account is no longer listed in the employee directory. Please contact the HRIS team.');
         }
 
         // An employee flagged inactive. This is opt-in: see the note on
@@ -146,7 +149,7 @@ class JwtMiddleware
                     'employee_id' => $employeeId,
                 ]);
 
-                return $this->endSession('Your account is no longer active. Please contact the HRIS team.');
+                return $this->endSession($request, 'Your account is no longer active. Please contact the HRIS team.');
             }
 
             Log::info('Revalidation: employee flagged inactive (not enforced)', [
@@ -177,14 +180,37 @@ class JwtMiddleware
     /**
      * Tear the session down and send the user back to the login page with an
      * explanation. The message is flashed *after* invalidate(), which wipes
-     * everything already in the session.
+     * everything already in the session; a background request's 401 sends the
+     * browser to the login page, where it is shown.
      */
-    protected function endSession(string $message): Response
+    protected function endSession(Request $request, string $message): Response
     {
         session()->invalidate();
         session()->regenerateToken();
         session()->flash('error', $message);
 
-        return redirect()->route('login');
+        return $this->signedOut($request);
+    }
+
+    /**
+     * Not signed in. A page load is redirected to the login page; a background
+     * JSON request (search, tracking, "select every match"…) gets a 401, which
+     * resources/react/lib/fetch-json.ts turns into a visit to the login page;
+     * a redirect would only hand it the login page's HTML to choke on.
+     */
+    protected function signedOut(Request $request): Response
+    {
+        return $this->wantsJson($request)
+            ? response()->json(['message' => 'Your session has ended. Please sign in again.'], 401)
+            : redirect()->route('login');
+    }
+
+    /**
+     * A background fetch asking for JSON. Inertia's own visits are left out:
+     * they follow a redirect to the login page themselves.
+     */
+    protected function wantsJson(Request $request): bool
+    {
+        return $request->expectsJson() && ! $request->header('X-Inertia');
     }
 }
