@@ -84,9 +84,53 @@ endorsements.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: endorsements.url(options),
     method: 'head',
 })
+
+/**
+* @see \App\Http\Controllers\Reports\ExternalRequestsController::external
+ * @see app/Http/Controllers/Reports/ExternalRequestsController.php:33
+ * @route '/report-status-of-external-documents'
+ */
+export const external = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: external.url(options),
+    method: 'get',
+})
+
+external.definition = {
+    methods: ["get","head"],
+    url: '/report-status-of-external-documents',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\Reports\ExternalRequestsController::external
+ * @see app/Http/Controllers/Reports/ExternalRequestsController.php:33
+ * @route '/report-status-of-external-documents'
+ */
+external.url = (options?: RouteQueryOptions) => {
+    return external.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Reports\ExternalRequestsController::external
+ * @see app/Http/Controllers/Reports/ExternalRequestsController.php:33
+ * @route '/report-status-of-external-documents'
+ */
+external.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: external.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\Reports\ExternalRequestsController::external
+ * @see app/Http/Controllers/Reports/ExternalRequestsController.php:33
+ * @route '/report-status-of-external-documents'
+ */
+external.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: external.url(options),
+    method: 'head',
+})
 const reports = {
     status: Object.assign(status, status),
 endorsements: Object.assign(endorsements, endorsements),
+external: Object.assign(external, external),
 }
 
 export default reports

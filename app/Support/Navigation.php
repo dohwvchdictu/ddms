@@ -74,7 +74,6 @@ class Navigation
                     ['title' => 'Status', 'href' => '/report-status-of-documents', 'icon' => 'clipboard-list'],
                     ['title' => 'Endorsements', 'href' => '/report-status-per-employee', 'icon' => 'user-round-check'],
                     ['title' => 'External Requests', 'href' => '/report-status-of-external-documents', 'icon' => 'globe'],
-                    ['title' => 'Internal Documents', 'href' => '/report-status-of-internal-documents', 'icon' => 'building-2'],
                     ['title' => 'Per Unit', 'href' => '/report-per-unit', 'icon' => 'network'],
                     ['title' => 'Turnaround Time', 'href' => '/report-turnaround-time', 'icon' => 'timer'],
                 ],

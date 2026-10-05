@@ -12,6 +12,7 @@ use App\Http\Controllers\IncomingController;
 use App\Http\Controllers\PendingController;
 use App\Http\Controllers\Reports\DocumentStatusController;
 use App\Http\Controllers\Reports\EndorsementsController;
+use App\Http\Controllers\Reports\ExternalRequestsController;
 use App\Http\Controllers\ProcessedController;
 use App\Http\Controllers\EmployeePhotoController;
 use App\Http\Controllers\MiscController;
@@ -19,8 +20,6 @@ use App\Http\Controllers\MyDocumentsController;
 use App\Http\Controllers\OfficeEmployeesController;
 use App\Http\Controllers\RoutingLogbookController;
 use App\Http\Controllers\TransmittalFormController;
-use App\Livewire\Report\ExternalDocuments;
-use App\Livewire\Report\InternalDocuments;
 use App\Livewire\Report\PerUnit;
 use App\Livewire\Report\TurnaroundTime;
 use Illuminate\Support\Facades\Route;
@@ -114,14 +113,13 @@ Route::middleware(['jwt.auth'])->group(function () {
     /** Reports */
     Route::get('/report-status-of-documents', DocumentStatusController::class)->name('reports.status');
     Route::get('/report-status-per-employee', EndorsementsController::class)->name('reports.endorsements');
-    Route::get('/report-status-of-external-documents', ExternalDocuments::class);
-    Route::get('/report-status-of-internal-documents', InternalDocuments::class);
+    Route::get('/report-status-of-external-documents', [ExternalRequestsController::class, 'index'])->name('reports.external');
     Route::get('/report-per-unit', PerUnit::class);
     Route::get('/report-turnaround-time', TurnaroundTime::class);
 
     /** Printing of Report*/
     Route::get('/print-document-status-report', [MiscController::class, 'printDocumentStatusReport'])->name('print.document.status');
-    Route::get('/print-external-documents-report', [MiscController::class, 'printExternalDocumentsReport'])->name('print.external.documents');
+    Route::get('/print-external-documents-report', [ExternalRequestsController::class, 'print'])->name('print.external.documents');
 
     /** Printing of Transmittal */
     Route::get('/print-transmittal-form/{control_no}', TransmittalFormController::class)->name('print.transmittal.form');

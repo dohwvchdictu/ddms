@@ -43,49 +43,6 @@ printDocumentStatusReport.head = (options?: RouteQueryOptions): RouteDefinition<
 })
 
 /**
-* @see \App\Http\Controllers\MiscController::printExternalDocumentsReport
- * @see app/Http/Controllers/MiscController.php:146
- * @route '/print-external-documents-report'
- */
-export const printExternalDocumentsReport = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: printExternalDocumentsReport.url(options),
-    method: 'get',
-})
-
-printExternalDocumentsReport.definition = {
-    methods: ["get","head"],
-    url: '/print-external-documents-report',
-} satisfies RouteDefinition<["get","head"]>
-
-/**
-* @see \App\Http\Controllers\MiscController::printExternalDocumentsReport
- * @see app/Http/Controllers/MiscController.php:146
- * @route '/print-external-documents-report'
- */
-printExternalDocumentsReport.url = (options?: RouteQueryOptions) => {
-    return printExternalDocumentsReport.definition.url + queryParams(options)
-}
-
-/**
-* @see \App\Http\Controllers\MiscController::printExternalDocumentsReport
- * @see app/Http/Controllers/MiscController.php:146
- * @route '/print-external-documents-report'
- */
-printExternalDocumentsReport.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
-    url: printExternalDocumentsReport.url(options),
-    method: 'get',
-})
-/**
-* @see \App\Http\Controllers\MiscController::printExternalDocumentsReport
- * @see app/Http/Controllers/MiscController.php:146
- * @route '/print-external-documents-report'
- */
-printExternalDocumentsReport.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
-    url: printExternalDocumentsReport.url(options),
-    method: 'head',
-})
-
-/**
 * @see \App\Http\Controllers\MiscController::generateLogbook
  * @see app/Http/Controllers/MiscController.php:68
  * @route '/inbox/generate-logbook'
@@ -127,6 +84,6 @@ generateLogbook.head = (options?: RouteQueryOptions): RouteDefinition<'head'> =>
     url: generateLogbook.url(options),
     method: 'head',
 })
-const MiscController = { printDocumentStatusReport, printExternalDocumentsReport, generateLogbook }
+const MiscController = { printDocumentStatusReport, generateLogbook }
 
 export default MiscController
