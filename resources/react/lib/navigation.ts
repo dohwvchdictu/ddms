@@ -20,17 +20,11 @@ import {
 } from 'lucide-react';
 import type { SidebarCounts } from '@/types';
 
-/**
- * The sidebar menu, React pages and Livewire pages alike. While the migration
- * is in progress a `legacy` page is still served by Livewire, so links to it
- * must do a full page load instead of an Inertia visit. Drop the flag when a
- * page moves to React.
- */
+/** The sidebar menu. */
 export interface NavItem {
     title: string;
     href: string;
     icon: LucideIcon;
-    legacy?: boolean;
     /** Red badge count, read from the shared `sidebarCounts` prop. */
     badge?: keyof SidebarCounts;
 }

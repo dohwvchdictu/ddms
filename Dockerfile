@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# Stage 1: build front-end assets (legacy Vite build + React/Inertia build)
+# Stage 1: build front-end assets (the React/Inertia build)
 # ---------------------------------------------------------------------------
 FROM node:22-alpine AS assets
 
@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-COPY vite.config.js vite.react.config.ts vite.shared.js tailwind.config.js tsconfig.json ./
+COPY vite.react.config.ts vite.shared.js tsconfig.json ./
 COPY resources ./resources
 COPY public ./public
 # No PHP in this stage, so Wayfinder cannot regenerate its route helpers here;
@@ -57,7 +57,6 @@ RUN composer install --no-dev --prefer-dist --no-interaction --no-progress \
 
 # Application code + built assets
 COPY . .
-COPY --from=assets /app/public/build ./public/build
 COPY --from=assets /app/public/build-react ./public/build-react
 
 RUN mkdir -p storage/framework/cache/data storage/framework/sessions \

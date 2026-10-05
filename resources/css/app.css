@@ -1,9 +1,0 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-.dt-layout-row:has(.dt-search),
-.dt-layout-row:has(.dt-length),
-.dt-layout-row:has(.dt-paging) {
-  display: none !important;
-}

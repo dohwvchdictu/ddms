@@ -41,10 +41,9 @@ function isActive(url: string, href: string): boolean {
     return path === href || path.startsWith(`${href}/`);
 }
 
-/** An Inertia link for React pages, a plain full-page link for Livewire ones. */
+/** A sidebar link: an Inertia visit, marked when it is the current page. */
 function NavLink({
     href,
-    legacy,
     className,
     onNavigate,
     current,
@@ -52,7 +51,6 @@ function NavLink({
     children,
 }: {
     href: string;
-    legacy?: boolean;
     className: string;
     onNavigate?: () => void;
     current?: boolean;
@@ -68,7 +66,7 @@ function NavLink({
         'aria-label': label,
     };
 
-    return legacy ? <a {...props}>{children}</a> : <Link {...props}>{children}</Link>;
+    return <Link {...props}>{children}</Link>;
 }
 
 function CountBadge({ count }: { count: number }) {
@@ -148,7 +146,6 @@ export default function AppSidebar({ collapsed = false, onNavigate }: AppSidebar
                 <RailTip show={rail} label={itemCount > 0 ? `${item.title} · ${itemCount}` : item.title}>
                     <NavLink
                         href={item.href}
-                        legacy={item.legacy}
                         current={active}
                         label={rail ? item.title : undefined}
                         onNavigate={() => {
@@ -281,7 +278,6 @@ export default function AppSidebar({ collapsed = false, onNavigate }: AppSidebar
                 <RailTip show={collapsed} label={newDocument.title}>
                     <NavLink
                         href={newDocument.href}
-                        legacy={newDocument.legacy}
                         current={creating}
                         label={collapsed ? newDocument.title : undefined}
                         onNavigate={onNavigate}

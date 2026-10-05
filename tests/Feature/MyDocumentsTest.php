@@ -358,19 +358,6 @@ class MyDocumentsTest extends TestCase
             ->assertSessionHasErrors('document_ids');
     }
 
-    public function test_a_livewire_alert_reaches_the_react_page_as_a_toast(): void
-    {
-        $this->expectFilters(self::filters());
-
-        $this->signedIn()
-            ->withSession(['livewire-alert' => ['icon' => 'success', 'titleText' => 'Document successfully forwarded!', 'toast' => true]])
-            ->get('/my-documents')
-            ->assertInertia(fn (Assert $page) => $page->where('flash.legacy', [
-                'type' => 'success',
-                'message' => 'Document successfully forwarded!',
-            ]));
-    }
-
     /** A document of the test office, inside a transaction rolled back after the test. */
     protected function saveDocument(array $overrides = []): Document
     {

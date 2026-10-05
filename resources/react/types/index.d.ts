@@ -37,8 +37,7 @@ export interface Toast {
 export interface SharedProps {
     app: { name: string };
     auth: { user: User | null };
-    /** `legacy`: a Livewire page's SweetAlert, carried over a redirect to React. */
-    flash: { error: string | null; status: string | null; legacy: Pick<Toast, 'type' | 'message'> | null };
+    flash: { error: string | null; status: string | null };
     sidebarCounts: SidebarCounts | null;
     [key: string]: unknown;
 }

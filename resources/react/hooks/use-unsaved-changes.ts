@@ -5,7 +5,7 @@ const MESSAGE = 'You have unsaved changes. Leave this page and lose them?';
 
 /**
  * Asks before leaving a form with unsaved changes: Inertia links, the browser's
- * Back button, and full page loads (the legacy Livewire links, closing the tab).
+ * Back button, and full page loads (closing or reloading the tab).
  * Only GET visits are checked, so submitting the form itself never prompts.
  */
 export function useUnsavedChanges(dirty: boolean): void {
