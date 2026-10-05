@@ -93,7 +93,7 @@ export const groups: NavGroup[] = [
             { title: 'Status', href: '/report-status-of-documents', icon: ClipboardList },
             { title: 'Endorsements', href: '/report-status-per-employee', icon: UserRoundCheck },
             { title: 'External Requests', href: '/report-status-of-external-documents', icon: Globe },
-            { title: 'Per Unit', href: '/report-per-unit', icon: Network, legacy: true },
+            { title: 'Per Unit', href: '/report-per-unit', icon: Network },
             { title: 'Turnaround Time', href: '/report-turnaround-time', icon: Timer, legacy: true },
         ],
     },

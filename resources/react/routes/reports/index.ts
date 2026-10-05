@@ -127,10 +127,54 @@ external.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: external.url(options),
     method: 'head',
 })
+
+/**
+* @see \App\Http\Controllers\Reports\PerUnitController::__invoke
+ * @see app/Http/Controllers/Reports/PerUnitController.php:18
+ * @route '/report-per-unit'
+ */
+export const perUnit = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: perUnit.url(options),
+    method: 'get',
+})
+
+perUnit.definition = {
+    methods: ["get","head"],
+    url: '/report-per-unit',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\Reports\PerUnitController::__invoke
+ * @see app/Http/Controllers/Reports/PerUnitController.php:18
+ * @route '/report-per-unit'
+ */
+perUnit.url = (options?: RouteQueryOptions) => {
+    return perUnit.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Reports\PerUnitController::__invoke
+ * @see app/Http/Controllers/Reports/PerUnitController.php:18
+ * @route '/report-per-unit'
+ */
+perUnit.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: perUnit.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\Reports\PerUnitController::__invoke
+ * @see app/Http/Controllers/Reports/PerUnitController.php:18
+ * @route '/report-per-unit'
+ */
+perUnit.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: perUnit.url(options),
+    method: 'head',
+})
 const reports = {
     status: Object.assign(status, status),
 endorsements: Object.assign(endorsements, endorsements),
 external: Object.assign(external, external),
+perUnit: Object.assign(perUnit, perUnit),
 }
 
 export default reports

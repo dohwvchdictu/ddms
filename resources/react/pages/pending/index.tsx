@@ -7,6 +7,7 @@ import DateRangeFilter, { describeRange, isSameRange, rangeQuery, type DateRange
 import FilterChips, { type FilterChip } from '@/components/data-table/filter-chips';
 import ListTabs from '@/components/data-table/list-tabs';
 import OutsideRangeNotice from '@/components/data-table/outside-range-notice';
+import Segmented from '@/components/data-table/segmented';
 import SelectionBar from '@/components/data-table/selection-bar';
 import SortableHead from '@/components/data-table/sortable-head';
 import ViewOptions from '@/components/data-table/view-options';
@@ -456,33 +457,6 @@ function IconAction({ label, onClick, href, children }: { label: string; onClick
 }
 
 /** A small one-of-several switch for the toolbar, with optional counts. */
-function Segmented({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: { value: string; label: string; count?: number }[] }) {
-    return (
-        <div role="radiogroup" aria-label={label} className="inline-flex h-9 items-center rounded-md border bg-background p-0.5 shadow-xs">
-            {options.map((option) => {
-                const on = option.value === value;
-
-                return (
-                    <button
-                        key={option.value}
-                        type="button"
-                        role="radio"
-                        aria-checked={on}
-                        onClick={() => onChange(option.value)}
-                        className={cn(
-                            'flex h-full items-center gap-1.5 rounded-sm px-2.5 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
-                            on ? 'bg-emerald-600 font-medium text-white' : 'text-muted-foreground hover:text-foreground',
-                        )}
-                    >
-                        {option.label}
-                        {option.count !== undefined && <span className={cn('text-xs tabular-nums', on ? 'text-white/80' : 'text-muted-foreground')}>{option.count}</span>}
-                    </button>
-                );
-            })}
-        </div>
-    );
-}
-
 function Tag({ children, className }: { children: ReactNode; className?: string }) {
     return <span className={cn('inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground', className)}>{children}</span>;
 }
