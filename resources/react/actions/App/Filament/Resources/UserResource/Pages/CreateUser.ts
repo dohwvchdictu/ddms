@@ -2,7 +2,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../
 /**
 * @see \App\Filament\Resources\UserResource\Pages\CreateUser::__invoke
  * @see app/Filament/Resources/UserResource/Pages/CreateUser.php:7
- * @route '/dtis-admin/users/create'
+ * @route '/ddms-admin/users/create'
  */
 const CreateUser = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: CreateUser.url(options),
@@ -11,13 +11,13 @@ const CreateUser = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 CreateUser.definition = {
     methods: ["get","head"],
-    url: '/dtis-admin/users/create',
+    url: '/ddms-admin/users/create',
 } satisfies RouteDefinition<["get","head"]>
 
 /**
 * @see \App\Filament\Resources\UserResource\Pages\CreateUser::__invoke
  * @see app/Filament/Resources/UserResource/Pages/CreateUser.php:7
- * @route '/dtis-admin/users/create'
+ * @route '/ddms-admin/users/create'
  */
 CreateUser.url = (options?: RouteQueryOptions) => {
     return CreateUser.definition.url + queryParams(options)
@@ -26,7 +26,7 @@ CreateUser.url = (options?: RouteQueryOptions) => {
 /**
 * @see \App\Filament\Resources\UserResource\Pages\CreateUser::__invoke
  * @see app/Filament/Resources/UserResource/Pages/CreateUser.php:7
- * @route '/dtis-admin/users/create'
+ * @route '/ddms-admin/users/create'
  */
 CreateUser.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: CreateUser.url(options),
@@ -35,7 +35,7 @@ CreateUser.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 /**
 * @see \App\Filament\Resources\UserResource\Pages\CreateUser::__invoke
  * @see app/Filament/Resources/UserResource/Pages/CreateUser.php:7
- * @route '/dtis-admin/users/create'
+ * @route '/ddms-admin/users/create'
  */
 CreateUser.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: CreateUser.url(options),

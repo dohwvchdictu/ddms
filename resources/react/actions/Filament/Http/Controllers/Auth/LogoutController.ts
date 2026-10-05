@@ -2,7 +2,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../
 /**
 * @see \Filament\Http\Controllers\Auth\LogoutController::__invoke
  * @see vendor/filament/filament/src/Http/Controllers/Auth/LogoutController.php:10
- * @route '/dtis-admin/logout'
+ * @route '/ddms-admin/logout'
  */
 const LogoutController = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: LogoutController.url(options),
@@ -11,13 +11,13 @@ const LogoutController = (options?: RouteQueryOptions): RouteDefinition<'post'> 
 
 LogoutController.definition = {
     methods: ["post"],
-    url: '/dtis-admin/logout',
+    url: '/ddms-admin/logout',
 } satisfies RouteDefinition<["post"]>
 
 /**
 * @see \Filament\Http\Controllers\Auth\LogoutController::__invoke
  * @see vendor/filament/filament/src/Http/Controllers/Auth/LogoutController.php:10
- * @route '/dtis-admin/logout'
+ * @route '/ddms-admin/logout'
  */
 LogoutController.url = (options?: RouteQueryOptions) => {
     return LogoutController.definition.url + queryParams(options)
@@ -26,7 +26,7 @@ LogoutController.url = (options?: RouteQueryOptions) => {
 /**
 * @see \Filament\Http\Controllers\Auth\LogoutController::__invoke
  * @see vendor/filament/filament/src/Http/Controllers/Auth/LogoutController.php:10
- * @route '/dtis-admin/logout'
+ * @route '/ddms-admin/logout'
  */
 LogoutController.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: LogoutController.url(options),

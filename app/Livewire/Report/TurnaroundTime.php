@@ -14,7 +14,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Title('Turnaround Time | Document Tracking Information System')]
+#[Title('Turnaround Time | DDMS')]
 class TurnaroundTime extends Component
 {
     use LivewireAlert;

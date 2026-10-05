@@ -27,7 +27,7 @@ import { useSelection } from '@/hooks/use-selection';
 import { useTablePreferences } from '@/hooks/use-table-preferences';
 import AppLayout from '@/layouts/app-layout';
 import { getJson } from '@/lib/fetch-json';
-import { printTransmittalForm } from '@/lib/print-transmittal-form';
+import { printTransmittalForm } from '@/lib/print-page';
 import { cn } from '@/lib/utils';
 import { myDocuments } from '@/routes';
 import { generateLogbook } from '@/routes/inbox';

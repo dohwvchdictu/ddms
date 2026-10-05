@@ -2,7 +2,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../
 /**
 * @see \Filament\Pages\Auth\Login::__invoke
  * @see vendor/filament/filament/src/Pages/Auth/Login.php:7
- * @route '/dtis-admin/login'
+ * @route '/ddms-admin/login'
  */
 const Login = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: Login.url(options),
@@ -11,13 +11,13 @@ const Login = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 Login.definition = {
     methods: ["get","head"],
-    url: '/dtis-admin/login',
+    url: '/ddms-admin/login',
 } satisfies RouteDefinition<["get","head"]>
 
 /**
 * @see \Filament\Pages\Auth\Login::__invoke
  * @see vendor/filament/filament/src/Pages/Auth/Login.php:7
- * @route '/dtis-admin/login'
+ * @route '/ddms-admin/login'
  */
 Login.url = (options?: RouteQueryOptions) => {
     return Login.definition.url + queryParams(options)
@@ -26,7 +26,7 @@ Login.url = (options?: RouteQueryOptions) => {
 /**
 * @see \Filament\Pages\Auth\Login::__invoke
  * @see vendor/filament/filament/src/Pages/Auth/Login.php:7
- * @route '/dtis-admin/login'
+ * @route '/ddms-admin/login'
  */
 Login.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: Login.url(options),
@@ -35,7 +35,7 @@ Login.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 /**
 * @see \Filament\Pages\Auth\Login::__invoke
  * @see vendor/filament/filament/src/Pages/Auth/Login.php:7
- * @route '/dtis-admin/login'
+ * @route '/ddms-admin/login'
  */
 Login.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: Login.url(options),

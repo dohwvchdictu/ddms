@@ -1,5 +1,5 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { ArrowRight, CircleAlert, CircleCheck, Eye, EyeOff, Info, Loader2, LockKeyhole, Mail, ShieldCheck } from 'lucide-react';
+import { ArrowRight, CircleAlert, Eye, EyeOff, Info, Loader2, LockKeyhole, Mail, ShieldCheck } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
 import { store } from '@/actions/App/Http/Controllers/Auth/LoginController';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -11,7 +11,7 @@ import AuthLayout from '@/layouts/auth-layout';
 
 const LAST_EMAIL_KEY = 'lastLoginEmail';
 
-/** How long the "Login successful" animation plays before leaving the page. */
+/** How long the "Welcome back" animation plays before leaving the page. */
 const SUCCESS_DELAY_MS = 900;
 
 function readLastEmail(): string {
@@ -89,20 +89,13 @@ export default function Login() {
                     aria-live="polite"
                     className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-emerald-950/90 px-6 text-center text-white backdrop-blur-md animate-in fade-in duration-300"
                 >
-                    <div className="flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                        <img src="/img/doh.png" alt="" className="size-14 drop-shadow-lg" />
-                        <img src="/img/bagongpilipinas.png" alt="" className="size-14 scale-[1.2] drop-shadow-lg" />
-                    </div>
-
-                    <div className="relative flex size-20 items-center justify-center">
+                    <div className="relative flex size-24 items-center justify-center">
                         <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400/30" />
-                        <span className="relative flex size-20 items-center justify-center rounded-full bg-emerald-500 shadow-lg shadow-emerald-950/50 animate-in zoom-in-50 duration-500">
-                            <CircleCheck className="size-11" />
-                        </span>
+                        <img src="/img/doh.png" alt="" className="relative size-24 drop-shadow-lg animate-in zoom-in-50 duration-500" />
                     </div>
 
                     <div className="grid gap-1.5">
-                        <p className="text-2xl font-semibold tracking-tight">Login successful</p>
+                        <p className="text-2xl font-semibold tracking-tight">Welcome back</p>
                         <p className="flex items-center justify-center gap-2 text-sm text-emerald-100/90">
                             <Loader2 className="size-4 animate-spin" />
                             Loading your dashboard…

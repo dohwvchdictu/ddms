@@ -91,8 +91,8 @@ export const groups: NavGroup[] = [
         icon: ChartColumn,
         defaultOpen: false,
         items: [
-            { title: 'Status', href: '/report-status-of-documents', icon: ClipboardList, legacy: true },
-            { title: 'Endorsements', href: '/report-status-per-employee', icon: UserRoundCheck, legacy: true },
+            { title: 'Status', href: '/report-status-of-documents', icon: ClipboardList },
+            { title: 'Endorsements', href: '/report-status-per-employee', icon: UserRoundCheck },
             { title: 'External Requests', href: '/report-status-of-external-documents', icon: Globe, legacy: true },
             { title: 'Internal Documents', href: '/report-status-of-internal-documents', icon: Building2, legacy: true },
             { title: 'Per Unit', href: '/report-per-unit', icon: Network, legacy: true },

@@ -115,6 +115,25 @@ class IncomingTest extends TestCase
                     === collect([$waiting->control_no, $returned->control_no])->sort()->values()->all()));
     }
 
+    public function test_older_documents_hidden_by_the_dates_are_counted(): void
+    {
+        $this->sentHere();
+        $old = $this->sentHere();
+        DB::table('documents')->where('id', $old->id)->update(['updated_at' => now()->subDays(45)]);
+
+        $this->signedIn()
+            ->get('/status-incoming')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('documents.total', 1)
+                ->where('outsideRange', 1));
+
+        $this->signedIn()
+            ->get('/status-incoming?from=&to=')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('documents.total', 2)
+                ->where('outsideRange', 0));
+    }
+
     public function test_rows_carry_the_sender_and_the_endorsement(): void
     {
         $document = $this->sentHere(['endorsed_to' => 7]);

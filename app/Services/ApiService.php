@@ -109,7 +109,7 @@ class ApiService
                     return [
                         'success' => false,
                         'error' => 'api_error',
-                        'message' => 'Your account signed in but no employee profile was returned. Please contact the DTIS administrator.',
+                        'message' => 'Your account signed in but no employee profile was returned. Please contact the DDMS administrator.',
                     ];
                 }
 

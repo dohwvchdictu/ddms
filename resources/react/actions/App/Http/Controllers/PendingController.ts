@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\PendingController::selectable
- * @see app/Http/Controllers/PendingController.php:77
+ * @see app/Http/Controllers/PendingController.php:81
  * @route '/status-pending/selectable'
  */
 export const selectable = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -59,7 +59,7 @@ selectable.definition = {
 
 /**
 * @see \App\Http\Controllers\PendingController::selectable
- * @see app/Http/Controllers/PendingController.php:77
+ * @see app/Http/Controllers/PendingController.php:81
  * @route '/status-pending/selectable'
  */
 selectable.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ selectable.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\PendingController::selectable
- * @see app/Http/Controllers/PendingController.php:77
+ * @see app/Http/Controllers/PendingController.php:81
  * @route '/status-pending/selectable'
  */
 selectable.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -77,7 +77,7 @@ selectable.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\PendingController::selectable
- * @see app/Http/Controllers/PendingController.php:77
+ * @see app/Http/Controllers/PendingController.php:81
  * @route '/status-pending/selectable'
  */
 selectable.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -87,7 +87,7 @@ selectable.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\PendingController::forward
- * @see app/Http/Controllers/PendingController.php:93
+ * @see app/Http/Controllers/PendingController.php:97
  * @route '/status-pending/forward'
  */
 export const forward = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -102,7 +102,7 @@ forward.definition = {
 
 /**
 * @see \App\Http\Controllers\PendingController::forward
- * @see app/Http/Controllers/PendingController.php:93
+ * @see app/Http/Controllers/PendingController.php:97
  * @route '/status-pending/forward'
  */
 forward.url = (options?: RouteQueryOptions) => {
@@ -111,7 +111,7 @@ forward.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\PendingController::forward
- * @see app/Http/Controllers/PendingController.php:93
+ * @see app/Http/Controllers/PendingController.php:97
  * @route '/status-pending/forward'
  */
 forward.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -121,7 +121,7 @@ forward.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
 /**
 * @see \App\Http\Controllers\PendingController::endorse
- * @see app/Http/Controllers/PendingController.php:110
+ * @see app/Http/Controllers/PendingController.php:114
  * @route '/status-pending/endorse'
  */
 export const endorse = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -136,7 +136,7 @@ endorse.definition = {
 
 /**
 * @see \App\Http\Controllers\PendingController::endorse
- * @see app/Http/Controllers/PendingController.php:110
+ * @see app/Http/Controllers/PendingController.php:114
  * @route '/status-pending/endorse'
  */
 endorse.url = (options?: RouteQueryOptions) => {
@@ -145,7 +145,7 @@ endorse.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\PendingController::endorse
- * @see app/Http/Controllers/PendingController.php:110
+ * @see app/Http/Controllers/PendingController.php:114
  * @route '/status-pending/endorse'
  */
 endorse.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -155,7 +155,7 @@ endorse.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
 /**
 * @see \App\Http\Controllers\PendingController::closeCode
- * @see app/Http/Controllers/PendingController.php:144
+ * @see app/Http/Controllers/PendingController.php:148
  * @route '/status-pending/close-code'
  */
 export const closeCode = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -170,7 +170,7 @@ closeCode.definition = {
 
 /**
 * @see \App\Http\Controllers\PendingController::closeCode
- * @see app/Http/Controllers/PendingController.php:144
+ * @see app/Http/Controllers/PendingController.php:148
  * @route '/status-pending/close-code'
  */
 closeCode.url = (options?: RouteQueryOptions) => {
@@ -179,7 +179,7 @@ closeCode.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\PendingController::closeCode
- * @see app/Http/Controllers/PendingController.php:144
+ * @see app/Http/Controllers/PendingController.php:148
  * @route '/status-pending/close-code'
  */
 closeCode.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -188,7 +188,7 @@ closeCode.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\PendingController::closeCode
- * @see app/Http/Controllers/PendingController.php:144
+ * @see app/Http/Controllers/PendingController.php:148
  * @route '/status-pending/close-code'
  */
 closeCode.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -198,7 +198,7 @@ closeCode.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\PendingController::close
- * @see app/Http/Controllers/PendingController.php:158
+ * @see app/Http/Controllers/PendingController.php:162
  * @route '/status-pending/close'
  */
 export const close = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -213,7 +213,7 @@ close.definition = {
 
 /**
 * @see \App\Http\Controllers\PendingController::close
- * @see app/Http/Controllers/PendingController.php:158
+ * @see app/Http/Controllers/PendingController.php:162
  * @route '/status-pending/close'
  */
 close.url = (options?: RouteQueryOptions) => {
@@ -222,7 +222,7 @@ close.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\PendingController::close
- * @see app/Http/Controllers/PendingController.php:158
+ * @see app/Http/Controllers/PendingController.php:162
  * @route '/status-pending/close'
  */
 close.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({

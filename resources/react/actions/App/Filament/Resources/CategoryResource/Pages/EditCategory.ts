@@ -2,7 +2,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefa
 /**
 * @see \App\Filament\Resources\CategoryResource\Pages\EditCategory::__invoke
  * @see app/Filament/Resources/CategoryResource/Pages/EditCategory.php:7
- * @route '/dtis-admin/categories/{record}/edit'
+ * @route '/ddms-admin/categories/{record}/edit'
  */
 const EditCategory = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: EditCategory.url(args, options),
@@ -11,13 +11,13 @@ const EditCategory = (args: { record: string | number } | [record: string | numb
 
 EditCategory.definition = {
     methods: ["get","head"],
-    url: '/dtis-admin/categories/{record}/edit',
+    url: '/ddms-admin/categories/{record}/edit',
 } satisfies RouteDefinition<["get","head"]>
 
 /**
 * @see \App\Filament\Resources\CategoryResource\Pages\EditCategory::__invoke
  * @see app/Filament/Resources/CategoryResource/Pages/EditCategory.php:7
- * @route '/dtis-admin/categories/{record}/edit'
+ * @route '/ddms-admin/categories/{record}/edit'
  */
 EditCategory.url = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
@@ -45,7 +45,7 @@ EditCategory.url = (args: { record: string | number } | [record: string | number
 /**
 * @see \App\Filament\Resources\CategoryResource\Pages\EditCategory::__invoke
  * @see app/Filament/Resources/CategoryResource/Pages/EditCategory.php:7
- * @route '/dtis-admin/categories/{record}/edit'
+ * @route '/ddms-admin/categories/{record}/edit'
  */
 EditCategory.get = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: EditCategory.url(args, options),
@@ -54,7 +54,7 @@ EditCategory.get = (args: { record: string | number } | [record: string | number
 /**
 * @see \App\Filament\Resources\CategoryResource\Pages\EditCategory::__invoke
  * @see app/Filament/Resources/CategoryResource/Pages/EditCategory.php:7
- * @route '/dtis-admin/categories/{record}/edit'
+ * @route '/ddms-admin/categories/{record}/edit'
  */
 EditCategory.head = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: EditCategory.url(args, options),

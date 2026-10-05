@@ -2,7 +2,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefa
 /**
 * @see \App\Filament\Resources\UserResource\Pages\EditUser::__invoke
  * @see app/Filament/Resources/UserResource/Pages/EditUser.php:7
- * @route '/dtis-admin/users/{record}/edit'
+ * @route '/ddms-admin/users/{record}/edit'
  */
 const EditUser = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: EditUser.url(args, options),
@@ -11,13 +11,13 @@ const EditUser = (args: { record: string | number } | [record: string | number ]
 
 EditUser.definition = {
     methods: ["get","head"],
-    url: '/dtis-admin/users/{record}/edit',
+    url: '/ddms-admin/users/{record}/edit',
 } satisfies RouteDefinition<["get","head"]>
 
 /**
 * @see \App\Filament\Resources\UserResource\Pages\EditUser::__invoke
  * @see app/Filament/Resources/UserResource/Pages/EditUser.php:7
- * @route '/dtis-admin/users/{record}/edit'
+ * @route '/ddms-admin/users/{record}/edit'
  */
 EditUser.url = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
@@ -45,7 +45,7 @@ EditUser.url = (args: { record: string | number } | [record: string | number ] |
 /**
 * @see \App\Filament\Resources\UserResource\Pages\EditUser::__invoke
  * @see app/Filament/Resources/UserResource/Pages/EditUser.php:7
- * @route '/dtis-admin/users/{record}/edit'
+ * @route '/ddms-admin/users/{record}/edit'
  */
 EditUser.get = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: EditUser.url(args, options),
@@ -54,7 +54,7 @@ EditUser.get = (args: { record: string | number } | [record: string | number ] |
 /**
 * @see \App\Filament\Resources\UserResource\Pages\EditUser::__invoke
  * @see app/Filament/Resources/UserResource/Pages/EditUser.php:7
- * @route '/dtis-admin/users/{record}/edit'
+ * @route '/ddms-admin/users/{record}/edit'
  */
 EditUser.head = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: EditUser.url(args, options),

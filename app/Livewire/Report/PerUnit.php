@@ -19,7 +19,7 @@ class PerUnit extends Component
     use LivewireAlert;
     use WithPagination;
 
-    #[Title('Per Unit | Document Tracking Information System')]
+    #[Title('Per Unit | DDMS')]
 
     /** Constant Variables */
     /** Office directory kept protected so it is not serialized into the Livewire snapshot; reloaded from cache in boot(). */

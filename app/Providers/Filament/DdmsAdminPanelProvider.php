@@ -18,14 +18,14 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-class DtisAdminPanelProvider extends PanelProvider
+class DdmsAdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
         return $panel
             ->default()
-            ->id('dtis-admin')
-            ->path('dtis-admin')
+            ->id('ddms-admin')
+            ->path('ddms-admin')
             ->login()
             ->colors([
                 'primary' => Color::Amber,

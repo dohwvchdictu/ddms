@@ -64,6 +64,10 @@ class PendingController extends Controller
             'filters' => $filters,
             'facets' => $pending->facets($officeId, $filters, $employeeId),
             'defaultRange' => self::defaultRange(),
+            // On process here but hidden by the dates, so the list and the sidebar badge still add up.
+            'outsideRange' => $filters['from'] || $filters['to']
+                ? $pending->query($officeId, [...$filters, 'from' => null, 'to' => null], $employeeId)->count() - $documents->total()
+                : 0,
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'maxSelection' => self::MAX_SELECTION,
             'offices' => collect($api->getActiveOffices())

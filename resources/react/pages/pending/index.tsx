@@ -6,6 +6,7 @@ import BulkActionButton from '@/components/data-table/bulk-action-button';
 import DateRangeFilter, { describeRange, isSameRange, rangeQuery, type DateRangeValue } from '@/components/data-table/date-range-filter';
 import FilterChips, { type FilterChip } from '@/components/data-table/filter-chips';
 import ListTabs from '@/components/data-table/list-tabs';
+import OutsideRangeNotice from '@/components/data-table/outside-range-notice';
 import SelectionBar from '@/components/data-table/selection-bar';
 import SortableHead from '@/components/data-table/sortable-head';
 import ViewOptions from '@/components/data-table/view-options';
@@ -69,6 +70,8 @@ interface Props {
     facets: { types: Record<DocumentType, number>; endorsed: { me: number } };
     /** The last 30 days: what the list shows with no dates in the URL. */
     defaultRange: DateRangeValue;
+    /** Rows hidden only by the date range; shown as a notice so the list and the sidebar badge add up. */
+    outsideRange: number;
     perPageOptions: number[];
     maxSelection: number;
     offices: Office[];
@@ -119,7 +122,7 @@ const toQuery = (filters: Filters, defaultRange: DateRangeValue) => ({
 /** The page where a pending document is acted on (still Livewire). */
 const pendingUrl = (controlNo: string) => `/document/pending/${encodeURIComponent(controlNo)}`;
 
-export default function Pending({ documents, filters: initial, facets, defaultRange, perPageOptions, maxSelection, offices, closePasswordThreshold }: Props) {
+export default function Pending({ documents, filters: initial, facets, defaultRange, outsideRange, perPageOptions, maxSelection, offices, closePasswordThreshold }: Props) {
     const toUrl = (filters: Filters) => pending.url({ query: toQuery(filters, defaultRange) });
     const { filters, update, loading } = useListFilters(initial, toUrl, { debounce: ['search'] });
     const { preferences, isVisible, toggleColumn, setDense } = useTablePreferences('pending');
@@ -244,6 +247,7 @@ export default function Pending({ documents, filters: initial, facets, defaultRa
                             </div>
                         </div>
                         <FilterChips chips={chips} onReset={reset} />
+                        <OutsideRangeNotice count={outsideRange} kind={emptyKind} onShowAll={() => update({ from: null, to: null })} />
                     </>
                 )}
 

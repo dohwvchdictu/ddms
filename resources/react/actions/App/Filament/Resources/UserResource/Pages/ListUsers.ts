@@ -2,7 +2,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../
 /**
 * @see \App\Filament\Resources\UserResource\Pages\ListUsers::__invoke
  * @see app/Filament/Resources/UserResource/Pages/ListUsers.php:7
- * @route '/dtis-admin/users'
+ * @route '/ddms-admin/users'
  */
 const ListUsers = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: ListUsers.url(options),
@@ -11,13 +11,13 @@ const ListUsers = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 ListUsers.definition = {
     methods: ["get","head"],
-    url: '/dtis-admin/users',
+    url: '/ddms-admin/users',
 } satisfies RouteDefinition<["get","head"]>
 
 /**
 * @see \App\Filament\Resources\UserResource\Pages\ListUsers::__invoke
  * @see app/Filament/Resources/UserResource/Pages/ListUsers.php:7
- * @route '/dtis-admin/users'
+ * @route '/ddms-admin/users'
  */
 ListUsers.url = (options?: RouteQueryOptions) => {
     return ListUsers.definition.url + queryParams(options)
@@ -26,7 +26,7 @@ ListUsers.url = (options?: RouteQueryOptions) => {
 /**
 * @see \App\Filament\Resources\UserResource\Pages\ListUsers::__invoke
  * @see app/Filament/Resources/UserResource/Pages/ListUsers.php:7
- * @route '/dtis-admin/users'
+ * @route '/ddms-admin/users'
  */
 ListUsers.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: ListUsers.url(options),
@@ -35,7 +35,7 @@ ListUsers.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 /**
 * @see \App\Filament\Resources\UserResource\Pages\ListUsers::__invoke
  * @see app/Filament/Resources/UserResource/Pages/ListUsers.php:7
- * @route '/dtis-admin/users'
+ * @route '/ddms-admin/users'
  */
 ListUsers.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: ListUsers.url(options),

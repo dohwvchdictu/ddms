@@ -15,7 +15,7 @@ class ExternalDocuments extends Component
 {
     use WithPagination;
 
-    #[Title('External Requests | Document Tracking Information System')]
+    #[Title('External Requests | DDMS')]
 
     /** Constant Variables */
     public $user = [];

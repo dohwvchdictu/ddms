@@ -1,10 +1,10 @@
 import exports from './exports'
 import imports from './imports'
-import dtisAdmin from './dtis-admin'
+import ddmsAdmin from './ddms-admin'
 const filament = {
     exports: Object.assign(exports, exports),
 imports: Object.assign(imports, imports),
-dtisAdmin: Object.assign(dtisAdmin, dtisAdmin),
+ddmsAdmin: Object.assign(ddmsAdmin, ddmsAdmin),
 }
 
 export default filament

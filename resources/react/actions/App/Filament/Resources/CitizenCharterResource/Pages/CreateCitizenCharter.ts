@@ -2,7 +2,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../
 /**
 * @see \App\Filament\Resources\CitizenCharterResource\Pages\CreateCitizenCharter::__invoke
  * @see app/Filament/Resources/CitizenCharterResource/Pages/CreateCitizenCharter.php:7
- * @route '/dtis-admin/citizen-charters/create'
+ * @route '/ddms-admin/citizen-charters/create'
  */
 const CreateCitizenCharter = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: CreateCitizenCharter.url(options),
@@ -11,13 +11,13 @@ const CreateCitizenCharter = (options?: RouteQueryOptions): RouteDefinition<'get
 
 CreateCitizenCharter.definition = {
     methods: ["get","head"],
-    url: '/dtis-admin/citizen-charters/create',
+    url: '/ddms-admin/citizen-charters/create',
 } satisfies RouteDefinition<["get","head"]>
 
 /**
 * @see \App\Filament\Resources\CitizenCharterResource\Pages\CreateCitizenCharter::__invoke
  * @see app/Filament/Resources/CitizenCharterResource/Pages/CreateCitizenCharter.php:7
- * @route '/dtis-admin/citizen-charters/create'
+ * @route '/ddms-admin/citizen-charters/create'
  */
 CreateCitizenCharter.url = (options?: RouteQueryOptions) => {
     return CreateCitizenCharter.definition.url + queryParams(options)
@@ -26,7 +26,7 @@ CreateCitizenCharter.url = (options?: RouteQueryOptions) => {
 /**
 * @see \App\Filament\Resources\CitizenCharterResource\Pages\CreateCitizenCharter::__invoke
  * @see app/Filament/Resources/CitizenCharterResource/Pages/CreateCitizenCharter.php:7
- * @route '/dtis-admin/citizen-charters/create'
+ * @route '/ddms-admin/citizen-charters/create'
  */
 CreateCitizenCharter.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: CreateCitizenCharter.url(options),
@@ -35,7 +35,7 @@ CreateCitizenCharter.get = (options?: RouteQueryOptions): RouteDefinition<'get'>
 /**
 * @see \App\Filament\Resources\CitizenCharterResource\Pages\CreateCitizenCharter::__invoke
  * @see app/Filament/Resources/CitizenCharterResource/Pages/CreateCitizenCharter.php:7
- * @route '/dtis-admin/citizen-charters/create'
+ * @route '/ddms-admin/citizen-charters/create'
  */
 CreateCitizenCharter.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: CreateCitizenCharter.url(options),

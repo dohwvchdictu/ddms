@@ -1,8 +1,8 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
-* @see \App\Filament\Resources\ActionResource\Pages\ListActions::__invoke
- * @see app/Filament/Resources/ActionResource/Pages/ListActions.php:7
- * @route '/dtis-admin/actions'
+* @see \App\Filament\Resources\UserResource\Pages\ListUsers::__invoke
+ * @see app/Filament/Resources/UserResource/Pages/ListUsers.php:7
+ * @route '/ddms-admin/users'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(options),
@@ -11,31 +11,31 @@ export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 
 index.definition = {
     methods: ["get","head"],
-    url: '/dtis-admin/actions',
+    url: '/ddms-admin/users',
 } satisfies RouteDefinition<["get","head"]>
 
 /**
-* @see \App\Filament\Resources\ActionResource\Pages\ListActions::__invoke
- * @see app/Filament/Resources/ActionResource/Pages/ListActions.php:7
- * @route '/dtis-admin/actions'
+* @see \App\Filament\Resources\UserResource\Pages\ListUsers::__invoke
+ * @see app/Filament/Resources/UserResource/Pages/ListUsers.php:7
+ * @route '/ddms-admin/users'
  */
 index.url = (options?: RouteQueryOptions) => {
     return index.definition.url + queryParams(options)
 }
 
 /**
-* @see \App\Filament\Resources\ActionResource\Pages\ListActions::__invoke
- * @see app/Filament/Resources/ActionResource/Pages/ListActions.php:7
- * @route '/dtis-admin/actions'
+* @see \App\Filament\Resources\UserResource\Pages\ListUsers::__invoke
+ * @see app/Filament/Resources/UserResource/Pages/ListUsers.php:7
+ * @route '/ddms-admin/users'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(options),
     method: 'get',
 })
 /**
-* @see \App\Filament\Resources\ActionResource\Pages\ListActions::__invoke
- * @see app/Filament/Resources/ActionResource/Pages/ListActions.php:7
- * @route '/dtis-admin/actions'
+* @see \App\Filament\Resources\UserResource\Pages\ListUsers::__invoke
+ * @see app/Filament/Resources/UserResource/Pages/ListUsers.php:7
+ * @route '/ddms-admin/users'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: index.url(options),
@@ -43,9 +43,9 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 })
 
 /**
-* @see \App\Filament\Resources\ActionResource\Pages\CreateAction::__invoke
- * @see app/Filament/Resources/ActionResource/Pages/CreateAction.php:7
- * @route '/dtis-admin/actions/create'
+* @see \App\Filament\Resources\UserResource\Pages\CreateUser::__invoke
+ * @see app/Filament/Resources/UserResource/Pages/CreateUser.php:7
+ * @route '/ddms-admin/users/create'
  */
 export const create = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: create.url(options),
@@ -54,31 +54,31 @@ export const create = (options?: RouteQueryOptions): RouteDefinition<'get'> => (
 
 create.definition = {
     methods: ["get","head"],
-    url: '/dtis-admin/actions/create',
+    url: '/ddms-admin/users/create',
 } satisfies RouteDefinition<["get","head"]>
 
 /**
-* @see \App\Filament\Resources\ActionResource\Pages\CreateAction::__invoke
- * @see app/Filament/Resources/ActionResource/Pages/CreateAction.php:7
- * @route '/dtis-admin/actions/create'
+* @see \App\Filament\Resources\UserResource\Pages\CreateUser::__invoke
+ * @see app/Filament/Resources/UserResource/Pages/CreateUser.php:7
+ * @route '/ddms-admin/users/create'
  */
 create.url = (options?: RouteQueryOptions) => {
     return create.definition.url + queryParams(options)
 }
 
 /**
-* @see \App\Filament\Resources\ActionResource\Pages\CreateAction::__invoke
- * @see app/Filament/Resources/ActionResource/Pages/CreateAction.php:7
- * @route '/dtis-admin/actions/create'
+* @see \App\Filament\Resources\UserResource\Pages\CreateUser::__invoke
+ * @see app/Filament/Resources/UserResource/Pages/CreateUser.php:7
+ * @route '/ddms-admin/users/create'
  */
 create.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: create.url(options),
     method: 'get',
 })
 /**
-* @see \App\Filament\Resources\ActionResource\Pages\CreateAction::__invoke
- * @see app/Filament/Resources/ActionResource/Pages/CreateAction.php:7
- * @route '/dtis-admin/actions/create'
+* @see \App\Filament\Resources\UserResource\Pages\CreateUser::__invoke
+ * @see app/Filament/Resources/UserResource/Pages/CreateUser.php:7
+ * @route '/ddms-admin/users/create'
  */
 create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: create.url(options),
@@ -86,9 +86,9 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 })
 
 /**
-* @see \App\Filament\Resources\ActionResource\Pages\EditAction::__invoke
- * @see app/Filament/Resources/ActionResource/Pages/EditAction.php:7
- * @route '/dtis-admin/actions/{record}/edit'
+* @see \App\Filament\Resources\UserResource\Pages\EditUser::__invoke
+ * @see app/Filament/Resources/UserResource/Pages/EditUser.php:7
+ * @route '/ddms-admin/users/{record}/edit'
  */
 export const edit = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: edit.url(args, options),
@@ -97,13 +97,13 @@ export const edit = (args: { record: string | number } | [record: string | numbe
 
 edit.definition = {
     methods: ["get","head"],
-    url: '/dtis-admin/actions/{record}/edit',
+    url: '/ddms-admin/users/{record}/edit',
 } satisfies RouteDefinition<["get","head"]>
 
 /**
-* @see \App\Filament\Resources\ActionResource\Pages\EditAction::__invoke
- * @see app/Filament/Resources/ActionResource/Pages/EditAction.php:7
- * @route '/dtis-admin/actions/{record}/edit'
+* @see \App\Filament\Resources\UserResource\Pages\EditUser::__invoke
+ * @see app/Filament/Resources/UserResource/Pages/EditUser.php:7
+ * @route '/ddms-admin/users/{record}/edit'
  */
 edit.url = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
@@ -129,27 +129,27 @@ edit.url = (args: { record: string | number } | [record: string | number ] | str
 }
 
 /**
-* @see \App\Filament\Resources\ActionResource\Pages\EditAction::__invoke
- * @see app/Filament/Resources/ActionResource/Pages/EditAction.php:7
- * @route '/dtis-admin/actions/{record}/edit'
+* @see \App\Filament\Resources\UserResource\Pages\EditUser::__invoke
+ * @see app/Filament/Resources/UserResource/Pages/EditUser.php:7
+ * @route '/ddms-admin/users/{record}/edit'
  */
 edit.get = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: edit.url(args, options),
     method: 'get',
 })
 /**
-* @see \App\Filament\Resources\ActionResource\Pages\EditAction::__invoke
- * @see app/Filament/Resources/ActionResource/Pages/EditAction.php:7
- * @route '/dtis-admin/actions/{record}/edit'
+* @see \App\Filament\Resources\UserResource\Pages\EditUser::__invoke
+ * @see app/Filament/Resources/UserResource/Pages/EditUser.php:7
+ * @route '/ddms-admin/users/{record}/edit'
  */
 edit.head = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: edit.url(args, options),
     method: 'head',
 })
-const actions = {
+const users = {
     index: Object.assign(index, index),
 create: Object.assign(create, create),
 edit: Object.assign(edit, edit),
 }
 
-export default actions
+export default users

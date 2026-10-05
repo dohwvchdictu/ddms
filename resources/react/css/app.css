@@ -115,7 +115,7 @@ html:has([data-auth-layout]) {
     font-size: clamp(16px, 0.2vw + 13px, 18px);
 }
 
-/* Fills the bar under "Login successful" while the dashboard loads. */
+/* Fills the bar under "Welcome back" while the dashboard loads. */
 @keyframes login-progress {
     from {
         width: 0%;

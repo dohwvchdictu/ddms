@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\MiscController::generateLogbook
- * @see app/Http/Controllers/MiscController.php:91
+ * @see app/Http/Controllers/MiscController.php:68
  * @route '/inbox/generate-logbook'
  */
 export const generateLogbook = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ generateLogbook.definition = {
 
 /**
 * @see \App\Http\Controllers\MiscController::generateLogbook
- * @see app/Http/Controllers/MiscController.php:91
+ * @see app/Http/Controllers/MiscController.php:68
  * @route '/inbox/generate-logbook'
  */
 generateLogbook.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ generateLogbook.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\MiscController::generateLogbook
- * @see app/Http/Controllers/MiscController.php:91
+ * @see app/Http/Controllers/MiscController.php:68
  * @route '/inbox/generate-logbook'
  */
 generateLogbook.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ generateLogbook.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => (
 })
 /**
 * @see \App\Http\Controllers\MiscController::generateLogbook
- * @see app/Http/Controllers/MiscController.php:91
+ * @see app/Http/Controllers/MiscController.php:68
  * @route '/inbox/generate-logbook'
  */
 generateLogbook.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

@@ -2,7 +2,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../
 /**
 * @see \Filament\Pages\Dashboard::__invoke
  * @see vendor/filament/filament/src/Pages/Dashboard.php:7
- * @route '/dtis-admin'
+ * @route '/ddms-admin'
  */
 export const dashboard = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: dashboard.url(options),
@@ -11,13 +11,13 @@ export const dashboard = (options?: RouteQueryOptions): RouteDefinition<'get'> =
 
 dashboard.definition = {
     methods: ["get","head"],
-    url: '/dtis-admin',
+    url: '/ddms-admin',
 } satisfies RouteDefinition<["get","head"]>
 
 /**
 * @see \Filament\Pages\Dashboard::__invoke
  * @see vendor/filament/filament/src/Pages/Dashboard.php:7
- * @route '/dtis-admin'
+ * @route '/ddms-admin'
  */
 dashboard.url = (options?: RouteQueryOptions) => {
     return dashboard.definition.url + queryParams(options)
@@ -26,7 +26,7 @@ dashboard.url = (options?: RouteQueryOptions) => {
 /**
 * @see \Filament\Pages\Dashboard::__invoke
  * @see vendor/filament/filament/src/Pages/Dashboard.php:7
- * @route '/dtis-admin'
+ * @route '/ddms-admin'
  */
 dashboard.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: dashboard.url(options),
@@ -35,7 +35,7 @@ dashboard.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 /**
 * @see \Filament\Pages\Dashboard::__invoke
  * @see vendor/filament/filament/src/Pages/Dashboard.php:7
- * @route '/dtis-admin'
+ * @route '/ddms-admin'
  */
 dashboard.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: dashboard.url(options),

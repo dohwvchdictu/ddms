@@ -2,7 +2,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefa
 /**
 * @see \App\Filament\Resources\CitizenCharterResource\Pages\EditCitizenCharter::__invoke
  * @see app/Filament/Resources/CitizenCharterResource/Pages/EditCitizenCharter.php:7
- * @route '/dtis-admin/citizen-charters/{record}/edit'
+ * @route '/ddms-admin/citizen-charters/{record}/edit'
  */
 const EditCitizenCharter = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: EditCitizenCharter.url(args, options),
@@ -11,13 +11,13 @@ const EditCitizenCharter = (args: { record: string | number } | [record: string 
 
 EditCitizenCharter.definition = {
     methods: ["get","head"],
-    url: '/dtis-admin/citizen-charters/{record}/edit',
+    url: '/ddms-admin/citizen-charters/{record}/edit',
 } satisfies RouteDefinition<["get","head"]>
 
 /**
 * @see \App\Filament\Resources\CitizenCharterResource\Pages\EditCitizenCharter::__invoke
  * @see app/Filament/Resources/CitizenCharterResource/Pages/EditCitizenCharter.php:7
- * @route '/dtis-admin/citizen-charters/{record}/edit'
+ * @route '/ddms-admin/citizen-charters/{record}/edit'
  */
 EditCitizenCharter.url = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
@@ -45,7 +45,7 @@ EditCitizenCharter.url = (args: { record: string | number } | [record: string | 
 /**
 * @see \App\Filament\Resources\CitizenCharterResource\Pages\EditCitizenCharter::__invoke
  * @see app/Filament/Resources/CitizenCharterResource/Pages/EditCitizenCharter.php:7
- * @route '/dtis-admin/citizen-charters/{record}/edit'
+ * @route '/ddms-admin/citizen-charters/{record}/edit'
  */
 EditCitizenCharter.get = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: EditCitizenCharter.url(args, options),
@@ -54,7 +54,7 @@ EditCitizenCharter.get = (args: { record: string | number } | [record: string | 
 /**
 * @see \App\Filament\Resources\CitizenCharterResource\Pages\EditCitizenCharter::__invoke
  * @see app/Filament/Resources/CitizenCharterResource/Pages/EditCitizenCharter.php:7
- * @route '/dtis-admin/citizen-charters/{record}/edit'
+ * @route '/ddms-admin/citizen-charters/{record}/edit'
  */
 EditCitizenCharter.head = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: EditCitizenCharter.url(args, options),

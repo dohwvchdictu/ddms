@@ -2,24 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Reports\DocumentStatusReport;
 use App\Models\Document;
+use App\Services\ApiService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 
 class MiscController extends Controller
 {
-    /**
-     * Action ids for the printed Status-of-Documents report. Kept in step with
-     * App\Livewire\Report\DocumentStatus so screen and paper agree.
-     */
-    private const ACTION_RECEIVED = 1;
+    /** The "Forwarded" action id: the logbook prints only what this office forwarded. */
     private const ACTION_FORWARDED = 3;
-    private const ACTION_CLOSED = 5;
-    private const ACTIONS_COMPLETED = [self::ACTION_FORWARDED, self::ACTION_CLOSED];
-
-    /** Fallback when neither the citizen charter nor the category sets required_days. */
-    private const DEFAULT_REQUIRED_DAYS = Document::DEFAULT_REQUIRED_DAYS;
 
     public $user = [];
     public $id;
@@ -36,35 +27,21 @@ class MiscController extends Controller
         $this->checkApiConnection();
     }
 
-    public function checkApiConnection()
+    /**
+     * The office directory, from ApiService's cache rather than a call to HRIS
+     * on every print. An unreachable HRIS leaves it empty: the printouts still
+     * render, with blank office names.
+     */
+    public function checkApiConnection(): bool
     {
-        /** API */
-        $officeResponse = Http::get(config('services.api.base_url') . 'public/get-offices');
+        $offices = app(ApiService::class)->getOfficesData()['officeList'] ?? null;
 
-        if(!$officeResponse->ok())
-        {
-            $this->offices = [];
-
-            $this->alert('error', 'No response from API server. Check connection and try again.', [
-                'position' => 'center',
-                'toast' => true,
-                'timer' => null,
-                'showConfirmButton' => true,
-                'confirmButtonText' => 'OK',
-                'confirmButtonColor' => '#dc2626',
-            ]);
-            
-            return false;
-        }
-
-        $this->response = $officeResponse->json();
-
-        $this->offices = collect($this->response['officeList'] ?? [])
+        $this->offices = collect($offices ?? [])
             ->sortBy('officeName')
             ->values()
             ->all();
 
-        return true;
+        return $offices !== null;
     }
 
     public function filterOffice($id)
@@ -145,207 +122,25 @@ class MiscController extends Controller
         return view('print.logbook', compact('documentsArray', 'offices'));
     }
 
-    public function printDocumentStatusReport(Request $request)
+    /**
+     * The printed Status of Documents report. Same figures as the on-screen
+     * report: both come from AppActionsReportsDocumentStatusReport.
+     */
+    public function printDocumentStatusReport(Request $request, DocumentStatusReport $report, ApiService $api)
     {
-        $startDate = $request->get('startDate');
-        $endDate = $request->get('endDate');
-        
-        // Default to the current month if no dates provided, matching the
-        // on-screen report in App\Livewire\Report\DocumentStatus.
-        if (!$startDate || !$endDate) {
-            $startDate = now()->startOfMonth()->format('Y-m-d');
-            $endDate = now()->format('Y-m-d');
-        }
+        // Default to the current month, as the on-screen report opens.
+        $startDate = $request->query('startDate') ?: now()->startOfMonth()->toDateString();
+        $endDate = $request->query('endDate') ?: now()->toDateString();
 
-        // Load offices data
-        $this->mount();
+        $data = $report->handle($startDate, $endDate, $api->getActiveOffices());
 
-        // Pre-aggregate the counts in grouped queries instead of running several
-        // count queries per office (~150 queries). Mirrors the on-screen report
-        // in App\Livewire\Report\DocumentStatus; keep the two in step.
-        /** Inclusive of both selected days — see App\Livewire\Report\DocumentStatus. */
-        $rangeStart = \Carbon\Carbon::parse($startDate)->startOfDay();
-        $rangeEnd = \Carbon\Carbon::parse($endDate)->addDay()->startOfDay();
-
-        $pendingByOffice = Document::where('status', 'On Process')
-            ->whereBetween('created_at', [$rangeStart, $rangeEnd])
-            ->selectRaw('assigned_to, COUNT(*) as aggregate')
-            ->groupBy('assigned_to')
-            ->pluck('aggregate', 'assigned_to');
-
-        // Received and Completed both come from the custody-window walk rather
-        // than two independent COUNT(*)s, so Completed can never exceed Received
-        // and the printed rate is exactly Completed / Received.
-        $windows = $this->completionWindows($rangeStart, $rangeEnd);
-        $receivedByOffice = $windows['started'];
-        $completedByOffice = $windows['finished'];
-
-        $overdueByOffice = $this->overdueDocumentsByOffice($rangeStart, $rangeEnd);
-
-        // Generate overall statistics
-        $overallReceived = $receivedByOffice->sum();
-        $overallCompleted = $completedByOffice->sum();
-
-        $reportData['overall'] = [
-            'pending' => $pendingByOffice->sum(),
-            'received' => $overallReceived,
-            'completed' => $overallCompleted,
-            'overdue' => $overdueByOffice->sum(),
-            'rate' => $this->completionRate($overallReceived, $overallCompleted),
+        $reportData = [
+            'overall' => $data['totals'],
+            // The print view reads the office name from `office`.
+            'offices' => array_map(fn (array $row) => [...$row, 'office' => ['officeName' => $row['name']]], $data['offices']),
         ];
 
-        $reportData['offices'] = [];
-        foreach ($this->offices as $office) {
-            // Report lists active offices only; $this->offices stays unfiltered
-            // because filterOffice() must still resolve deactivated offices.
-            if (!($office['status'] ?? true)) {
-                continue;
-            }
-
-            $received = $receivedByOffice[$office['id']] ?? 0;
-            $completed = $completedByOffice[$office['id']] ?? 0;
-
-            $reportData['offices'][] = [
-                'office' => $office,
-                'pending' => $pendingByOffice[$office['id']] ?? 0,
-                'received' => $received,
-                'completed' => $completed,
-                'overdue' => $overdueByOffice[$office['id']] ?? 0,
-                'rate' => $this->completionRate($received, $completed),
-            ];
-        }
-
-        // Sort offices by name
-        $reportData['offices'] = collect($reportData['offices'])->sortBy(function ($item) {
-            return $item['office']['officeName'];
-        })->values()->toArray();
-
         return view('reports.document-status-print', compact('reportData', 'startDate', 'endDate'));
-    }
-
-    /**
-     * Share of the documents an office took in that it also finished. Both terms
-     * come from completionWindows(), where each receipt is followed to its own
-     * outcome, so the result cannot exceed 100%. Null when nothing arrived.
-     * Mirrors DocumentStatus::completionRate().
-     */
-    private function completionRate($started, $finished)
-    {
-        if (!$started) {
-            return null;
-        }
-
-        return ($finished / $started) * 100;
-    }
-
-    /**
-     * Per-office custody windows for the period: a window opens on "Received"
-     * and closes on the next "Forwarded" or "Closed". Only windows that opened
-     * inside the period count, and one still counts as finished if it closed
-     * after the period ended. No upper bound on the query for that reason.
-     *
-     * Mirrors DocumentStatus::walkCompletionWindows(); keep the two in step.
-     */
-    private function completionWindows($rangeStart, $rangeEnd): array
-    {
-        $logs = DB::table('logs')
-            ->whereIn('action_id', array_merge([self::ACTION_RECEIVED], self::ACTIONS_COMPLETED))
-            ->where('created_at', '>=', $rangeStart)
-            ->orderBy('document_id')
-            ->orderBy('created_at')
-            ->orderBy('id')
-            ->select('document_id', 'assigned_to', 'action_id', 'created_at')
-            ->cursor();
-
-        $endAt = $rangeEnd->toDateTimeString();
-
-        $started = [];
-        $finished = [];
-        $currentDoc = null;
-        $openWindow = null;
-
-        foreach ($logs as $log) {
-            $documentId = (int) $log->document_id;
-
-            if ($documentId !== $currentDoc) {
-                $currentDoc = $documentId;
-                $openWindow = null;
-            }
-
-            if ((int) $log->action_id === self::ACTION_RECEIVED) {
-                $officeId = (int) $log->assigned_to;
-
-                // Repeat receipts by the holding office are batch re-scans.
-                if ($openWindow !== null && $openWindow['office'] === $officeId) {
-                    continue;
-                }
-
-                $inPeriod = $log->created_at < $endAt;
-                $openWindow = ['office' => $officeId, 'in' => $inPeriod];
-
-                if ($inPeriod) {
-                    $started[$officeId] = ($started[$officeId] ?? 0) + 1;
-                }
-
-                continue;
-            }
-
-            if ($openWindow !== null) {
-                if ($openWindow['in']) {
-                    $finished[$openWindow['office']] = ($finished[$openWindow['office']] ?? 0) + 1;
-                }
-
-                $openWindow = null;
-            }
-        }
-
-        return ['started' => collect($started), 'finished' => collect($finished)];
-    }
-
-    /**
-     * Pending documents past the deadline their service commitment set, charged
-     * to the office now holding them. A strict subset of the Pending column.
-     * Mirrors DocumentStatus::overdueByOffice() — see the notes there on why the
-     * clock runs from creation rather than from the current office's receipt.
-     */
-    private function overdueDocumentsByOffice($rangeStart, $rangeEnd)
-    {
-        $requiredDays = 'case'
-            . ' when citizen_charters.required_days > 0 then citizen_charters.required_days'
-            . ' when categories.required_days > 0 then categories.required_days'
-            . ' else ' . self::DEFAULT_REQUIRED_DAYS
-            . ' end';
-
-        $groups = DB::table('documents')
-            ->leftJoin('citizen_charters', 'citizen_charters.id', '=', 'documents.citizen_charter_id')
-            ->leftJoin('categories', 'categories.id', '=', 'documents.category_id')
-            ->where('documents.status', 'On Process')
-            ->whereBetween('documents.created_at', [$rangeStart, $rangeEnd])
-            ->groupBy('documents.assigned_to', DB::raw($requiredDays), DB::raw('date(documents.created_at)'))
-            ->select([
-                'documents.assigned_to',
-                DB::raw($requiredDays . ' as required_days'),
-                DB::raw('date(documents.created_at) as created_date'),
-                DB::raw('count(*) as documents'),
-            ])
-            ->get();
-
-        $today = \Carbon\Carbon::today();
-        $overdue = [];
-
-        foreach ($groups as $group) {
-            $dueDate = \Carbon\Carbon::parse($group->created_date)->startOfDay()->addWeekdays((int) $group->required_days);
-
-            /** Signed working days to the deadline: >0 left, <0 overdue. */
-            if ((int) $today->diffInWeekdays($dueDate, false) >= 0) {
-                continue;
-            }
-
-            $officeId = $group->assigned_to;
-            $overdue[$officeId] = ($overdue[$officeId] ?? 0) + (int) $group->documents;
-        }
-
-        return collect($overdue);
     }
 
     public function printExternalDocumentsReport(Request $request)

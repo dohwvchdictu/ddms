@@ -127,6 +127,26 @@ class PendingTest extends TestCase
                 ->where('documents.data.0.endorsed_to_me', true));
     }
 
+    public function test_older_documents_hidden_by_the_dates_are_counted(): void
+    {
+        $this->onProcess();
+        $old = $this->onProcess();
+        DB::table('documents')->where('id', $old->id)->update(['updated_at' => now()->subDays(45)]);
+
+        $this->signedIn()
+            ->get('/status-pending')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('documents.total', 1)
+                ->where('outsideRange', 1));
+
+        // Any date: nothing hidden.
+        $this->signedIn()
+            ->get('/status-pending?from=&to=')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('documents.total', 2)
+                ->where('outsideRange', 0));
+    }
+
     public function test_forwarding_from_pending_sends_them_on(): void
     {
         $document = $this->onProcess();

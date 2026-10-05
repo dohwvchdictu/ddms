@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\IncomingController::selectable
- * @see app/Http/Controllers/IncomingController.php:59
+ * @see app/Http/Controllers/IncomingController.php:63
  * @route '/status-incoming/selectable'
  */
 export const selectable = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -59,7 +59,7 @@ selectable.definition = {
 
 /**
 * @see \App\Http\Controllers\IncomingController::selectable
- * @see app/Http/Controllers/IncomingController.php:59
+ * @see app/Http/Controllers/IncomingController.php:63
  * @route '/status-incoming/selectable'
  */
 selectable.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ selectable.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\IncomingController::selectable
- * @see app/Http/Controllers/IncomingController.php:59
+ * @see app/Http/Controllers/IncomingController.php:63
  * @route '/status-incoming/selectable'
  */
 selectable.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -77,7 +77,7 @@ selectable.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\IncomingController::selectable
- * @see app/Http/Controllers/IncomingController.php:59
+ * @see app/Http/Controllers/IncomingController.php:63
  * @route '/status-incoming/selectable'
  */
 selectable.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -87,7 +87,7 @@ selectable.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\IncomingController::receive
- * @see app/Http/Controllers/IncomingController.php:75
+ * @see app/Http/Controllers/IncomingController.php:79
  * @route '/status-incoming/receive'
  */
 export const receive = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -102,7 +102,7 @@ receive.definition = {
 
 /**
 * @see \App\Http\Controllers\IncomingController::receive
- * @see app/Http/Controllers/IncomingController.php:75
+ * @see app/Http/Controllers/IncomingController.php:79
  * @route '/status-incoming/receive'
  */
 receive.url = (options?: RouteQueryOptions) => {
@@ -111,7 +111,7 @@ receive.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\IncomingController::receive
- * @see app/Http/Controllers/IncomingController.php:75
+ * @see app/Http/Controllers/IncomingController.php:79
  * @route '/status-incoming/receive'
  */
 receive.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({

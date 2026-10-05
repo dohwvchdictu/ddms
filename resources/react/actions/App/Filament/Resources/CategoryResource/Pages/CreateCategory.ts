@@ -2,7 +2,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../
 /**
 * @see \App\Filament\Resources\CategoryResource\Pages\CreateCategory::__invoke
  * @see app/Filament/Resources/CategoryResource/Pages/CreateCategory.php:7
- * @route '/dtis-admin/categories/create'
+ * @route '/ddms-admin/categories/create'
  */
 const CreateCategory = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: CreateCategory.url(options),
@@ -11,13 +11,13 @@ const CreateCategory = (options?: RouteQueryOptions): RouteDefinition<'get'> => 
 
 CreateCategory.definition = {
     methods: ["get","head"],
-    url: '/dtis-admin/categories/create',
+    url: '/ddms-admin/categories/create',
 } satisfies RouteDefinition<["get","head"]>
 
 /**
 * @see \App\Filament\Resources\CategoryResource\Pages\CreateCategory::__invoke
  * @see app/Filament/Resources/CategoryResource/Pages/CreateCategory.php:7
- * @route '/dtis-admin/categories/create'
+ * @route '/ddms-admin/categories/create'
  */
 CreateCategory.url = (options?: RouteQueryOptions) => {
     return CreateCategory.definition.url + queryParams(options)
@@ -26,7 +26,7 @@ CreateCategory.url = (options?: RouteQueryOptions) => {
 /**
 * @see \App\Filament\Resources\CategoryResource\Pages\CreateCategory::__invoke
  * @see app/Filament/Resources/CategoryResource/Pages/CreateCategory.php:7
- * @route '/dtis-admin/categories/create'
+ * @route '/ddms-admin/categories/create'
  */
 CreateCategory.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: CreateCategory.url(options),
@@ -35,7 +35,7 @@ CreateCategory.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 /**
 * @see \App\Filament\Resources\CategoryResource\Pages\CreateCategory::__invoke
  * @see app/Filament/Resources/CategoryResource/Pages/CreateCategory.php:7
- * @route '/dtis-admin/categories/create'
+ * @route '/ddms-admin/categories/create'
  */
 CreateCategory.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: CreateCategory.url(options),

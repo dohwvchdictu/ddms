@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\MiscController::documents
- * @see app/Http/Controllers/MiscController.php:351
+ * @see app/Http/Controllers/MiscController.php:146
  * @route '/print-external-documents-report'
  */
 export const documents = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ documents.definition = {
 
 /**
 * @see \App\Http\Controllers\MiscController::documents
- * @see app/Http/Controllers/MiscController.php:351
+ * @see app/Http/Controllers/MiscController.php:146
  * @route '/print-external-documents-report'
  */
 documents.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ documents.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\MiscController::documents
- * @see app/Http/Controllers/MiscController.php:351
+ * @see app/Http/Controllers/MiscController.php:146
  * @route '/print-external-documents-report'
  */
 documents.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ documents.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\MiscController::documents
- * @see app/Http/Controllers/MiscController.php:351
+ * @see app/Http/Controllers/MiscController.php:146
  * @route '/print-external-documents-report'
  */
 documents.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

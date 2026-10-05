@@ -2,7 +2,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefa
 /**
 * @see \App\Filament\Resources\ActionResource\Pages\EditAction::__invoke
  * @see app/Filament/Resources/ActionResource/Pages/EditAction.php:7
- * @route '/dtis-admin/actions/{record}/edit'
+ * @route '/ddms-admin/actions/{record}/edit'
  */
 const EditAction = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: EditAction.url(args, options),
@@ -11,13 +11,13 @@ const EditAction = (args: { record: string | number } | [record: string | number
 
 EditAction.definition = {
     methods: ["get","head"],
-    url: '/dtis-admin/actions/{record}/edit',
+    url: '/ddms-admin/actions/{record}/edit',
 } satisfies RouteDefinition<["get","head"]>
 
 /**
 * @see \App\Filament\Resources\ActionResource\Pages\EditAction::__invoke
  * @see app/Filament/Resources/ActionResource/Pages/EditAction.php:7
- * @route '/dtis-admin/actions/{record}/edit'
+ * @route '/ddms-admin/actions/{record}/edit'
  */
 EditAction.url = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
@@ -45,7 +45,7 @@ EditAction.url = (args: { record: string | number } | [record: string | number ]
 /**
 * @see \App\Filament\Resources\ActionResource\Pages\EditAction::__invoke
  * @see app/Filament/Resources/ActionResource/Pages/EditAction.php:7
- * @route '/dtis-admin/actions/{record}/edit'
+ * @route '/ddms-admin/actions/{record}/edit'
  */
 EditAction.get = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: EditAction.url(args, options),
@@ -54,7 +54,7 @@ EditAction.get = (args: { record: string | number } | [record: string | number ]
 /**
 * @see \App\Filament\Resources\ActionResource\Pages\EditAction::__invoke
  * @see app/Filament/Resources/ActionResource/Pages/EditAction.php:7
- * @route '/dtis-admin/actions/{record}/edit'
+ * @route '/ddms-admin/actions/{record}/edit'
  */
 EditAction.head = (args: { record: string | number } | [record: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: EditAction.url(args, options),

@@ -50,6 +50,10 @@ class IncomingController extends Controller
             'facets' => $incoming->facets($officeId, $filters),
             'statusOptions' => IncomingDocuments::STATUSES,
             'defaultRange' => self::defaultRange(),
+            // Waiting here but hidden by the dates, so the list and the sidebar badge still add up.
+            'outsideRange' => $filters['from'] || $filters['to']
+                ? $incoming->query($officeId, [...$filters, 'from' => null, 'to' => null])->count() - $documents->total()
+                : 0,
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'maxSelection' => self::MAX_SELECTION,
         ]);

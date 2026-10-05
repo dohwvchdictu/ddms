@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/app-layout';
-import { printTransmittalForm } from '@/lib/print-transmittal-form';
+import { printTransmittalForm } from '@/lib/print-page';
 import { cn } from '@/lib/utils';
 import { longDate, parseDay } from '@/lib/working-days';
 import { dashboard, incoming, myDocuments, pending } from '@/routes';

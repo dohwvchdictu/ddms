@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\MiscController::printDocumentStatusReport
- * @see app/Http/Controllers/MiscController.php:148
+ * @see app/Http/Controllers/MiscController.php:129
  * @route '/print-document-status-report'
  */
 export const printDocumentStatusReport = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ printDocumentStatusReport.definition = {
 
 /**
 * @see \App\Http\Controllers\MiscController::printDocumentStatusReport
- * @see app/Http/Controllers/MiscController.php:148
+ * @see app/Http/Controllers/MiscController.php:129
  * @route '/print-document-status-report'
  */
 printDocumentStatusReport.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ printDocumentStatusReport.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\MiscController::printDocumentStatusReport
- * @see app/Http/Controllers/MiscController.php:148
+ * @see app/Http/Controllers/MiscController.php:129
  * @route '/print-document-status-report'
  */
 printDocumentStatusReport.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ printDocumentStatusReport.get = (options?: RouteQueryOptions): RouteDefinition<'
 })
 /**
 * @see \App\Http\Controllers\MiscController::printDocumentStatusReport
- * @see app/Http/Controllers/MiscController.php:148
+ * @see app/Http/Controllers/MiscController.php:129
  * @route '/print-document-status-report'
  */
 printDocumentStatusReport.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ printDocumentStatusReport.head = (options?: RouteQueryOptions): RouteDefinition<
 
 /**
 * @see \App\Http\Controllers\MiscController::printExternalDocumentsReport
- * @see app/Http/Controllers/MiscController.php:351
+ * @see app/Http/Controllers/MiscController.php:146
  * @route '/print-external-documents-report'
  */
 export const printExternalDocumentsReport = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -59,7 +59,7 @@ printExternalDocumentsReport.definition = {
 
 /**
 * @see \App\Http\Controllers\MiscController::printExternalDocumentsReport
- * @see app/Http/Controllers/MiscController.php:351
+ * @see app/Http/Controllers/MiscController.php:146
  * @route '/print-external-documents-report'
  */
 printExternalDocumentsReport.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ printExternalDocumentsReport.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\MiscController::printExternalDocumentsReport
- * @see app/Http/Controllers/MiscController.php:351
+ * @see app/Http/Controllers/MiscController.php:146
  * @route '/print-external-documents-report'
  */
 printExternalDocumentsReport.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -77,7 +77,7 @@ printExternalDocumentsReport.get = (options?: RouteQueryOptions): RouteDefinitio
 })
 /**
 * @see \App\Http\Controllers\MiscController::printExternalDocumentsReport
- * @see app/Http/Controllers/MiscController.php:351
+ * @see app/Http/Controllers/MiscController.php:146
  * @route '/print-external-documents-report'
  */
 printExternalDocumentsReport.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -87,7 +87,7 @@ printExternalDocumentsReport.head = (options?: RouteQueryOptions): RouteDefiniti
 
 /**
 * @see \App\Http\Controllers\MiscController::generateLogbook
- * @see app/Http/Controllers/MiscController.php:91
+ * @see app/Http/Controllers/MiscController.php:68
  * @route '/inbox/generate-logbook'
  */
 export const generateLogbook = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -102,7 +102,7 @@ generateLogbook.definition = {
 
 /**
 * @see \App\Http\Controllers\MiscController::generateLogbook
- * @see app/Http/Controllers/MiscController.php:91
+ * @see app/Http/Controllers/MiscController.php:68
  * @route '/inbox/generate-logbook'
  */
 generateLogbook.url = (options?: RouteQueryOptions) => {
@@ -111,7 +111,7 @@ generateLogbook.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\MiscController::generateLogbook
- * @see app/Http/Controllers/MiscController.php:91
+ * @see app/Http/Controllers/MiscController.php:68
  * @route '/inbox/generate-logbook'
  */
 generateLogbook.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -120,7 +120,7 @@ generateLogbook.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => (
 })
 /**
 * @see \App\Http\Controllers\MiscController::generateLogbook
- * @see app/Http/Controllers/MiscController.php:91
+ * @see app/Http/Controllers/MiscController.php:68
  * @route '/inbox/generate-logbook'
  */
 generateLogbook.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
