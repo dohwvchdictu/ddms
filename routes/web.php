@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\ActionController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CitizenCharterController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ClosedController;
 use App\Http\Controllers\DashboardController;
@@ -39,9 +42,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'store'])->name('login.store');
 
-/** The admin panel moved with the rebrand (DTIS → DDMS); old bookmarks still land. */
-Route::get('/dtis-admin/{path?}', fn (?string $path = null) => redirect('/ddms-admin' . ($path ? "/{$path}" : ''), 301))
-    ->where('path', '.*');
+/** The old Filament admin panel (DTIS, then DDMS); its bookmarks now land on Administration. */
+Route::permanentRedirect('/dtis-admin/{path?}', '/admin/categories')->where('path', '.*');
+Route::permanentRedirect('/ddms-admin/{path?}', '/admin/categories')->where('path', '.*');
 
 Route::middleware(['jwt.auth'])->group(function () {
     /** Dashboard */
@@ -119,6 +122,18 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::get('/report-turnaround-time/offices/{office}', [TurnaroundController::class, 'office'])
         ->whereNumber('office')
         ->name('reports.turnaround.office');
+
+    /** Administration: only for allowed employees (App\Support\Administration) */
+    Route::prefix('admin')->name('admin.')->middleware('can:administer')->group(function () {
+        Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+        Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+        Route::patch('/categories/{category}', [CategoryController::class, 'update'])->whereNumber('category')->name('categories.update');
+        Route::get('/citizen-charters', [CitizenCharterController::class, 'index'])->name('citizen-charters.index');
+        Route::post('/citizen-charters', [CitizenCharterController::class, 'store'])->name('citizen-charters.store');
+        Route::patch('/citizen-charters/{citizenCharter}', [CitizenCharterController::class, 'update'])->whereNumber('citizenCharter')->name('citizen-charters.update');
+        Route::get('/actions', [ActionController::class, 'index'])->name('actions.index');
+        Route::post('/actions', [ActionController::class, 'store'])->name('actions.store');
+    });
 
     /** Printing of Report*/
     Route::get('/print-document-status-report', [MiscController::class, 'printDocumentStatusReport'])->name('print.document.status');

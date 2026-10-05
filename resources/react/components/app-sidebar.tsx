@@ -295,7 +295,7 @@ export default function AppSidebar({ collapsed = false, onNavigate }: AppSidebar
 
                 <hr className={cn('border-border', collapsed ? 'mx-2' : 'mx-1')} />
 
-                <ul className="space-y-1">{groups.map(renderGroup)}</ul>
+                <ul className="space-y-1">{groups.filter((group) => group.requires !== 'administer' || props.auth.canAdminister).map(renderGroup)}</ul>
             </div>
         </nav>
     );

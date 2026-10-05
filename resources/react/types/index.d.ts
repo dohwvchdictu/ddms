@@ -36,7 +36,8 @@ export interface Toast {
 
 export interface SharedProps {
     app: { name: string };
-    auth: { user: User | null };
+    /** `canAdminister`: may use the Administration pages (see App\Support\Administration). */
+    auth: { user: User | null; canAdminister: boolean };
     flash: { error: string | null; status: string | null };
     sidebarCounts: SidebarCounts | null;
     [key: string]: unknown;

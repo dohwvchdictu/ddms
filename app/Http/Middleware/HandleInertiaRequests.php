@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Administration;
 use App\Support\CurrentEmployee;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -29,6 +30,8 @@ class HandleInertiaRequests extends Middleware
             ],
             'auth' => [
                 'user' => fn () => CurrentEmployee::get(),
+                // Shows the Administration group in the sidebar.
+                'canAdminister' => fn () => Administration::allows(session('user')),
             ],
             'flash' => [
                 'error' => fn () => $request->session()->get('error'),

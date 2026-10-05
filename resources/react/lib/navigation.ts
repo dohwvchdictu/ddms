@@ -12,10 +12,14 @@ import {
     Hourglass,
     House,
     Inbox,
+    Landmark,
     Network,
     Send,
+    ShieldCheck,
+    Tags,
     Timer,
     UserRoundCheck,
+    Workflow,
     type LucideIcon,
 } from 'lucide-react';
 import type { SidebarCounts } from '@/types';
@@ -38,6 +42,8 @@ export interface NavGroup {
     defaultOpen?: boolean;
     /** Count shown on the group header while it is closed (and on the rail icon). */
     badge?: keyof SidebarCounts;
+    /** Shown only to those allowed: `administer` = the shared `auth.canAdminister`. */
+    requires?: 'administer';
 }
 
 /** Links shown above the New Document button. */
@@ -89,6 +95,18 @@ export const groups: NavGroup[] = [
             { title: 'External Requests', href: '/report-status-of-external-documents', icon: Globe },
             { title: 'Per Unit', href: '/report-per-unit', icon: Network },
             { title: 'Turnaround Time', href: '/report-turnaround-time', icon: Timer },
+        ],
+    },
+    {
+        // Reference data the workflow runs on. Only for allowed employees (until roles exist).
+        title: 'Administration',
+        icon: ShieldCheck,
+        defaultOpen: false,
+        requires: 'administer',
+        items: [
+            { title: 'Categories', href: '/admin/categories', icon: Tags },
+            { title: "Citizen's Charter", href: '/admin/citizen-charters', icon: Landmark },
+            { title: 'Actions', href: '/admin/actions', icon: Workflow },
         ],
     },
 ];

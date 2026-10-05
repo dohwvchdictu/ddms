@@ -13,6 +13,7 @@ import ClosedController from './ClosedController'
 import DocumentViewController from './DocumentViewController'
 import RoutingLogbookController from './RoutingLogbookController'
 import Reports from './Reports'
+import Admin from './Admin'
 import MiscController from './MiscController'
 import TransmittalFormController from './TransmittalFormController'
 import EmployeePhotoController from './EmployeePhotoController'
@@ -32,6 +33,7 @@ ClosedController: Object.assign(ClosedController, ClosedController),
 DocumentViewController: Object.assign(DocumentViewController, DocumentViewController),
 RoutingLogbookController: Object.assign(RoutingLogbookController, RoutingLogbookController),
 Reports: Object.assign(Reports, Reports),
+Admin: Object.assign(Admin, Admin),
 MiscController: Object.assign(MiscController, MiscController),
 TransmittalFormController: Object.assign(TransmittalFormController, TransmittalFormController),
 EmployeePhotoController: Object.assign(EmployeePhotoController, EmployeePhotoController),
