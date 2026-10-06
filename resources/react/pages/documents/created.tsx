@@ -21,7 +21,7 @@ interface Props {
         required_days: number;
         due_date: string;
     };
-    /** The (still Livewire) My Documents list it was filed under. */
+    /** The My Documents list it was filed under. */
     listPath: string;
 }
 
@@ -92,11 +92,10 @@ export default function DocumentCreated({ document, listPath }: Props) {
                         </Link>
                     </Button>
                     <Button asChild className="bg-emerald-600 text-white hover:bg-emerald-700">
-                        {/* A full page load: My Documents is still a Livewire page. */}
-                        <a href={listPath}>
+                        <Link href={listPath}>
                             My Documents
                             <ArrowRight />
-                        </a>
+                        </Link>
                     </Button>
                 </div>
             </section>

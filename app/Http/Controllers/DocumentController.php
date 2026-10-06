@@ -75,7 +75,6 @@ class DocumentController extends Controller
                 'required_days' => DeadlineCounts::requiredDays($document),
                 'due_date' => DeadlineCounts::dueDate($document)->toDateString(),
             ],
-            // Still a Livewire page, so the link is a full page load.
             'listPath' => CreateDocument::listPath($document),
         ]);
     }

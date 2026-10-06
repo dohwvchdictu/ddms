@@ -10,7 +10,7 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/
 import { findNavItem } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
 
-/** Same key as the Livewire layout, so the choice carries across both. */
+/** Remembered across visits in localStorage. */
 const COLLAPSED_KEY = 'sidebarCollapsed';
 
 /** Tailwind's `lg` breakpoint, where the sidebar is always on screen. */
@@ -108,8 +108,7 @@ export default function AppLayout({ children, breadcrumbs, title, icon, actions 
             <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
 
             <main className={cn('pt-16 transition-[padding] duration-200', collapsed ? 'lg:pl-16' : 'lg:pl-64')}>
-                {/* With breadcrumbs, they sit right under the header with a rule below,
-                    where the Livewire pages have them, so both kinds of page line up. */}
+                {/* With breadcrumbs, the page header sits closer under the top bar. */}
                 <div className={cn('mx-auto max-w-[85rem] space-y-6 p-4 sm:p-6 lg:p-8', breadcrumbs && 'lg:pt-1.5')}>
                     {/* Page header: breadcrumbs directly over the title, one unit, no divider. */}
                     {(breadcrumbs || title) && (

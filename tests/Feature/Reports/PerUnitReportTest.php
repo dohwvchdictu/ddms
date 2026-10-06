@@ -120,6 +120,25 @@ class PerUnitReportTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->where('report.total', 3));
     }
 
+    public function test_a_document_without_a_category_is_counted_as_uncategorized(): void
+    {
+        $this->document(null, ['citizen_charter_id' => null]);
+
+        // A null array key is deprecated in PHP 8.5; fail on it instead of only logging it.
+        set_error_handler(fn (int $level, string $message) => throw new \ErrorException($message, 0, $level), E_DEPRECATED);
+
+        try {
+            $this->signedIn()
+                ->get('/report-per-unit?office=' . self::OFFICE)
+                ->assertOk()
+                ->assertInertia(fn (Assert $page) => $page
+                    ->where('report.total', 1)
+                    ->where('report.rows.0', ['name' => 'Uncategorized', 'count' => 1]));
+        } finally {
+            restore_error_handler();
+        }
+    }
+
     public function test_unknown_filter_values_are_dropped(): void
     {
         $this->signedIn()

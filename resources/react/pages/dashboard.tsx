@@ -37,8 +37,7 @@ interface CardDef {
 }
 
 /**
- * The user's own office queue, the same numbers as the sidebar badges. These
- * pages are still on Livewire, so the cards are full-page links.
+ * The user's own office queue, the same numbers as the sidebar badges.
  */
 const OFFICE_CARDS: (CardDef & { key: 'incoming' | 'pending' | 'endorsed'; href: string })[] = [
     {
@@ -203,9 +202,9 @@ export default function Dashboard({ counts, activity }: { counts: Counts; activi
                                 def={def}
                                 value={sidebarCounts[def.key]}
                                 link={(children) => (
-                                    <a href={def.href} className={cardLinkClass} aria-description={def.tooltip}>
+                                    <Link href={def.href} className={cardLinkClass} aria-description={def.tooltip}>
                                         {children}
-                                    </a>
+                                    </Link>
                                 )}
                             />
                         ))}

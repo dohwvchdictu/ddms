@@ -50,7 +50,7 @@ export default function Login() {
     }, []);
 
     // A successful sign-in answers with Inertia::location (a full page load to
-    // the Livewire dashboard). Hold that navigation briefly so the success
+    // the dashboard, so the app starts fresh). Hold that navigation briefly so the success
     // animation can play, then follow it ourselves.
     useEffect(
         () =>
@@ -68,7 +68,7 @@ export default function Login() {
         event.preventDefault();
 
         // Saved up front: a successful sign-in is a full page load to the
-        // Livewire dashboard (Inertia::location), so onSuccess never runs.
+        // dashboard (Inertia::location), so onSuccess never runs.
         rememberEmail(form.data.email);
 
         form.submit(store(), {

@@ -3,9 +3,9 @@ import { useCallback, useEffect, useState } from 'react';
 export type Theme = 'light' | 'dark' | 'system';
 
 /**
- * Same localStorage key as theme-script.blade.php and the Livewire layout:
- * '1' dark, '0' light, absent = follow the browser/OS. Sharing it means a
- * choice made here carries over to the pages still on Livewire.
+ * Same localStorage key as theme-script.blade.php, which applies it before
+ * React loads (no flash of the wrong theme): '1' dark, '0' light, absent =
+ * follow the browser/OS.
  */
 const STORAGE_KEY = 'darkMode';
 

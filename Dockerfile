@@ -21,7 +21,7 @@ RUN SKIP_WAYFINDER=1 npm run build
 FROM php:8.3-apache
 
 # System libraries + PHP extensions required by the app:
-#   pdo_mysql - MySQL, gd - barcodes/dompdf, intl - Filament,
+#   pdo_mysql - MySQL, gd - barcodes/dompdf, intl - Laravel number/locale helpers,
 #   zip/exif/bcmath - general Laravel, opcache - performance,
 #   redis (pecl) - cache/session/queue drivers
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -63,7 +63,6 @@ RUN mkdir -p storage/framework/cache/data storage/framework/sessions \
         storage/framework/views storage/logs storage/app/public bootstrap/cache \
     && composer dump-autoload --optimize --no-dev \
     && php artisan package:discover --ansi \
-    && php artisan filament:upgrade \
     && chown -R www-data:www-data storage bootstrap/cache
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh

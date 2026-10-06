@@ -24,6 +24,7 @@ export default function TrackingDialog({ document, onClose, showOpenLink = true 
                         backLabel="Close"
                         hint="Press Esc to close."
                         showOpenLink={showOpenLink}
+                        onOpen={onClose}
                     />
                 )}
             </DialogContent>

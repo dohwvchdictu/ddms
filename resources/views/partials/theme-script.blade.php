@@ -1,8 +1,7 @@
 {{-- Sets the `dark` class on <html> before first paint. A choice made with
      the theme toggle (localStorage `darkMode` = '1' or '0') wins; with no
      choice saved, the page follows the browser/OS theme and keeps following
-     it if that changes while the page is open. Shared by the Livewire and
-     Inertia layouts so the theme carries across both.
+     it if that changes while the page is open. Included by inertia.blade.php.
 
      Pass `followSystem => true` to ignore the saved choice and always follow
      the browser/OS theme (the login page does this). --}}

@@ -44,6 +44,9 @@ class TurnaroundReport
     /** Bucket key for a document with neither a category nor a charter procedure. */
     private const CLASSIFICATION_NONE = 'x';
 
+    /** "Y-m-d H:i:s" (fractional seconds allowed), as the logs store it. */
+    private const DATETIME = '/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2}(?:\.\d+)?)$/';
+
     /**
      * Per-office dwell, and the summary across the offices shown.
      *
@@ -133,8 +136,50 @@ class TurnaroundReport
         return $stats['count'] ? round($stats['sum'] / $stats['count'], 1) : null;
     }
 
-    /** Whole business days between two moments, weekends excluded. */
+    /**
+     * Whole business days between two moments, weekends excluded: the same
+     * count as Carbon's diffInDaysFiltered (each weekday from the start, a day
+     * at a time, while still before the end, so the arrival day counts as 1),
+     * worked out arithmetically. Carbon walking day by day was most of the
+     * report's time over long ranges. Asia/Manila has no DST, so a day is
+     * always the same wall-clock time a day later.
+     */
     private static function businessDays(string $start, string $end): int
+    {
+        if (! preg_match(self::DATETIME, $start, $from) || ! preg_match(self::DATETIME, $end, $to)) {
+            return self::businessDaysCarbon($start, $end);
+        }
+
+        // Days stepped from the start that are still before the end.
+        $days = self::epochDay($to[1]) - self::epochDay($from[1]) + ($from[2] < $to[2] ? 1 : 0);
+
+        if ($days <= 0) {
+            return 0;
+        }
+
+        // Whole weeks hold 5 working days; then the remaining days one by one.
+        $weekday = (self::epochDay($from[1]) + 3) % 7; // 0 = Monday … 6 = Sunday
+        $count = intdiv($days, 7) * 5;
+
+        for ($i = 0, $rest = $days % 7; $i < $rest; $i++) {
+            if (($weekday + $i) % 7 < 5) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    /** Days since 1970-01-01 for a "Y-m-d" date; memoized, since logs share dates. */
+    private static function epochDay(string $date): int
+    {
+        static $days = [];
+
+        return $days[$date] ??= intdiv((int) strtotime($date . ' 00:00:00 UTC'), 86400);
+    }
+
+    /** The original Carbon count, kept for any timestamp the fast path does not recognize. */
+    private static function businessDaysCarbon(string $start, string $end): int
     {
         $from = Carbon::parse($start);
         $to = Carbon::parse($end);

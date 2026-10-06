@@ -92,8 +92,8 @@ interface SearchDialogProps {
 }
 
 /**
- * Search documents by subject or control number. A result opens the
- * document's page, which is still served by Livewire (full page load).
+ * Search documents by subject or control number. A result shows the
+ * document's routing history, with a link to its page.
  */
 export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     const [query, setQuery] = useState('');
@@ -244,7 +244,7 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
                 </DialogDescription>
 
                 {selected ? (
-                    <DocumentTracking documentId={selected.id} controlNo={selected.control_no} onBack={backToResults} />
+                    <DocumentTracking documentId={selected.id} controlNo={selected.control_no} onBack={backToResults} onOpen={() => onOpenChange(false)} />
                 ) : (
                     <>
                         <div className="flex items-center gap-3 border-b px-4">

@@ -33,8 +33,8 @@ class LoginController extends Controller
             $request->ip(),
         );
 
-        // A full page load, not an Inertia visit: the dashboard is still a
-        // Livewire page.
+        // A full page load, not an Inertia visit: the app starts fresh after
+        // sign-in, and the login page plays its "Logging in" animation first.
         return Inertia::location(session()->pull('url.intended', route('dashboard')));
     }
 }

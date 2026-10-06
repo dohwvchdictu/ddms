@@ -4,7 +4,7 @@ const isDark = () => typeof document !== 'undefined' && document.documentElement
 
 /**
  * Tracks the `dark` class on <html>. The class is set before first paint in
- * inertia.blade.php from the same `darkMode` key the Livewire layout uses.
+ * inertia.blade.php (theme-script) from the `darkMode` key use-theme writes.
  */
 export function useDarkMode(): boolean {
     const [dark, setDark] = useState(isDark);

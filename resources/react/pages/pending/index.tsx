@@ -120,7 +120,7 @@ const toQuery = (filters: Filters, defaultRange: DateRangeValue) => ({
 });
 
 
-/** The page where a pending document is acted on (still Livewire). */
+/** The page where a pending document is acted on. */
 const pendingUrl = (controlNo: string) => `/document/pending/${encodeURIComponent(controlNo)}`;
 
 export default function Pending({ documents, filters: initial, facets, defaultRange, outsideRange, perPageOptions, maxSelection, offices, closePasswordThreshold }: Props) {

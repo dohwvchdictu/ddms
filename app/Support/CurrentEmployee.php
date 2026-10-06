@@ -6,8 +6,8 @@ use App\Actions\Navigation\SidebarCounts;
 
 /**
  * The signed-in employee, trimmed to what the app shell shows. The API token
- * and the rest of the employee record stay on the server. Shared by the React
- * shell (HandleInertiaRequests) and the Blade copy the Livewire pages use.
+ * and the rest of the employee record stay on the server. Shared with React
+ * through HandleInertiaRequests.
  */
 class CurrentEmployee
 {

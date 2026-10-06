@@ -117,7 +117,7 @@ const toQuery = (filters: Filters, defaultRange: DateRangeValue) => ({
 });
 
 
-/** The page where a waiting document is received or returned (still Livewire). */
+/** The page where a waiting document is received or returned. */
 const incomingUrl = (controlNo: string) => `/document/incoming/${encodeURIComponent(controlNo)}`;
 
 export default function Incoming({ documents, filters: initial, facets, statusOptions, defaultRange, outsideRange, perPageOptions, maxSelection }: Props) {

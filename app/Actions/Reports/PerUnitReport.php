@@ -36,7 +36,10 @@ class PerUnitReport
             ->groupBy('category_id', 'charter_id')
             ->get()
             ->map(fn ($row) => [
-                'name' => $categories[$row->category_id] ?? $charters[$row->charter_id] ?? 'Uncategorized',
+                // Checked for null first: a null array key is deprecated in PHP 8.5.
+                'name' => ($row->category_id !== null ? $categories[$row->category_id] ?? null : null)
+                    ?? ($row->charter_id !== null ? $charters[$row->charter_id] ?? null : null)
+                    ?? 'Uncategorized',
                 'count' => (int) $row->total,
             ])
             // Most documents first; ties by name.

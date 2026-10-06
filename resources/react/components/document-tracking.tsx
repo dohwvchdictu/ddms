@@ -1,3 +1,4 @@
+import { Link } from '@inertiajs/react';
 import { ArrowLeft, ExternalLink, RefreshCw, SearchX } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import DocumentTimeline, { type TimelineRow } from '@/components/document-timeline';
@@ -79,6 +80,8 @@ interface DocumentTrackingProps {
     hint?: string;
     /** The footer's "Open document" button; off when already on that document's page. */
     showOpenLink?: boolean;
+    /** Called as "Open document" navigates, so the window around it can close. */
+    onOpen?: () => void;
 }
 
 /** One line: "Currently at X", or "Forwarded to X · awaiting receipt" while in transit. */
@@ -96,6 +99,7 @@ export default function DocumentTracking({
     backLabel = 'Results',
     hint = 'Press Backspace or Esc to go back.',
     showOpenLink = true,
+    onOpen,
 }: DocumentTrackingProps) {
     const [data, setData] = useState<Tracking | null>(null);
     const [failed, setFailed] = useState(false);
@@ -199,10 +203,10 @@ export default function DocumentTracking({
                 <p className="hidden text-xs text-muted-foreground sm:block">{hint}</p>
                 {showOpenLink && (
                     <Button asChild size="sm" className="ml-auto">
-                        <a href={documentUrl(controlNo)}>
+                        <Link href={documentUrl(controlNo)} onClick={onOpen}>
                             Open document
                             <ExternalLink />
-                        </a>
+                        </Link>
                     </Button>
                 )}
             </div>
