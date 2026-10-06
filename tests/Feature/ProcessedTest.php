@@ -11,10 +11,13 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 use Mockery\MockInterface;
+use Tests\Concerns\LoadsDeferredProps;
 use Tests\TestCase;
 
 class ProcessedTest extends TestCase
 {
+    use LoadsDeferredProps;
+
     /** Office ids no real office uses, so the shared dev data never shows up here. */
     protected const OFFICE = 990001;
 
@@ -122,7 +125,7 @@ class ProcessedTest extends TestCase
         $this->processed(overrides: ['bundle_id' => $forwarded->id]);                   // travels with its bundle
 
         $this->signedIn()
-            ->get('/status-forwarded')
+            ->getWithDeferred('/status-forwarded')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('processed/index')
@@ -146,11 +149,11 @@ class ProcessedTest extends TestCase
         $this->step($document, 'Closed', '2026-10-02 08:00:00');
 
         $this->signedIn()
-            ->get('/status-forwarded')
+            ->getWithDeferred('/status-forwarded')
             ->assertInertia(fn (Assert $page) => $page->where('documents.total', 0));
 
         $this->signedIn()
-            ->get('/status-closed')
+            ->getWithDeferred('/status-closed')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('documents.total', 1)
                 ->where('documents.data.0.control_no', $document->control_no));
@@ -162,13 +165,13 @@ class ProcessedTest extends TestCase
         $this->step($document, 'Forwarded', '2026-10-02 08:00:00');
 
         $this->signedIn()
-            ->get('/status-forwarded?from=2026-10-01&to=2026-10-02')
+            ->getWithDeferred('/status-forwarded?from=2026-10-01&to=2026-10-02')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('documents.total', 1)
                 ->where('documents.data.0.processed_at', '2026-10-02T08:00:00+08:00'));
 
         $this->signedIn()
-            ->get('/status-forwarded?from=2026-09-01&to=2026-09-02')
+            ->getWithDeferred('/status-forwarded?from=2026-09-01&to=2026-09-02')
             ->assertInertia(fn (Assert $page) => $page->where('documents.total', 0));
     }
 
@@ -179,7 +182,7 @@ class ProcessedTest extends TestCase
         $this->processed(at: '2026-09-02 08:00:00');
 
         $this->signedIn()
-            ->get('/status-forwarded')
+            ->getWithDeferred('/status-forwarded')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('filters.from', '2026-09-03')
                 ->where('filters.to', '2026-10-02')
@@ -188,7 +191,7 @@ class ProcessedTest extends TestCase
 
         // Empty dates mean any date.
         $this->signedIn()
-            ->get('/status-forwarded?from=&to=')
+            ->getWithDeferred('/status-forwarded?from=&to=')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('filters.from', null)
                 ->where('documents.total', 3));
@@ -200,7 +203,7 @@ class ProcessedTest extends TestCase
         $this->processed('Closed');
 
         $this->signedIn()
-            ->get('/status-forwarded?search=budget&status=For Receiving,Bogus&sort=password&per_page=7')
+            ->getWithDeferred('/status-forwarded?search=budget&status=For Receiving,Bogus&sort=password&per_page=7')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('filters.statuses', ['For Receiving'])
                 ->where('filters.sort', '-processed_at')

@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\MyDocumentsController::selectable
- * @see app/Http/Controllers/MyDocumentsController.php:71
+ * @see app/Http/Controllers/MyDocumentsController.php:73
  * @route '/my-documents/selectable'
  */
 export const selectable = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ selectable.definition = {
 
 /**
 * @see \App\Http\Controllers\MyDocumentsController::selectable
- * @see app/Http/Controllers/MyDocumentsController.php:71
+ * @see app/Http/Controllers/MyDocumentsController.php:73
  * @route '/my-documents/selectable'
  */
 selectable.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ selectable.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\MyDocumentsController::selectable
- * @see app/Http/Controllers/MyDocumentsController.php:71
+ * @see app/Http/Controllers/MyDocumentsController.php:73
  * @route '/my-documents/selectable'
  */
 selectable.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ selectable.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\MyDocumentsController::selectable
- * @see app/Http/Controllers/MyDocumentsController.php:71
+ * @see app/Http/Controllers/MyDocumentsController.php:73
  * @route '/my-documents/selectable'
  */
 selectable.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ selectable.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\MyDocumentsController::forward
- * @see app/Http/Controllers/MyDocumentsController.php:86
+ * @see app/Http/Controllers/MyDocumentsController.php:88
  * @route '/my-documents/forward'
  */
 export const forward = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -59,7 +59,7 @@ forward.definition = {
 
 /**
 * @see \App\Http\Controllers\MyDocumentsController::forward
- * @see app/Http/Controllers/MyDocumentsController.php:86
+ * @see app/Http/Controllers/MyDocumentsController.php:88
  * @route '/my-documents/forward'
  */
 forward.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ forward.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\MyDocumentsController::forward
- * @see app/Http/Controllers/MyDocumentsController.php:86
+ * @see app/Http/Controllers/MyDocumentsController.php:88
  * @route '/my-documents/forward'
  */
 forward.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({

@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\ClosedController::index
- * @see app/Http/Controllers/ClosedController.php:27
+ * @see app/Http/Controllers/ClosedController.php:28
  * @route '/status-closed'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\ClosedController::index
- * @see app/Http/Controllers/ClosedController.php:27
+ * @see app/Http/Controllers/ClosedController.php:28
  * @route '/status-closed'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ClosedController::index
- * @see app/Http/Controllers/ClosedController.php:27
+ * @see app/Http/Controllers/ClosedController.php:28
  * @route '/status-closed'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\ClosedController::index
- * @see app/Http/Controllers/ClosedController.php:27
+ * @see app/Http/Controllers/ClosedController.php:28
  * @route '/status-closed'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

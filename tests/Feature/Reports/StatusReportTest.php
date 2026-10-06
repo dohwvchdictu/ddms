@@ -10,11 +10,14 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 use Mockery\MockInterface;
+use Tests\Concerns\LoadsDeferredProps;
 use Tests\TestCase;
 
 /** Report › Status of Documents: per office, received / completed / pending / overdue for a period. */
 class StatusReportTest extends TestCase
 {
+    use LoadsDeferredProps;
+
     /** Office ids no real office uses, so the shared dev data never shows up here. */
     protected const OFFICE = 990001;
 
@@ -119,7 +122,7 @@ class StatusReportTest extends TestCase
         $this->log($open, 1, '2026-10-01 09:00:00');
 
         $this->signedIn()
-            ->get('/report-status-of-documents')
+            ->getWithDeferred('/report-status-of-documents')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('reports/status')
@@ -144,7 +147,7 @@ class StatusReportTest extends TestCase
         $this->document('2026-10-02 08:00:00');
 
         $this->signedIn()
-            ->get('/report-status-of-documents?from=2026-09-01&to=2026-10-02')
+            ->getWithDeferred('/report-status-of-documents?from=2026-09-01&to=2026-10-02')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('report.offices.0.pending', 2)
                 ->where('report.offices.0.overdue', 1));

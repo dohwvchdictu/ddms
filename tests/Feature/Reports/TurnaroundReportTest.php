@@ -135,11 +135,14 @@ class TurnaroundReportTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('reports/turnaround')
                 ->where('defaultRange', ['from' => '2026-09-03', 'to' => '2026-10-02'])
-                // Weekend not counted: Thu → Mon is 2 working days.
-                ->where('report.offices', fn ($rows) => collect($rows)->firstWhere('id', self::FIRST)['avg'] == 2
-                    && collect($rows)->firstWhere('id', self::SECOND)['avg'] == 1
-                    // The origin only created it: never measured.
-                    && collect($rows)->firstWhere('id', self::ORIGIN) === null));
+                // Deferred: the page opens first, the report follows.
+                ->missing('report')
+                ->loadDeferredProps(fn (Assert $reload) => $reload
+                    // Weekend not counted: Thu → Mon is 2 working days.
+                    ->where('report.offices', fn ($rows) => collect($rows)->firstWhere('id', self::FIRST)['avg'] == 2
+                        && collect($rows)->firstWhere('id', self::SECOND)['avg'] == 1
+                        // The origin only created it: never measured.
+                        && collect($rows)->firstWhere('id', self::ORIGIN) === null)));
     }
 
     public function test_picking_an_office_narrows_the_rows_and_the_summary(): void
@@ -150,10 +153,12 @@ class TurnaroundReportTest extends TestCase
             ->get('/report-turnaround-time?office=' . self::FIRST)
             ->assertInertia(fn (Assert $page) => $page
                 ->where('filters.offices', [(string) self::FIRST])
-                ->has('report.offices', 1)
-                ->where('report.summary.average', 2)
-                ->where('report.summary.fastest', 2)
-                ->where('report.facets.offices.' . self::SECOND, 1));
+                // As a filter change asks for it: filters and report in one partial reload.
+                ->reloadOnly(['filters', 'report'], fn (Assert $reload) => $reload
+                    ->has('report.offices', 1)
+                    ->where('report.summary.average', 2)
+                    ->where('report.summary.fastest', 2)
+                    ->where('report.facets.offices.' . self::SECOND, 1)));
     }
 
     public function test_an_office_breaks_down_by_category(): void

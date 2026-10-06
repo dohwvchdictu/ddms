@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\Dashboard\DeadlineCounts;
 use App\Models\Document;
 use App\Services\ApiService;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,6 +25,20 @@ class DashboardDocumentsController extends Controller
             : 'overdue';
         $search = trim((string) $request->query('search', ''));
 
+        return Inertia::render('dashboard/documents', [
+            'filter' => $filter,
+            'search' => $search,
+            // Deferred: the page opens with a skeleton and the list follows.
+            // Search, tabs and page turns ask for these by name, so they come
+            // back in the same response. Rescued: a failure offers a retry.
+            'documents' => Inertia::defer(fn () => $this->documents($filter, $search, $deadlines, $api), rescue: true),
+            'counts' => Inertia::defer(fn () => $deadlines->handle(), rescue: true),
+        ]);
+    }
+
+    /** One page of the card's documents, as the list shows them. */
+    protected function documents(string $filter, string $search, DeadlineCounts $deadlines, ApiService $api): LengthAwarePaginator
+    {
         $query = $deadlines->documentsQuery($filter)->with(['category', 'citizencharter']);
 
         if ($search !== '') {
@@ -58,11 +73,6 @@ class DashboardDocumentsController extends Controller
             ];
         });
 
-        return Inertia::render('dashboard/documents', [
-            'filter' => $filter,
-            'search' => $search,
-            'documents' => $documents,
-            'counts' => $deadlines->handle(),
-        ]);
+        return $documents;
     }
 }

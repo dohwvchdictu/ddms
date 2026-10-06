@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Deferred, Head } from '@inertiajs/react';
 import { ArrowRight, ExternalLink, Globe, Printer } from 'lucide-react';
 import DateRangeFilter, { describeRange, isSameRange, rangeQuery, type DateRangeValue } from '@/components/data-table/date-range-filter';
 import FilterChips, { type FilterChip } from '@/components/data-table/filter-chips';
@@ -6,6 +6,7 @@ import ListTabs from '@/components/data-table/list-tabs';
 import SortableHead from '@/components/data-table/sortable-head';
 import ViewOptions from '@/components/data-table/view-options';
 import Pagination from '@/components/pagination';
+import { LoadingBody, LoadFailed, TableSkeleton } from '@/components/data-table/deferred-states';
 import SearchInput from '@/components/search-input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -59,9 +60,10 @@ interface Filters {
 }
 
 interface Props {
-    requests: Paginated<Row>;
+    /** Deferred, with counts: undefined until they arrive after the page opens. */
+    requests?: Paginated<Row>;
     filters: Filters;
-    counts: Record<Tab, number>;
+    counts?: Record<Tab, number>;
     /** The last 30 days: what the report shows with no dates in the URL. */
     defaultRange: DateRangeValue;
     perPageOptions: number[];
@@ -108,16 +110,24 @@ const toQuery = (filters: Filters, defaultRange: DateRangeValue) => ({
     per_page: filters.per_page === DEFAULT_PER_PAGE ? undefined : filters.per_page,
 });
 
+/** A filter change or page turn reloads just these, so the old rows stay up meanwhile. */
+const RELOAD = ['filters', 'requests', 'counts'];
+
 const documentUrl = (controlNo: string) => `/document/view/${encodeURIComponent(controlNo)}`;
 
 export default function ExternalRequestsReport({ requests, filters: initial, counts, defaultRange, perPageOptions }: Props) {
     const toUrl = (filters: Filters) => externalReport.url({ query: toQuery(filters, defaultRange) });
-    const { filters, update, loading } = useListFilters(initial, toUrl, { debounce: ['search'] });
+    const { filters, update, loading } = useListFilters(initial, toUrl, { debounce: ['search'], only: RELOAD });
     const { preferences, isVisible, toggleColumn, setDense } = useTablePreferences('report-external');
 
     const chips: FilterChip[] = [
         filters.search && { key: 'search', label: 'Search', value: `“${filters.search}”`, onRemove: () => update({ search: '' }) },
-        !isSameRange(filters, defaultRange) && { key: 'received', label: 'Received', value: describeRange(filters), onRemove: () => update({ ...defaultRange }) },
+        !isSameRange(filters, defaultRange) && {
+            key: 'received',
+            label: 'Received',
+            value: describeRange(filters),
+            onRemove: () => update({ ...defaultRange }),
+        },
     ].filter((chip): chip is FilterChip => Boolean(chip));
 
     const reset = () => update({ search: '', ...defaultRange });
@@ -140,12 +150,21 @@ export default function ExternalRequestsReport({ requests, filters: initial, cou
 
             <div className="relative overflow-clip rounded-xl border bg-card shadow-sm">
                 {loading && (
-                    <div className="absolute inset-x-0 top-0 z-10 h-0.5 overflow-hidden bg-emerald-100 dark:bg-emerald-950" role="progressbar" aria-label="Loading">
+                    <div
+                        className="absolute inset-x-0 top-0 z-10 h-0.5 overflow-hidden bg-emerald-100 dark:bg-emerald-950"
+                        role="progressbar"
+                        aria-label="Loading"
+                    >
                         <div className="h-full w-1/3 animate-[table-progress_1s_ease-in-out_infinite] bg-emerald-600" />
                     </div>
                 )}
 
-                <ListTabs label="Deadline" value={filters.state} onChange={(state) => update({ state: state as Tab })} tabs={TABS.map((tab) => ({ ...tab, count: counts[tab.value] }))} />
+                <ListTabs
+                    label="Deadline"
+                    value={filters.state}
+                    onChange={(state) => update({ state: state as Tab })}
+                    tabs={TABS.map((tab) => ({ ...tab, count: counts?.[tab.value] }))}
+                />
 
                 <div className="flex min-h-15 flex-wrap items-center gap-2 border-b p-3">
                     <SearchInput
@@ -154,7 +173,7 @@ export default function ExternalRequestsReport({ requests, filters: initial, cou
                         placeholder="Search subject or control no.…"
                         label="Search external requests"
                         loading={loading}
-                        resultCount={filters.search.trim() === initial.search ? requests.total : undefined}
+                        resultCount={requests && filters.search.trim() === initial.search ? requests.total : undefined}
                         className="w-full sm:max-w-md sm:min-w-72 sm:flex-1"
                     />
                     <DateRangeFilter label="Received" value={{ from: filters.from, to: filters.to }} onChange={({ from, to }) => update({ from, to })} />
@@ -173,111 +192,143 @@ export default function ExternalRequestsReport({ requests, filters: initial, cou
                 </div>
                 <FilterChips chips={chips} onReset={reset} />
 
-                <div className={cn('transition-opacity', loading && 'pointer-events-none opacity-60')} aria-busy={loading}>
-                    {requests.data.length === 0 ? (
-                        <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
-                            <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                                <Globe className="size-5" />
-                            </div>
-                            <p className="text-sm font-medium">{chips.length > 0 || filters.state !== 'all' ? 'No external requests match these filters' : 'No external requests in the last 30 days'}</p>
-                            <p className="text-sm text-muted-foreground">
-                                {chips.length > 0 ? 'Try another date range or search.' : 'External requests your office encodes show here with their deadlines.'}
-                            </p>
-                            {chips.length > 0 && (
-                                <Button variant="outline" size="sm" onClick={reset} className="mt-2">
-                                    Reset filters
-                                </Button>
-                            )}
-                        </div>
-                    ) : (
-                        <Table className={cn(preferences.dense ? '[&_td]:py-1.5' : '[&_td]:py-3')}>
-                            <TableHeader>
-                                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                                    <TableHead className="pl-4">Document Control No.</TableHead>
-                                    {isVisible('received') && (
-                                        <SortableHead column="created_at" sort={filters.sort} onSort={(sort) => update({ sort })} firstDirection="desc">
-                                            Received
-                                        </SortableHead>
-                                    )}
-                                    {isVisible('title') && <TableHead>Document Title</TableHead>}
-                                    {isVisible('route') && <TableHead>Route</TableHead>}
-                                    {isVisible('required') && <TableHead className="text-center">Required Days</TableHead>}
-                                    {isVisible('remaining') && (
-                                        // One direction only: most urgent first.
-                                        <SortableHead column="remaining" sort={filters.sort} onSort={() => update({ sort: filters.sort === 'remaining' ? DEFAULT_SORT : 'remaining' })}>
-                                            Days Remaining
-                                        </SortableHead>
-                                    )}
-                                    {isVisible('status') && <TableHead>Current Status</TableHead>}
-                                    {isVisible('remarks') && <TableHead className="pr-4">Remarks</TableHead>}
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {requests.data.map((row) => (
-                                    <TableRow key={row.id}>
-                                        <TableCell className="pl-4 align-top">
-                                            <a
-                                                href={documentUrl(row.control_no)}
-                                                target="_blank"
-                                                rel="noopener"
-                                                title="Open in a new tab"
-                                                className="inline-flex items-center gap-1 rounded font-mono text-sm font-semibold text-emerald-700 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 dark:text-emerald-400"
-                                            >
-                                                {row.control_no}
-                                                <ExternalLink className="size-3" aria-hidden="true" />
-                                            </a>
-                                            {row.encoded_by && <p className="mt-0.5 text-xs text-muted-foreground">By {row.encoded_by}</p>}
-                                        </TableCell>
-                                        {isVisible('received') && (
-                                            <TableCell className="align-top text-sm whitespace-nowrap">{row.created_at ? dateFormat.format(new Date(row.created_at)) : '—'}</TableCell>
+                <Deferred data="requests" fallback={<TableSkeleton columns={4} />} rescue={<LoadFailed only={RELOAD} />}>
+                    {requests && (
+                        <>
+                            <LoadingBody loading={loading}>
+                                {requests.data.length === 0 ? (
+                                    <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
+                                        <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                                            <Globe className="size-5" />
+                                        </div>
+                                        <p className="text-sm font-medium">
+                                            {chips.length > 0 || filters.state !== 'all'
+                                                ? 'No external requests match these filters'
+                                                : 'No external requests in the last 30 days'}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground">
+                                            {chips.length > 0
+                                                ? 'Try another date range or search.'
+                                                : 'External requests your office encodes show here with their deadlines.'}
+                                        </p>
+                                        {chips.length > 0 && (
+                                            <Button variant="outline" size="sm" onClick={reset} className="mt-2">
+                                                Reset filters
+                                            </Button>
                                         )}
-                                        {isVisible('title') && (
-                                            <TableCell className="max-w-sm min-w-56 align-top text-sm whitespace-normal">
-                                                <p className={cn(preferences.dense ? 'line-clamp-1' : 'line-clamp-2')} title={row.subject}>
-                                                    {row.subject}
-                                                </p>
-                                                <p className="mt-0.5 text-xs text-muted-foreground">{row.classification}</p>
-                                            </TableCell>
-                                        )}
-                                        {isVisible('route') && (
-                                            <TableCell className="min-w-44 align-top text-sm whitespace-normal">
-                                                {/* Where it started → where it was first sent; then where it is now. */}
-                                                <p className="flex items-center gap-1.5">
-                                                    <span title={row.origin?.name ?? undefined}>{place(row.origin)}</span>
-                                                    <ArrowRight className="size-3 text-muted-foreground" aria-label="forwarded to" />
-                                                    <span title={row.first_destination?.name ?? undefined}>{place(row.first_destination)}</span>
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    Now at <span title={row.now_at?.name ?? undefined}>{place(row.now_at)}</span>
-                                                </p>
-                                            </TableCell>
-                                        )}
-                                        {isVisible('required') && <TableCell className="text-center align-top text-sm tabular-nums">{row.required_days}</TableCell>}
-                                        {isVisible('remaining') && (
-                                            <TableCell className="align-top whitespace-nowrap">
-                                                <span className={cn('inline-flex rounded-full px-2 py-0.5 text-xs font-medium', STATE_STYLES[row.state])}>{row.deadline_label}</span>
-                                            </TableCell>
-                                        )}
-                                        {isVisible('status') && <TableCell className="align-top text-sm whitespace-nowrap">{row.status}</TableCell>}
-                                        {isVisible('remarks') && (
-                                            <TableCell className="max-w-64 min-w-40 pr-4 align-top text-sm whitespace-normal">
-                                                {row.remarks ? (
-                                                    <p className={cn(preferences.dense ? 'line-clamp-1' : 'line-clamp-3')} title={row.remarks}>
-                                                        {row.remarks}
-                                                    </p>
-                                                ) : (
-                                                    <span className="text-muted-foreground">—</span>
+                                    </div>
+                                ) : (
+                                    <Table className={cn(preferences.dense ? '[&_td]:py-1.5' : '[&_td]:py-3')}>
+                                        <TableHeader>
+                                            <TableRow className="bg-muted/40 hover:bg-muted/40">
+                                                <TableHead className="pl-4">Document Control No.</TableHead>
+                                                {isVisible('received') && (
+                                                    <SortableHead
+                                                        column="created_at"
+                                                        sort={filters.sort}
+                                                        onSort={(sort) => update({ sort })}
+                                                        firstDirection="desc"
+                                                    >
+                                                        Received
+                                                    </SortableHead>
                                                 )}
-                                            </TableCell>
-                                        )}
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    )}
-                </div>
+                                                {isVisible('title') && <TableHead>Document Title</TableHead>}
+                                                {isVisible('route') && <TableHead>Route</TableHead>}
+                                                {isVisible('required') && <TableHead className="text-center">Required Days</TableHead>}
+                                                {isVisible('remaining') && (
+                                                    // One direction only: most urgent first.
+                                                    <SortableHead
+                                                        column="remaining"
+                                                        sort={filters.sort}
+                                                        onSort={() => update({ sort: filters.sort === 'remaining' ? DEFAULT_SORT : 'remaining' })}
+                                                    >
+                                                        Days Remaining
+                                                    </SortableHead>
+                                                )}
+                                                {isVisible('status') && <TableHead>Current Status</TableHead>}
+                                                {isVisible('remarks') && <TableHead className="pr-4">Remarks</TableHead>}
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {requests.data.map((row) => (
+                                                <TableRow key={row.id}>
+                                                    <TableCell className="pl-4 align-top">
+                                                        <a
+                                                            href={documentUrl(row.control_no)}
+                                                            target="_blank"
+                                                            rel="noopener"
+                                                            title="Open in a new tab"
+                                                            className="inline-flex items-center gap-1 rounded font-mono text-sm font-semibold text-emerald-700 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 dark:text-emerald-400"
+                                                        >
+                                                            {row.control_no}
+                                                            <ExternalLink className="size-3" aria-hidden="true" />
+                                                        </a>
+                                                        {row.encoded_by && <p className="mt-0.5 text-xs text-muted-foreground">By {row.encoded_by}</p>}
+                                                    </TableCell>
+                                                    {isVisible('received') && (
+                                                        <TableCell className="align-top text-sm whitespace-nowrap">
+                                                            {row.created_at ? dateFormat.format(new Date(row.created_at)) : '—'}
+                                                        </TableCell>
+                                                    )}
+                                                    {isVisible('title') && (
+                                                        <TableCell className="max-w-sm min-w-56 align-top text-sm whitespace-normal">
+                                                            <p className={cn(preferences.dense ? 'line-clamp-1' : 'line-clamp-2')} title={row.subject}>
+                                                                {row.subject}
+                                                            </p>
+                                                            <p className="mt-0.5 text-xs text-muted-foreground">{row.classification}</p>
+                                                        </TableCell>
+                                                    )}
+                                                    {isVisible('route') && (
+                                                        <TableCell className="min-w-44 align-top text-sm whitespace-normal">
+                                                            {/* Where it started → where it was first sent; then where it is now. */}
+                                                            <p className="flex items-center gap-1.5">
+                                                                <span title={row.origin?.name ?? undefined}>{place(row.origin)}</span>
+                                                                <ArrowRight className="size-3 text-muted-foreground" aria-label="forwarded to" />
+                                                                <span title={row.first_destination?.name ?? undefined}>{place(row.first_destination)}</span>
+                                                            </p>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                Now at <span title={row.now_at?.name ?? undefined}>{place(row.now_at)}</span>
+                                                            </p>
+                                                        </TableCell>
+                                                    )}
+                                                    {isVisible('required') && (
+                                                        <TableCell className="text-center align-top text-sm tabular-nums">{row.required_days}</TableCell>
+                                                    )}
+                                                    {isVisible('remaining') && (
+                                                        <TableCell className="align-top whitespace-nowrap">
+                                                            <span
+                                                                className={cn(
+                                                                    'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
+                                                                    STATE_STYLES[row.state],
+                                                                )}
+                                                            >
+                                                                {row.deadline_label}
+                                                            </span>
+                                                        </TableCell>
+                                                    )}
+                                                    {isVisible('status') && <TableCell className="align-top text-sm whitespace-nowrap">{row.status}</TableCell>}
+                                                    {isVisible('remarks') && (
+                                                        <TableCell className="max-w-64 min-w-40 pr-4 align-top text-sm whitespace-normal">
+                                                            {row.remarks ? (
+                                                                <p className={cn(preferences.dense ? 'line-clamp-1' : 'line-clamp-3')} title={row.remarks}>
+                                                                    {row.remarks}
+                                                                </p>
+                                                            ) : (
+                                                                <span className="text-muted-foreground">—</span>
+                                                            )}
+                                                        </TableCell>
+                                                    )}
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </LoadingBody>
 
-                <Pagination page={requests} />
+                            <Pagination page={requests} only={RELOAD} />
+                        </>
+                    )}
+                </Deferred>
             </div>
         </AppLayout>
     );

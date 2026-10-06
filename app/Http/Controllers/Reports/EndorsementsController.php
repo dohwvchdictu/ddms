@@ -25,13 +25,17 @@ class EndorsementsController extends Controller
         $from = $range['from'] ?? substr((string) (Document::min('created_at') ?? now()), 0, 10);
         $to = $range['to'] ?? now()->toDateString();
 
-        $employees = collect($api->getEmployeesData()['employeesList'] ?? [])
-            ->filter(fn (array $employee) => (string) ($employee['office']['id'] ?? '') === (string) $officeId);
-
         return Inertia::render('reports/endorsements', [
             'filters' => $range,
             'defaultRange' => self::defaultRange(),
-            'report' => $report->handle($officeId, $from, $to, $employees),
+            // Deferred: the page opens with a skeleton and the report follows
+            // (see TurnaroundController). Rescued: a failure offers a retry.
+            'report' => Inertia::defer(function () use ($report, $api, $officeId, $from, $to) {
+                $employees = collect($api->getEmployeesData()['employeesList'] ?? [])
+                    ->filter(fn (array $employee) => (string) ($employee['office']['id'] ?? '') === (string) $officeId);
+
+                return $report->handle($officeId, $from, $to, $employees);
+            }, rescue: true),
             'officeName' => session('user')['office']['officeName'] ?? null,
         ]);
     }

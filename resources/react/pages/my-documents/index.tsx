@@ -1,7 +1,8 @@
-import { Head } from '@inertiajs/react';
+import { Deferred, Head } from '@inertiajs/react';
 import { CircleDot, ExternalLink, FileSearch, History, Loader2, NotebookText, Printer, Send, TriangleAlert } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
+import { LoadFailed, LoadingBody, TableSkeleton } from '@/components/data-table/deferred-states';
 import DateRangeFilter, { describeRange, isSameRange, rangeQuery, type DateRangeValue } from '@/components/data-table/date-range-filter';
 import FacetedFilter, { type FacetOption } from '@/components/data-table/faceted-filter';
 import BulkActionButton from '@/components/data-table/bulk-action-button';
@@ -53,9 +54,10 @@ interface Facets {
 }
 
 interface Props {
-    documents: Paginated<Row>;
+    /** Deferred: undefined until it arrives after the page opens. */
+    documents?: Paginated<Row>;
     filters: Filters;
-    facets: Facets;
+    facets?: Facets;
     statusOptions: string[];
     /** The last 30 days: what the list shows with no dates in the URL. */
     defaultRange: DateRangeValue;
@@ -72,6 +74,9 @@ const TYPE_TABS: { value: DocumentType; label: string; empty: string }[] = [
     { value: 'purchase_requests', label: 'Purchase Requests', empty: 'purchase requests' },
     { value: 'payments', label: 'Payments', empty: 'payments' },
 ];
+
+/** Reloaded by name on filter changes, page turns and actions, so the old rows stay up meanwhile. */
+const RELOAD = ['filters', 'documents', 'facets'];
 
 const DEFAULT_SORT = '-created_at';
 const DEFAULT_PER_PAGE = 25;
@@ -101,7 +106,7 @@ const toQuery = (filters: Filters, defaultRange: DateRangeValue) => ({
 
 export default function MyDocuments({ documents, filters: initial, facets, statusOptions, defaultRange, perPageOptions, offices, maxSelection }: Props) {
     const toUrl = (filters: Filters) => myDocuments.url({ query: toQuery(filters, defaultRange) });
-    const { filters, update, loading } = useListFilters(initial, toUrl, { debounce: ['search'] });
+    const { filters, update, loading } = useListFilters(initial, toUrl, { debounce: ['search'], only: RELOAD });
     const { preferences, isVisible, toggleColumn, setDense } = useTablePreferences('my-documents');
     const [tracking, setTracking] = useState<Row | null>(null);
     const [reviewing, setReviewing] = useState(false);
@@ -121,7 +126,7 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
     const statusFacet: FacetOption[] = statusOptions.map((status) => ({
         value: status,
         label: status,
-        count: facets.statuses[status] ?? 0,
+        count: facets ? (facets.statuses[status] ?? 0) : undefined,
         display: <StatusBadge status={status} />,
     }));
     // The filters in effect, as removable chips. The default date range isn't one.
@@ -134,10 +139,10 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
     const reset = () => update({ search: '', statuses: [], ...defaultRange });
 
     // Header checkbox: this page's selectable rows.
-    const pageRows = documents.data.filter((row) => row.selectable);
+    const pageRows = (documents?.data ?? []).filter((row) => row.selectable);
     const pageChecked = pageRows.length > 0 && pageRows.every((row) => selection.has(row.id));
     const pagePartly = !pageChecked && pageRows.some((row) => selection.has(row.id));
-    const morePages = documents.total > documents.data.length;
+    const morePages = documents !== undefined && documents.total > documents.data.length;
 
     // Forward needs every pick still Created; the logbook needs every pick For Receiving.
     const canForward = selection.size > 0 && selection.items.every((row) => row.status === 'Created');
@@ -185,12 +190,15 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
     return (
         <AppLayout title="My Documents">
             <Head title="My Documents" />
-
             {/* overflow-clip, not -hidden: hidden would make this the scroll box and stop the selection bar sticking. */}
             <div className="relative overflow-clip rounded-xl border bg-card shadow-sm">
                 {/* Reloading: a thin bar runs along the top while the table dims. */}
                 {loading && (
-                    <div className="absolute inset-x-0 top-0 z-10 h-0.5 overflow-hidden bg-emerald-100 dark:bg-emerald-950" role="progressbar" aria-label="Loading">
+                    <div
+                        className="absolute inset-x-0 top-0 z-10 h-0.5 overflow-hidden bg-emerald-100 dark:bg-emerald-950"
+                        role="progressbar"
+                        aria-label="Loading"
+                    >
                         <div className="h-full w-1/3 animate-[table-progress_1s_ease-in-out_infinite] bg-emerald-600" />
                     </div>
                 )}
@@ -200,7 +208,7 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                     label="Document type"
                     value={filters.type}
                     onChange={(type) => update({ type: type as DocumentType })}
-                    tabs={TYPE_TABS.map((tab) => ({ ...tab, count: facets.types[tab.value] }))}
+                    tabs={TYPE_TABS.map((tab) => ({ ...tab, count: facets?.types[tab.value] }))}
                 />
 
                 {/* Toolbar: the filters, or (while something is selected) what to do with the selection. */}
@@ -223,7 +231,12 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                                         <Button size="xs" variant="outline" onClick={() => keepOnly('Created')} className="border-amber-300 bg-background">
                                             Keep the {created} Created
                                         </Button>
-                                        <Button size="xs" variant="outline" onClick={() => keepOnly('For Receiving')} className="border-amber-300 bg-background">
+                                        <Button
+                                            size="xs"
+                                            variant="outline"
+                                            onClick={() => keepOnly('For Receiving')}
+                                            className="border-amber-300 bg-background"
+                                        >
                                             Keep the {receiving} For Receiving
                                         </Button>
                                     </span>
@@ -260,10 +273,16 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                                 label="Search my documents"
                                 loading={loading}
                                 // Only once the results are for what is typed, not a stale count mid-typing.
-                                resultCount={filters.search.trim() === initial.search ? documents.total : undefined}
+                                resultCount={documents && filters.search.trim() === initial.search ? documents.total : undefined}
                                 className="w-full sm:max-w-md sm:min-w-72 sm:flex-1"
                             />
-                            <FacetedFilter title="Status" icon={CircleDot} options={statusFacet} value={filters.statuses} onChange={(statuses) => update({ statuses })} />
+                            <FacetedFilter
+                                title="Status"
+                                icon={CircleDot}
+                                options={statusFacet}
+                                value={filters.statuses}
+                                onChange={(statuses) => update({ statuses })}
+                            />
                             <DateRangeFilter label="Created" value={{ from: filters.from, to: filters.to }} onChange={({ from, to }) => update({ from, to })} />
                             <div className="ml-auto flex items-center gap-2">
                                 {selection.size > 0 && (
@@ -287,173 +306,210 @@ export default function MyDocuments({ documents, filters: initial, facets, statu
                     </>
                 )}
 
-                <div className={cn('transition-opacity', loading && 'pointer-events-none opacity-60')} aria-busy={loading}>
-                    {documents.data.length === 0 ? (
-                        <EmptyState filtered={chips.length > 0} onReset={reset} kind={TYPE_TABS.find((tab) => tab.value === filters.type)?.empty ?? 'documents'} />
-                    ) : (
-                        <Table className={cn(preferences.dense ? '[&_td]:py-1.5' : '[&_td]:py-3')}>
-                            <TableHeader>
-                                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                                    <TableHead className="w-10 pl-4">
-                                        <Checkbox
-                                            checked={pageChecked ? true : pagePartly ? 'indeterminate' : false}
-                                            onCheckedChange={(checked) => togglePage(checked === true)}
-                                            disabled={pageRows.length === 0 || (selection.full && !pageChecked && !pagePartly)}
-                                            aria-label="Select every selectable document on this page"
-                                            className={CHECKBOX}
-                                        />
-                                    </TableHead>
-                                    <SortableHead column="control_no" sort={filters.sort} onSort={(sort) => update({ sort })}>
-                                        Control no.
-                                    </SortableHead>
-                                    {isVisible('subject') && <TableHead>Subject</TableHead>}
-                                    {isVisible('destination') && <TableHead>Destination</TableHead>}
-                                    {isVisible('created') && (
-                                        <SortableHead column="created_at" sort={filters.sort} onSort={(sort) => update({ sort })} firstDirection="desc">
-                                            Created
-                                        </SortableHead>
-                                    )}
-                                    {isVisible('encoded_by') && <TableHead>Encoded by</TableHead>}
-                                    <TableHead className="pr-4 text-right">
-                                        <span className="sr-only">Actions</span>
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {pageChecked && morePages && (
-                                    <TableRow className="bg-emerald-50 hover:bg-emerald-50 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/30">
-                                        <TableCell colSpan={columnCount} className="py-2 text-center text-sm">
-                                            All selectable documents on this page are selected.{' '}
-                                            <button
-                                                type="button"
-                                                onClick={selectAllMatching}
-                                                disabled={selectingAll || selection.full}
-                                                className="inline-flex items-center gap-1 font-medium text-emerald-700 underline-offset-2 hover:underline disabled:opacity-50 dark:text-emerald-400"
-                                            >
-                                                {selectingAll && <Loader2 className="size-3.5 animate-spin" />}
-                                                Select every match on all pages
-                                            </button>
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                                {documents.data.map((row) => (
-                                    <TableRow
-                                        key={row.id}
-                                        data-state={selection.has(row.id) ? 'selected' : undefined}
-                                        className="data-[state=selected]:bg-emerald-50/60 dark:data-[state=selected]:bg-emerald-950/20"
-                                    >
-                                        <TableCell className="pl-4 align-top">
-                                            {row.selectable ? (
-                                                <Checkbox
-                                                    checked={selection.has(row.id)}
-                                                    onCheckedChange={(checked) => selection.toggle(row, checked === true)}
-                                                    disabled={selection.full && !selection.has(row.id)}
-                                                    aria-label={`Select ${row.control_no}`}
-                                                    className={cn(CHECKBOX, 'mt-0.5')}
-                                                />
-                                            ) : (
-                                                // Not Created / For Receiving, or a bundle attachment (it travels with its bundle).
-                                                <span className="sr-only">Not selectable</span>
-                                            )}
-                                        </TableCell>
-                                        <TableCell className="align-top">
-                                            {/* A new tab, so the list and its filters stay where they are. */}
-                                            <a
-                                                href={documentUrl(row.control_no)}
-                                                target="_blank"
-                                                rel="noopener"
-                                                title="Open in a new tab"
-                                                className="inline-flex items-center gap-1 rounded font-mono text-sm font-semibold text-emerald-700 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 dark:text-emerald-400"
-                                            >
-                                                {row.control_no}
-                                                <ExternalLink className="size-3" aria-hidden="true" />
-                                            </a>
-                                            <div className="mt-1.5 flex flex-wrap gap-1">
-                                                <StatusBadge status={row.status} className="px-1.5 py-0 text-[0.65rem] leading-4" />
-                                                {row.turnaround_days !== null && (
-                                                    <Tag title="Turnaround time">
-                                                        TAT {row.turnaround_days} {row.turnaround_days === 1 ? 'day' : 'days'}
-                                                    </Tag>
+                <Deferred data="documents" fallback={<TableSkeleton columns={4} />} rescue={<LoadFailed only={RELOAD} what="your documents" />}>
+                    {documents && (
+                        <>
+                            <LoadingBody loading={loading}>
+                                {documents.data.length === 0 ? (
+                                    <EmptyState
+                                        filtered={chips.length > 0}
+                                        onReset={reset}
+                                        kind={TYPE_TABS.find((tab) => tab.value === filters.type)?.empty ?? 'documents'}
+                                    />
+                                ) : (
+                                    <Table className={cn(preferences.dense ? '[&_td]:py-1.5' : '[&_td]:py-3')}>
+                                        <TableHeader>
+                                            <TableRow className="bg-muted/40 hover:bg-muted/40">
+                                                <TableHead className="w-10 pl-4">
+                                                    <Checkbox
+                                                        checked={pageChecked ? true : pagePartly ? 'indeterminate' : false}
+                                                        onCheckedChange={(checked) => togglePage(checked === true)}
+                                                        disabled={pageRows.length === 0 || (selection.full && !pageChecked && !pagePartly)}
+                                                        aria-label="Select every selectable document on this page"
+                                                        className={CHECKBOX}
+                                                    />
+                                                </TableHead>
+                                                <SortableHead column="control_no" sort={filters.sort} onSort={(sort) => update({ sort })}>
+                                                    Control no.
+                                                </SortableHead>
+                                                {isVisible('subject') && <TableHead>Subject</TableHead>}
+                                                {isVisible('destination') && <TableHead>Destination</TableHead>}
+                                                {isVisible('created') && (
+                                                    <SortableHead
+                                                        column="created_at"
+                                                        sort={filters.sort}
+                                                        onSort={(sort) => update({ sort })}
+                                                        firstDirection="desc"
+                                                    >
+                                                        Created
+                                                    </SortableHead>
                                                 )}
-                                                {row.is_bundle && <Tag>Bundle</Tag>}
-                                            </div>
-                                        </TableCell>
-                                        {isVisible('subject') && (
-                                            <TableCell className="max-w-md min-w-64 align-top whitespace-normal">
-                                                <p className="text-sm font-medium">{row.classification}</p>
-                                                <p className={cn('text-sm text-muted-foreground', preferences.dense ? 'line-clamp-1' : 'line-clamp-2')} title={row.subject}>
-                                                    <Highlight text={row.subject} term={filters.search} />
-                                                </p>
-                                                {!preferences.dense && (
-                                                    <div className="mt-1.5 flex flex-wrap gap-1">
-                                                        <Tag
-                                                            className={
-                                                                row.source === 'internal'
-                                                                    ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300'
-                                                                    : 'bg-rose-50 text-rose-800 dark:bg-rose-500/15 dark:text-rose-300'
-                                                            }
+                                                {isVisible('encoded_by') && <TableHead>Encoded by</TableHead>}
+                                                <TableHead className="pr-4 text-right">
+                                                    <span className="sr-only">Actions</span>
+                                                </TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {pageChecked && morePages && (
+                                                <TableRow className="bg-emerald-50 hover:bg-emerald-50 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/30">
+                                                    <TableCell colSpan={columnCount} className="py-2 text-center text-sm">
+                                                        All selectable documents on this page are selected.{' '}
+                                                        <button
+                                                            type="button"
+                                                            onClick={selectAllMatching}
+                                                            disabled={selectingAll || selection.full}
+                                                            className="inline-flex items-center gap-1 font-medium text-emerald-700 underline-offset-2 hover:underline disabled:opacity-50 dark:text-emerald-400"
                                                         >
-                                                            <span className="capitalize">{row.source}</span>
-                                                        </Tag>
-                                                        {row.charter && <Tag>{row.charter}</Tag>}
-                                                    </div>
-                                                )}
-                                            </TableCell>
-                                        )}
-                                        {isVisible('destination') && (
-                                            <TableCell className="align-top text-sm">
-                                                {row.destination?.code ? (
-                                                    <span title={row.destination.name ?? undefined}>{row.destination.code}</span>
-                                                ) : (
-                                                    <span className="text-muted-foreground">—</span>
-                                                )}
-                                            </TableCell>
-                                        )}
-                                        {isVisible('created') && (
-                                            <TableCell className="align-top text-sm whitespace-nowrap">
-                                                {row.created_at ? (
-                                                    <>
-                                                        <p>{dateFormat.format(new Date(row.created_at))}</p>
-                                                        {!preferences.dense && <p className="text-xs text-muted-foreground">{timeFormat.format(new Date(row.created_at))}</p>}
-                                                    </>
-                                                ) : (
-                                                    '—'
-                                                )}
-                                            </TableCell>
-                                        )}
-                                        {isVisible('encoded_by') && (
-                                            <TableCell className="max-w-44 min-w-32 align-top text-sm whitespace-normal wrap-break-word">
-                                                {row.encoded_by ?? <span className="text-muted-foreground">—</span>}
-                                            </TableCell>
-                                        )}
-                                        <TableCell className="pr-4 align-top">
-                                            <div className="flex justify-end">
-                                                <RowActions row={row} onTrack={() => setTracking(row)} onPrint={() => printTransmittalForm(row.control_no)} />
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                                            {selectingAll && <Loader2 className="size-3.5 animate-spin" />}
+                                                            Select every match on all pages
+                                                        </button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                            {documents.data.map((row) => (
+                                                <TableRow
+                                                    key={row.id}
+                                                    data-state={selection.has(row.id) ? 'selected' : undefined}
+                                                    className="data-[state=selected]:bg-emerald-50/60 dark:data-[state=selected]:bg-emerald-950/20"
+                                                >
+                                                    <TableCell className="pl-4 align-top">
+                                                        {row.selectable ? (
+                                                            <Checkbox
+                                                                checked={selection.has(row.id)}
+                                                                onCheckedChange={(checked) => selection.toggle(row, checked === true)}
+                                                                disabled={selection.full && !selection.has(row.id)}
+                                                                aria-label={`Select ${row.control_no}`}
+                                                                className={cn(CHECKBOX, 'mt-0.5')}
+                                                            />
+                                                        ) : (
+                                                            // Not Created / For Receiving, or a bundle attachment (it travels with its bundle).
+                                                            <span className="sr-only">Not selectable</span>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="align-top">
+                                                        {/* A new tab, so the list and its filters stay where they are. */}
+                                                        <a
+                                                            href={documentUrl(row.control_no)}
+                                                            target="_blank"
+                                                            rel="noopener"
+                                                            title="Open in a new tab"
+                                                            className="inline-flex items-center gap-1 rounded font-mono text-sm font-semibold text-emerald-700 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 dark:text-emerald-400"
+                                                        >
+                                                            {row.control_no}
+                                                            <ExternalLink className="size-3" aria-hidden="true" />
+                                                        </a>
+                                                        <div className="mt-1.5 flex flex-wrap gap-1">
+                                                            <StatusBadge status={row.status} className="px-1.5 py-0 text-[0.65rem] leading-4" />
+                                                            {row.turnaround_days !== null && (
+                                                                <Tag title="Turnaround time">
+                                                                    TAT {row.turnaround_days} {row.turnaround_days === 1 ? 'day' : 'days'}
+                                                                </Tag>
+                                                            )}
+                                                            {row.is_bundle && <Tag>Bundle</Tag>}
+                                                        </div>
+                                                    </TableCell>
+                                                    {isVisible('subject') && (
+                                                        <TableCell className="max-w-md min-w-64 align-top whitespace-normal">
+                                                            <p className="text-sm font-medium">{row.classification}</p>
+                                                            <p
+                                                                className={cn(
+                                                                    'text-sm text-muted-foreground',
+                                                                    preferences.dense ? 'line-clamp-1' : 'line-clamp-2',
+                                                                )}
+                                                                title={row.subject}
+                                                            >
+                                                                <Highlight text={row.subject} term={filters.search} />
+                                                            </p>
+                                                            {!preferences.dense && (
+                                                                <div className="mt-1.5 flex flex-wrap gap-1">
+                                                                    <Tag
+                                                                        className={
+                                                                            row.source === 'internal'
+                                                                                ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300'
+                                                                                : 'bg-rose-50 text-rose-800 dark:bg-rose-500/15 dark:text-rose-300'
+                                                                        }
+                                                                    >
+                                                                        <span className="capitalize">{row.source}</span>
+                                                                    </Tag>
+                                                                    {row.charter && <Tag>{row.charter}</Tag>}
+                                                                </div>
+                                                            )}
+                                                        </TableCell>
+                                                    )}
+                                                    {isVisible('destination') && (
+                                                        <TableCell className="align-top text-sm">
+                                                            {row.destination?.code ? (
+                                                                <span title={row.destination.name ?? undefined}>{row.destination.code}</span>
+                                                            ) : (
+                                                                <span className="text-muted-foreground">—</span>
+                                                            )}
+                                                        </TableCell>
+                                                    )}
+                                                    {isVisible('created') && (
+                                                        <TableCell className="align-top text-sm whitespace-nowrap">
+                                                            {row.created_at ? (
+                                                                <>
+                                                                    <p>{dateFormat.format(new Date(row.created_at))}</p>
+                                                                    {!preferences.dense && (
+                                                                        <p className="text-xs text-muted-foreground">
+                                                                            {timeFormat.format(new Date(row.created_at))}
+                                                                        </p>
+                                                                    )}
+                                                                </>
+                                                            ) : (
+                                                                '—'
+                                                            )}
+                                                        </TableCell>
+                                                    )}
+                                                    {isVisible('encoded_by') && (
+                                                        <TableCell className="max-w-44 min-w-32 align-top text-sm whitespace-normal wrap-break-word">
+                                                            {row.encoded_by ?? <span className="text-muted-foreground">—</span>}
+                                                        </TableCell>
+                                                    )}
+                                                    <TableCell className="pr-4 align-top">
+                                                        <div className="flex justify-end">
+                                                            <RowActions
+                                                                row={row}
+                                                                onTrack={() => setTracking(row)}
+                                                                onPrint={() => printTransmittalForm(row.control_no)}
+                                                            />
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </LoadingBody>
+
+                            <Pagination page={documents} only={RELOAD} />
+                        </>
                     )}
-                </div>
-
-                <Pagination page={documents} />
+                </Deferred>
             </div>
-
-            <TrackingDialog document={tracking} onClose={() => setTracking(null)} />            <SelectionDialog
+            <TrackingDialog document={tracking} onClose={() => setTracking(null)} />{' '}
+            <SelectionDialog
                 open={reviewing}
                 onOpenChange={setReviewing}
                 items={selection.items}
                 onRemove={(id) => selection.remove([id])}
                 onClear={selection.clear}
             />
-            <ForwardDialog open={forwarding} onOpenChange={setForwarding} documents={selection.items} offices={offices} onForwarded={selection.clear} />
+            <ForwardDialog
+                open={forwarding}
+                onOpenChange={setForwarding}
+                documents={selection.items}
+                offices={offices}
+                onForwarded={selection.clear}
+                reloadOnly={[...RELOAD, 'sidebarCounts']}
+            />
         </AppLayout>
     );
 }
 
-const CHECKBOX = 'data-[state=checked]:border-emerald-600 data-[state=checked]:bg-emerald-600 data-[state=indeterminate]:border-emerald-600 data-[state=indeterminate]:bg-emerald-600 data-[state=indeterminate]:text-white';
+const CHECKBOX =
+    'data-[state=checked]:border-emerald-600 data-[state=checked]:bg-emerald-600 data-[state=indeterminate]:border-emerald-600 data-[state=indeterminate]:bg-emerald-600 data-[state=indeterminate]:text-white';
 
 /** The search term marked wherever it appears in the text. */
 function Highlight({ text, term }: { text: string; term: string }) {
@@ -483,7 +539,11 @@ function Highlight({ text, term }: { text: string; term: string }) {
 /** A row's actions as one group of icon buttons. */
 function RowActions({ row, onTrack, onPrint }: { row: Row; onTrack: () => void; onPrint: () => void }) {
     return (
-        <div role="group" aria-label={`Actions for ${row.control_no}`} className="inline-flex divide-x overflow-hidden rounded-md border bg-background shadow-xs">
+        <div
+            role="group"
+            aria-label={`Actions for ${row.control_no}`}
+            className="inline-flex divide-x overflow-hidden rounded-md border bg-background shadow-xs"
+        >
             <IconAction label="Routing history" onClick={onTrack}>
                 <History />
             </IconAction>

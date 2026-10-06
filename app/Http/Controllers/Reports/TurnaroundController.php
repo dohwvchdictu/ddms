@@ -20,13 +20,20 @@ class TurnaroundController extends Controller
     public function index(Request $request, TurnaroundReport $report, ApiService $api): Response
     {
         $filters = $this->filters($request, $api);
-        // Every office, active or not, so documents that passed through a since-closed one still name it.
-        $officeNames = collect($api->getOfficesData()['officeList'] ?? [])->pluck('officeName', 'id')->all();
 
         return Inertia::render('reports/turnaround', [
             'filters' => $filters['shown'],
             'defaultRange' => self::defaultRange(),
-            'report' => $report->handle($filters['report'], $officeNames),
+            // Deferred: the page opens at once with a skeleton body, and the
+            // report (the slow part) follows. Filter changes ask for it by name,
+            // so it comes back in the same response. Rescued: a failure shows a
+            // retry message instead of an error page.
+            'report' => Inertia::defer(function () use ($report, $filters, $api) {
+                // Every office, active or not, so documents that passed through a since-closed one still name it.
+                $officeNames = collect($api->getOfficesData()['officeList'] ?? [])->pluck('officeName', 'id')->all();
+
+                return $report->handle($filters['report'], $officeNames);
+            }, rescue: true),
             'offices' => collect($api->getActiveOffices())
                 ->map(fn (array $office) => ['id' => (string) $office['id'], 'name' => $office['officeName'] ?? ''])
                 ->values(),

@@ -32,21 +32,24 @@ class ProcessedController extends Controller
     {
         $filters = $this->filters($request);
         $officeId = session('user')['office']['id'];
-        [$column, $direction] = self::sortParts($filters['sort']);
-
-        $documents = $processed->withLatestStep($processed->query($officeId, $filters)->select('documents.*'), $officeId)
-            ->with(['category', 'citizencharter'])
-            ->orderBy($column === 'control_no' ? 'documents.control_no' : 'processed_at', $direction)
-            ->orderBy('documents.id', $direction)
-            ->paginate($filters['per_page'])
-            ->withQueryString();
-
-        $documents->through($this->rowMapper($api, $processed));
 
         return Inertia::render('processed/index', [
-            'documents' => $documents,
+            // Deferred: the page opens with a skeleton and the list follows.
+            // Filter changes and page turns ask for these by name, so they come
+            // back in the same response. Rescued: a failure offers a retry.
+            'documents' => Inertia::defer(function () use ($filters, $officeId, $processed, $api) {
+                [$column, $direction] = self::sortParts($filters['sort']);
+
+                return $processed->withLatestStep($processed->query($officeId, $filters)->select('documents.*'), $officeId)
+                    ->with(['category', 'citizencharter'])
+                    ->orderBy($column === 'control_no' ? 'documents.control_no' : 'processed_at', $direction)
+                    ->orderBy('documents.id', $direction)
+                    ->paginate($filters['per_page'])
+                    ->withQueryString()
+                    ->through($this->rowMapper($api, $processed));
+            }, rescue: true),
             'filters' => $filters,
-            'facets' => $processed->facets($officeId, $filters),
+            'facets' => Inertia::defer(fn () => $processed->facets($officeId, $filters), rescue: true),
             'statusOptions' => ProcessedDocuments::STATUSES,
             'defaultRange' => self::defaultRange(),
             'perPageOptions' => self::PER_PAGE_OPTIONS,

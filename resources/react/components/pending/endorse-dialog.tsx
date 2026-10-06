@@ -16,10 +16,12 @@ interface EndorseDialogProps {
     onOpenChange: (open: boolean) => void;
     documentIds: number[];
     onDone: () => void;
+    /** Back on the same list, reload just these props (the list keeps its rows instead of showing its skeleton). */
+    reloadOnly?: string[];
 }
 
 /** Hand the selected documents to someone in this office, with a note. */
-export default function EndorseDialog({ open, onOpenChange, documentIds, onDone }: EndorseDialogProps) {
+export default function EndorseDialog({ open, onOpenChange, documentIds, onDone, reloadOnly }: EndorseDialogProps) {
     const { auth } = usePage().props;
     const officeId = auth.user?.office?.id;
     const form = useForm({ endorsed_to: '', remarks: '' });
@@ -51,6 +53,7 @@ export default function EndorseDialog({ open, onOpenChange, documentIds, onDone 
         form.transform((current) => ({ ...current, document_ids: documentIds }));
         form.submit(endorse(), {
             preserveScroll: true,
+            ...(reloadOnly && { only: reloadOnly }),
             onSuccess: () => {
                 onOpenChange(false);
                 onDone();
@@ -70,7 +73,10 @@ export default function EndorseDialog({ open, onOpenChange, documentIds, onDone 
                     <div className="grid gap-5 px-6 py-5">
                         <div className="grid gap-2">
                             <Label htmlFor="endorse-to">
-                                Endorse to <span className="text-destructive" aria-hidden="true">*</span>
+                                Endorse to{' '}
+                                <span className="text-destructive" aria-hidden="true">
+                                    *
+                                </span>
                             </Label>
                             <Combobox
                                 id="endorse-to"
@@ -87,7 +93,10 @@ export default function EndorseDialog({ open, onOpenChange, documentIds, onDone 
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="endorse-remarks">
-                                Note <span className="text-destructive" aria-hidden="true">*</span>
+                                Note{' '}
+                                <span className="text-destructive" aria-hidden="true">
+                                    *
+                                </span>
                             </Label>
                             <RemarkPresets value={data.remarks} onPick={(remark) => form.setData('remarks', remark)} />
                             <Textarea

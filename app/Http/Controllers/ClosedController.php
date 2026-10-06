@@ -8,6 +8,7 @@ use App\Models\Document;
 use App\Services\ApiService;
 use App\Support\DocumentTypes;
 use Carbon\Carbon;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -28,6 +29,22 @@ class ClosedController extends Controller
     {
         $filters = $this->filters($request);
         $officeId = session('user')['office']['id'];
+
+        return Inertia::render('closed/index', [
+            // Deferred: the page opens with a skeleton and the list follows.
+            // Filter changes and page turns ask for these by name, so they come
+            // back in the same response. Rescued: a failure offers a retry.
+            'documents' => Inertia::defer(fn () => $this->documents($filters, $officeId, $closed, $api), rescue: true),
+            'filters' => $filters,
+            'facets' => Inertia::defer(fn () => $closed->facets($officeId, $filters), rescue: true),
+            'defaultRange' => self::defaultRange(),
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
+        ]);
+    }
+
+    /** One page of the closed documents, as the list shows them. */
+    protected function documents(array $filters, int|string $officeId, ClosedDocuments $closed, ApiService $api): LengthAwarePaginator
+    {
         [$column, $direction] = self::sortParts($filters['sort']);
 
         $documents = $closed->withClose($closed->query($officeId, $filters)->select('documents.*'), $officeId)
@@ -55,13 +72,7 @@ class ClosedController extends Controller
             'turnaround' => $document->turnaroundtime !== null ? (int) $document->turnaroundtime : null,
         ]);
 
-        return Inertia::render('closed/index', [
-            'documents' => $documents,
-            'filters' => $filters,
-            'facets' => $closed->facets($officeId, $filters),
-            'defaultRange' => self::defaultRange(),
-            'perPageOptions' => self::PER_PAGE_OPTIONS,
-        ]);
+        return $documents;
     }
 
     /** @return array{type: string, search: string, from: string|null, to: string|null, sort: string, per_page: int} */

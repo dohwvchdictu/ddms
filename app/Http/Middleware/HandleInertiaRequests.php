@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Support\Administration;
 use App\Support\CurrentEmployee;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -33,10 +34,12 @@ class HandleInertiaRequests extends Middleware
                 // Shows the Administration group in the sidebar.
                 'canAdminister' => fn () => Administration::allows(session('user')),
             ],
-            'flash' => [
-                'error' => fn () => $request->session()->get('error'),
-                'status' => fn () => $request->session()->get('status'),
-            ],
+            // Always: lists reload only their own props after an action, and a
+            // session message must still come through with them.
+            'flash' => Inertia::always([
+                'error' => $request->session()->get('error'),
+                'status' => $request->session()->get('status'),
+            ]),
             'sidebarCounts' => fn () => CurrentEmployee::sidebarCounts(),
         ];
     }

@@ -33,27 +33,38 @@ class IncomingController extends Controller
     {
         $filters = $this->filters($request);
         $officeId = session('user')['office']['id'];
-        [$column, $direction] = self::sortParts($filters['sort']);
 
-        $documents = $incoming->withSender($incoming->query($officeId, $filters)->select('documents.*'), $officeId)
-            ->with(['category', 'citizencharter'])
-            ->orderBy("documents.{$column}", $direction)
-            ->orderBy('documents.id', $direction)
-            ->paginate($filters['per_page'])
-            ->withQueryString();
+        // The page and outsideRange both need it; built once, on first use.
+        $page = null;
+        $documents = function () use (&$page, $filters, $officeId, $incoming, $api) {
+            if ($page === null) {
+                [$column, $direction] = self::sortParts($filters['sort']);
 
-        $documents->through($this->rowMapper($api));
+                $page = $incoming->withSender($incoming->query($officeId, $filters)->select('documents.*'), $officeId)
+                    ->with(['category', 'citizencharter'])
+                    ->orderBy("documents.{$column}", $direction)
+                    ->orderBy('documents.id', $direction)
+                    ->paginate($filters['per_page'])
+                    ->withQueryString()
+                    ->through($this->rowMapper($api));
+            }
+
+            return $page;
+        };
 
         return Inertia::render('incoming/index', [
-            'documents' => $documents,
+            // Deferred: the page opens with a skeleton and the list follows.
+            // Filter changes, page turns and Receive ask for these by name, so
+            // they come back in the same response. Rescued: a failure offers a retry.
+            'documents' => Inertia::defer($documents, rescue: true),
             'filters' => $filters,
-            'facets' => $incoming->facets($officeId, $filters),
+            'facets' => Inertia::defer(fn () => $incoming->facets($officeId, $filters), rescue: true),
             'statusOptions' => IncomingDocuments::STATUSES,
             'defaultRange' => self::defaultRange(),
             // Waiting here but hidden by the dates, so the list and the sidebar badge still add up.
-            'outsideRange' => $filters['from'] || $filters['to']
-                ? $incoming->query($officeId, [...$filters, 'from' => null, 'to' => null])->count() - $documents->total()
-                : 0,
+            'outsideRange' => Inertia::defer(fn () => $filters['from'] || $filters['to']
+                ? $incoming->query($officeId, [...$filters, 'from' => null, 'to' => null])->count() - $documents()->total()
+                : 0, rescue: true),
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'maxSelection' => self::MAX_SELECTION,
         ]);

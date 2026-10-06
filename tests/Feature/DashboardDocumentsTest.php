@@ -8,10 +8,13 @@ use App\Models\Document;
 use App\Services\ApiService;
 use Inertia\Testing\AssertableInertia as Assert;
 use Mockery\MockInterface;
+use Tests\Concerns\LoadsDeferredProps;
 use Tests\TestCase;
 
 class DashboardDocumentsTest extends TestCase
 {
+    use LoadsDeferredProps;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -53,7 +56,7 @@ class DashboardDocumentsTest extends TestCase
         $this->expectFilter('due_today');
 
         $this->signedIn()
-            ->get('/dashboard/documents?filter=due_today&search=memo')
+            ->getWithDeferred('/dashboard/documents?filter=due_today&search=memo')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('dashboard/documents')
@@ -68,7 +71,7 @@ class DashboardDocumentsTest extends TestCase
         $this->expectFilter('overdue');
 
         $this->signedIn()
-            ->get('/dashboard/documents?filter=everything')
+            ->getWithDeferred('/dashboard/documents?filter=everything')
             ->assertInertia(fn (Assert $page) => $page->where('filter', 'overdue'));
     }
 }

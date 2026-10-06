@@ -1,12 +1,14 @@
-import { Head } from '@inertiajs/react';
+import { Deferred, Head } from '@inertiajs/react';
 import { Building2, CircleDot, FileSearch, Globe } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import DateRangeFilter, { describeRange, isSameRange, rangeQuery, type DateRangeValue } from '@/components/data-table/date-range-filter';
 import FacetedFilter from '@/components/data-table/faceted-filter';
 import FilterChips, { type FilterChip } from '@/components/data-table/filter-chips';
 import SortableHead from '@/components/data-table/sortable-head';
+import { LoadingBody, LoadFailed, TableSkeleton } from '@/components/data-table/deferred-states';
 import StatusBadge from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useListFilters } from '@/hooks/use-list-filters';
 import AppLayout from '@/layouts/app-layout';
@@ -33,7 +35,8 @@ interface Props {
     filters: Filters;
     /** The last 30 days: what the report shows with no dates in the URL. */
     defaultRange: DateRangeValue;
-    report: {
+    /** Deferred: undefined until it arrives after the page opens. */
+    report?: {
         total: number;
         /** Most documents first. */
         rows: Row[];
@@ -66,7 +69,7 @@ const toQuery = (filters: Filters, defaultRange: DateRangeValue) => ({
 
 export default function PerUnitReport({ filters: initial, defaultRange, report, offices, statusOptions, sourceOptions }: Props) {
     const toUrl = (filters: Filters) => perUnitReport.url({ query: toQuery(filters, defaultRange) });
-    const { filters, update, loading } = useListFilters(initial, toUrl);
+    const { filters, update, loading } = useListFilters(initial, toUrl, { only: ['filters', 'report'] });
     const [sort, setSort] = useState('-count');
 
     const officeOf = (id: string) => offices.find((office) => office.id === id);
@@ -105,16 +108,16 @@ export default function PerUnitReport({ filters: initial, defaultRange, report, 
         const descending = sort.startsWith('-');
         const column = descending ? sort.slice(1) : sort;
 
-        return report.rows
+        return (report?.rows ?? [])
             .map((row, index) => ({ ...row, rank: index + 1 }))
             .sort((a, b) => {
                 const order = column === 'name' ? a.name.localeCompare(b.name) : a.count - b.count || b.name.localeCompare(a.name);
 
                 return descending ? -order : order;
             });
-    }, [report.rows, sort]);
+    }, [report?.rows, sort]);
 
-    const largest = report.rows[0]?.count ?? 0;
+    const largest = report?.rows[0]?.count ?? 0;
 
     return (
         <AppLayout title="Per Category">
@@ -140,7 +143,7 @@ export default function PerUnitReport({ filters: initial, defaultRange, report, 
                         options={offices.map((office) => ({
                             value: office.id,
                             label: office.name,
-                            count: report.facets.offices[office.id] ?? 0,
+                            count: report ? (report.facets.offices[office.id] ?? 0) : undefined,
                         }))}
                         value={filters.offices}
                         onChange={(offices) => update({ offices })}
@@ -151,7 +154,7 @@ export default function PerUnitReport({ filters: initial, defaultRange, report, 
                         options={sourceOptions.map((source) => ({
                             value: source,
                             label: SOURCE_LABELS[source] ?? source,
-                            count: report.facets.sources[source] ?? 0,
+                            count: report ? (report.facets.sources[source] ?? 0) : undefined,
                         }))}
                         value={filters.sources}
                         onChange={(sources) => update({ sources })}
@@ -162,84 +165,92 @@ export default function PerUnitReport({ filters: initial, defaultRange, report, 
                         options={statusOptions.map((status) => ({
                             value: status,
                             label: status,
-                            count: report.facets.statuses[status] ?? 0,
+                            count: report ? (report.facets.statuses[status] ?? 0) : undefined,
                             display: <StatusBadge status={status} />,
                         }))}
                         value={filters.statuses}
                         onChange={(statuses) => update({ statuses })}
                     />
                     <DateRangeFilter label="Created" value={{ from: filters.from, to: filters.to }} onChange={({ from, to }) => update({ from, to })} />
-                    <p className={cn('ml-auto flex items-baseline gap-1.5 pr-1 transition-opacity', loading && 'opacity-60')} aria-live="polite">
-                        <span className="text-lg font-semibold tabular-nums">{number.format(report.total)}</span>
-                        <span className="text-sm text-muted-foreground">{report.total === 1 ? 'document' : 'documents'}</span>
-                    </p>
+                    {report ? (
+                        <p className={cn('ml-auto flex items-baseline gap-1.5 pr-1 transition-opacity', loading && 'opacity-60')} aria-live="polite">
+                            <span className="text-lg font-semibold tabular-nums">{number.format(report.total)}</span>
+                            <span className="text-sm text-muted-foreground">{report.total === 1 ? 'document' : 'documents'}</span>
+                        </p>
+                    ) : (
+                        <Skeleton className="ml-auto h-5 w-28" />
+                    )}
                 </div>
                 <FilterChips chips={chips} onReset={reset} />
 
-                <div className={cn('transition-opacity', loading && 'pointer-events-none opacity-60')} aria-busy={loading}>
-                    {report.total === 0 ? (
-                        <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
-                            <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                                <FileSearch className="size-5" />
-                            </div>
-                            <p className="text-sm font-medium">No documents match these filters</p>
-                            <p className="text-sm text-muted-foreground">Try another office, status or date range.</p>
-                            {chips.length > 0 && (
-                                <Button variant="outline" size="sm" onClick={reset} className="mt-2">
-                                    Reset filters
-                                </Button>
+                <Deferred data="report" fallback={<TableSkeleton columns={2} />} rescue={<LoadFailed only={['report']} />}>
+                    {report && (
+                        <LoadingBody loading={loading}>
+                            {report.total === 0 ? (
+                                <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
+                                    <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                                        <FileSearch className="size-5" />
+                                    </div>
+                                    <p className="text-sm font-medium">No documents match these filters</p>
+                                    <p className="text-sm text-muted-foreground">Try another office, status or date range.</p>
+                                    {chips.length > 0 && (
+                                        <Button variant="outline" size="sm" onClick={reset} className="mt-2">
+                                            Reset filters
+                                        </Button>
+                                    )}
+                                </div>
+                            ) : (
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow className="bg-muted/40 hover:bg-muted/40">
+                                            <TableHead className="w-12 pl-4 text-right">#</TableHead>
+                                            <SortableHead column="name" sort={sort} onSort={setSort}>
+                                                Procedure / Category
+                                            </SortableHead>
+                                            <SortableHead column="count" sort={sort} onSort={setSort} firstDirection="desc" className="text-right">
+                                                Documents
+                                            </SortableHead>
+                                            <TableHead className="w-56 pr-4">Share</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {rows.map((row) => (
+                                            <TableRow key={row.name}>
+                                                <TableCell className="pl-4 text-right text-xs text-muted-foreground tabular-nums">{row.rank}</TableCell>
+                                                <TableCell className="max-w-xl text-sm font-medium whitespace-normal">{row.name}</TableCell>
+                                                <TableCell className="text-right font-medium tabular-nums">{number.format(row.count)}</TableCell>
+                                                <TableCell className="pr-4">
+                                                    {/* The bar is scaled to the largest, so the leaders read at a glance; the % is of all documents. */}
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="h-2 flex-1 overflow-hidden rounded-full bg-muted" aria-hidden="true">
+                                                            <span
+                                                                className="block h-full rounded-full bg-emerald-500"
+                                                                style={{
+                                                                    width: `${largest > 0 ? Math.max((row.count / largest) * 100, 2) : 0}%`,
+                                                                }}
+                                                            />
+                                                        </span>
+                                                        <span className="w-12 text-right text-xs text-muted-foreground tabular-nums">
+                                                            {share(row.count, report.total).toFixed(1)}%
+                                                        </span>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                    <TableFooter>
+                                        <TableRow className="font-semibold">
+                                            <TableCell />
+                                            <TableCell>Total</TableCell>
+                                            <TableCell className="text-right tabular-nums">{number.format(report.total)}</TableCell>
+                                            <TableCell className="pr-4" />
+                                        </TableRow>
+                                    </TableFooter>
+                                </Table>
                             )}
-                        </div>
-                    ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                                    <TableHead className="w-12 pl-4 text-right">#</TableHead>
-                                    <SortableHead column="name" sort={sort} onSort={setSort}>
-                                        Procedure / Category
-                                    </SortableHead>
-                                    <SortableHead column="count" sort={sort} onSort={setSort} firstDirection="desc" className="text-right">
-                                        Documents
-                                    </SortableHead>
-                                    <TableHead className="w-56 pr-4">Share</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {rows.map((row) => (
-                                    <TableRow key={row.name}>
-                                        <TableCell className="pl-4 text-right text-xs text-muted-foreground tabular-nums">{row.rank}</TableCell>
-                                        <TableCell className="max-w-xl text-sm font-medium whitespace-normal">{row.name}</TableCell>
-                                        <TableCell className="text-right font-medium tabular-nums">{number.format(row.count)}</TableCell>
-                                        <TableCell className="pr-4">
-                                            {/* The bar is scaled to the largest, so the leaders read at a glance; the % is of all documents. */}
-                                            <div className="flex items-center gap-2">
-                                                <span className="h-2 flex-1 overflow-hidden rounded-full bg-muted" aria-hidden="true">
-                                                    <span
-                                                        className="block h-full rounded-full bg-emerald-500"
-                                                        style={{
-                                                            width: `${largest > 0 ? Math.max((row.count / largest) * 100, 2) : 0}%`,
-                                                        }}
-                                                    />
-                                                </span>
-                                                <span className="w-12 text-right text-xs text-muted-foreground tabular-nums">
-                                                    {share(row.count, report.total).toFixed(1)}%
-                                                </span>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                            <TableFooter>
-                                <TableRow className="font-semibold">
-                                    <TableCell />
-                                    <TableCell>Total</TableCell>
-                                    <TableCell className="text-right tabular-nums">{number.format(report.total)}</TableCell>
-                                    <TableCell className="pr-4" />
-                                </TableRow>
-                            </TableFooter>
-                        </Table>
+                        </LoadingBody>
                     )}
-                </div>
+                </Deferred>
             </div>
         </AppLayout>
     );

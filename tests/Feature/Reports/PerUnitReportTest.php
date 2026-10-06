@@ -10,11 +10,14 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 use Mockery\MockInterface;
+use Tests\Concerns\LoadsDeferredProps;
 use Tests\TestCase;
 
 /** Report › Per Category: documents per procedure / category. */
 class PerUnitReportTest extends TestCase
 {
+    use LoadsDeferredProps;
+
     /** Office ids no real office uses, so the shared dev data never shows up here. */
     protected const OFFICE = 990001;
 
@@ -96,7 +99,7 @@ class PerUnitReportTest extends TestCase
         $this->document($general->id, ['source' => 'external', 'status' => 'Closed']);
 
         $this->signedIn()
-            ->get('/report-per-unit?office=' . self::OFFICE)
+            ->getWithDeferred('/report-per-unit?office=' . self::OFFICE)
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('reports/per-unit')
@@ -112,11 +115,11 @@ class PerUnitReportTest extends TestCase
 
         // Narrowed by source and status; several statuses at once.
         $this->signedIn()
-            ->get('/report-per-unit?office=' . self::OFFICE . '&source=external&status=Closed')
+            ->getWithDeferred('/report-per-unit?office=' . self::OFFICE . '&source=external&status=Closed')
             ->assertInertia(fn (Assert $page) => $page->where('report.total', 1));
 
         $this->signedIn()
-            ->get('/report-per-unit?office=' . self::OFFICE . '&status=Closed,Created')
+            ->getWithDeferred('/report-per-unit?office=' . self::OFFICE . '&status=Closed,Created')
             ->assertInertia(fn (Assert $page) => $page->where('report.total', 3));
     }
 
@@ -129,7 +132,7 @@ class PerUnitReportTest extends TestCase
 
         try {
             $this->signedIn()
-                ->get('/report-per-unit?office=' . self::OFFICE)
+                ->getWithDeferred('/report-per-unit?office=' . self::OFFICE)
                 ->assertOk()
                 ->assertInertia(fn (Assert $page) => $page
                     ->where('report.total', 1)
@@ -142,7 +145,7 @@ class PerUnitReportTest extends TestCase
     public function test_unknown_filter_values_are_dropped(): void
     {
         $this->signedIn()
-            ->get('/report-per-unit?office=123456789&source=fax,internal&status=Lost')
+            ->getWithDeferred('/report-per-unit?office=123456789&source=fax,internal&status=Lost')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('filters.offices', [])
                 ->where('filters.sources', ['internal'])

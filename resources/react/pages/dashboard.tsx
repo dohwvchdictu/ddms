@@ -1,18 +1,11 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import {
-    ArrowDownToLine,
-    ArrowUpRight,
-    CircleHelp,
-    Clock,
-    FileInput,
-    Hourglass,
-    UserRoundCheck,
-    type LucideIcon,
-} from 'lucide-react';
+import { Deferred, Head, Link, usePage } from '@inertiajs/react';
+import { ArrowDownToLine, ArrowUpRight, CircleHelp, Clock, FileInput, Hourglass, UserRoundCheck, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import ActivityChart, { type ActivityPoint } from '@/components/dashboard/activity-chart';
 import DeadlineBreakdown from '@/components/dashboard/deadline-breakdown';
+import { LoadFailed, StatCardsSkeleton } from '@/components/data-table/deferred-states';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
@@ -179,7 +172,11 @@ function SectionHeading({ id, title, description }: { id: string; title: string;
     );
 }
 
-export default function Dashboard({ counts, activity }: { counts: Counts; activity: ActivityPoint[] }) {
+/** Both deferred: the page opens with skeletons and the figures follow. */
+const FIGURES = ['counts', 'activity'];
+const SYSTEM_GRID = 'grid grid-cols-[repeat(auto-fit,minmax(11rem,1fr))] gap-4';
+
+export default function Dashboard({ counts, activity }: { counts?: Counts; activity?: ActivityPoint[] }) {
     const { auth, sidebarCounts } = usePage().props;
     const officeName = auth.user?.office?.name;
 
@@ -215,32 +212,67 @@ export default function Dashboard({ counts, activity }: { counts: Counts; activi
             <section aria-labelledby="system-heading">
                 <SectionHeading id="system-heading" title="All documents" description="Open documents across DOH Western Visayas" />
                 {/* Five across on a laptop with the sidebar open; wraps on narrower screens. */}
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(11rem,1fr))] gap-4">
-                    {SYSTEM_CARDS.map((def) => (
-                        <StatCard
-                            key={def.key}
-                            def={def}
-                            value={counts[def.key]}
-                            link={(children) => (
-                                <Link
-                                    href={documentsRoute({ query: { filter: def.key } })}
-                                    className={cardLinkClass}
-                                    aria-description={def.tooltip}
-                                >
-                                    {children}
-                                </Link>
-                            )}
-                        />
-                    ))}
-                </div>
+                <Deferred
+                    data="counts"
+                    fallback={<StatCardsSkeleton count={SYSTEM_CARDS.length} className={SYSTEM_GRID} />}
+                    rescue={
+                        <Card className="p-0">
+                            <LoadFailed only={FIGURES} what="the figures" />
+                        </Card>
+                    }
+                >
+                    {counts && (
+                        <div className={SYSTEM_GRID}>
+                            {SYSTEM_CARDS.map((def) => (
+                                <StatCard
+                                    key={def.key}
+                                    def={def}
+                                    value={counts[def.key]}
+                                    link={(children) => (
+                                        <Link href={documentsRoute({ query: { filter: def.key } })} className={cardLinkClass} aria-description={def.tooltip}>
+                                            {children}
+                                        </Link>
+                                    )}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </Deferred>
             </section>
 
-            <div className="grid gap-4 lg:grid-cols-3">
-                <div className="lg:col-span-2">
-                    <ActivityChart data={activity} />
-                </div>
-                <DeadlineBreakdown counts={counts} />
-            </div>
+            {/* On a failure the message above covers these too. */}
+            <Deferred data={FIGURES} fallback={<ChartsSkeleton />} rescue={<></>}>
+                {counts && activity && (
+                    <div className="grid gap-4 lg:grid-cols-3">
+                        <div className="lg:col-span-2">
+                            <ActivityChart data={activity} />
+                        </div>
+                        <DeadlineBreakdown counts={counts} />
+                    </div>
+                )}
+            </Deferred>
         </AppLayout>
+    );
+}
+
+/** Stand-ins shaped like the activity chart and the deadline breakdown. */
+function ChartsSkeleton() {
+    return (
+        <div className="grid gap-4 lg:grid-cols-3" aria-hidden="true">
+            <Card className="gap-4 p-5 lg:col-span-2">
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-56 w-full" />
+            </Card>
+            <Card className="gap-4 p-5">
+                <Skeleton className="h-4 w-36" />
+                <Skeleton className="mx-auto size-40 rounded-full" />
+                <div className="grid gap-2">
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-5/6" />
+                    <Skeleton className="h-3 w-4/6" />
+                </div>
+            </Card>
+        </div>
     );
 }

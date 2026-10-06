@@ -13,10 +13,13 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 use Mockery\MockInterface;
+use Tests\Concerns\LoadsDeferredProps;
 use Tests\TestCase;
 
 class MyDocumentsTest extends TestCase
 {
+    use LoadsDeferredProps;
+
     /** An office id no real office uses, so dev data never shows up in these lists. */
     protected const OFFICE = 990001;
 
@@ -100,7 +103,7 @@ class MyDocumentsTest extends TestCase
         $this->expectFilters(self::filters());
 
         $this->signedIn()
-            ->get('/my-documents')
+            ->getWithDeferred('/my-documents')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('my-documents/index')
@@ -124,7 +127,7 @@ class MyDocumentsTest extends TestCase
         ]));
 
         $this->signedIn()
-            ->get('/my-documents?search=+memo+&status=Created,Bogus,Closed&from=&to=&sort=control_no&per_page=50')
+            ->getWithDeferred('/my-documents?search=+memo+&status=Created,Bogus,Closed&from=&to=&sort=control_no&per_page=50')
             ->assertOk();
     }
 
@@ -132,14 +135,14 @@ class MyDocumentsTest extends TestCase
     {
         $this->expectFilters(self::filters());
 
-        $this->signedIn()->get('/my-documents?sort=password&per_page=100000')->assertOk();
+        $this->signedIn()->getWithDeferred('/my-documents?sort=password&per_page=100000')->assertOk();
     }
 
     public function test_a_malformed_date_is_ignored(): void
     {
         $this->expectFilters(self::filters(['from' => '2026-09-15', 'to' => null]));
 
-        $this->signedIn()->get('/my-documents?from=2026-09-15&to=yesterday')->assertOk();
+        $this->signedIn()->getWithDeferred('/my-documents?from=2026-09-15&to=yesterday')->assertOk();
     }
 
     public function test_status_counts_ignore_the_status_filter_but_honour_the_rest(): void
@@ -160,7 +163,7 @@ class MyDocumentsTest extends TestCase
         $document = $this->saveDocument(['assigned_to' => 12, 'status' => 'For Receiving']);
 
         $this->signedIn()
-            ->get('/my-documents')
+            ->getWithDeferred('/my-documents')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('documents.total', 1)
                 ->where('documents.data.0.control_no', $document->control_no)
@@ -194,7 +197,7 @@ class MyDocumentsTest extends TestCase
 
         foreach (['purchase_requests', 'payments', 'documents'] as $type) {
             $this->signedIn()
-                ->get("/my-documents?type={$type}")
+                ->getWithDeferred("/my-documents?type={$type}")
                 ->assertInertia(fn (Assert $page) => $page
                     ->where('filters.type', $type)
                     ->where('documents.total', 1)
@@ -203,14 +206,14 @@ class MyDocumentsTest extends TestCase
         }
 
         $this->signedIn()
-            ->get('/my-documents')
+            ->getWithDeferred('/my-documents')
             ->assertInertia(fn (Assert $page) => $page->where('filters.type', 'all')->where('documents.total', 3));
     }
 
     public function test_an_unknown_type_falls_back_to_all(): void
     {
         $this->signedIn()
-            ->get('/my-documents?type=receipts')
+            ->getWithDeferred('/my-documents?type=receipts')
             ->assertInertia(fn (Assert $page) => $page->where('filters.type', 'all'));
     }
 
@@ -244,7 +247,7 @@ class MyDocumentsTest extends TestCase
         $this->saveDocument(['office_id' => self::OFFICE + 1]);
 
         $this->signedIn()
-            ->get('/my-documents')
+            ->getWithDeferred('/my-documents')
             ->assertInertia(fn (Assert $page) => $page->where('documents.total', 0));
     }
 
@@ -255,7 +258,7 @@ class MyDocumentsTest extends TestCase
         $this->saveDocument(['control_no' => 'DC3', 'bundle_id' => $created->id]);
 
         $this->signedIn()
-            ->get('/my-documents')
+            ->getWithDeferred('/my-documents')
             ->assertInertia(fn (Assert $page) => $page
                 // == rather than ===: rows come newest first, and only the flags matter here.
                 ->where('documents.data', fn ($rows) => collect($rows)->pluck('selectable', 'control_no')->all() == [

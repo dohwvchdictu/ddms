@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\Admin\CategoryController::store
- * @see app/Http/Controllers/Admin/CategoryController.php:64
+ * @see app/Http/Controllers/Admin/CategoryController.php:70
  * @route '/admin/categories'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -59,7 +59,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\CategoryController::store
- * @see app/Http/Controllers/Admin/CategoryController.php:64
+ * @see app/Http/Controllers/Admin/CategoryController.php:70
  * @route '/admin/categories'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\CategoryController::store
- * @see app/Http/Controllers/Admin/CategoryController.php:64
+ * @see app/Http/Controllers/Admin/CategoryController.php:70
  * @route '/admin/categories'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -78,7 +78,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
 /**
 * @see \App\Http\Controllers\Admin\CategoryController::update
- * @see app/Http/Controllers/Admin/CategoryController.php:74
+ * @see app/Http/Controllers/Admin/CategoryController.php:80
  * @route '/admin/categories/{category}'
  */
 export const update = (args: { category: number | { id: number } } | [category: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -93,7 +93,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\CategoryController::update
- * @see app/Http/Controllers/Admin/CategoryController.php:74
+ * @see app/Http/Controllers/Admin/CategoryController.php:80
  * @route '/admin/categories/{category}'
  */
 update.url = (args: { category: number | { id: number } } | [category: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -126,7 +126,7 @@ update.url = (args: { category: number | { id: number } } | [category: number | 
 
 /**
 * @see \App\Http\Controllers\Admin\CategoryController::update
- * @see app/Http/Controllers/Admin/CategoryController.php:74
+ * @see app/Http/Controllers/Admin/CategoryController.php:80
  * @route '/admin/categories/{category}'
  */
 update.patch = (args: { category: number | { id: number } } | [category: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({

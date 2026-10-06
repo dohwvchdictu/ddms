@@ -48,26 +48,37 @@ class PendingController extends Controller
         $filters = $this->filters($request);
         $officeId = session('user')['office']['id'];
         $employeeId = session('user')['id'] ?? null;
-        [$column, $direction] = self::sortParts($filters['sort']);
 
-        $documents = DocumentSender::select($pending->query($officeId, $filters, $employeeId)->select('documents.*'), $officeId)
-            ->with(['category', 'citizencharter'])
-            ->orderBy("documents.{$column}", $direction)
-            ->orderBy('documents.id', $direction)
-            ->paginate($filters['per_page'])
-            ->withQueryString();
+        // The page and outsideRange both need it; built once, on first use.
+        $page = null;
+        $documents = function () use (&$page, $filters, $officeId, $employeeId, $pending, $api) {
+            if ($page === null) {
+                [$column, $direction] = self::sortParts($filters['sort']);
 
-        $documents->through($this->rowMapper($api));
+                $page = DocumentSender::select($pending->query($officeId, $filters, $employeeId)->select('documents.*'), $officeId)
+                    ->with(['category', 'citizencharter'])
+                    ->orderBy("documents.{$column}", $direction)
+                    ->orderBy('documents.id', $direction)
+                    ->paginate($filters['per_page'])
+                    ->withQueryString()
+                    ->through($this->rowMapper($api));
+            }
+
+            return $page;
+        };
 
         return Inertia::render('pending/index', [
-            'documents' => $documents,
+            // Deferred: the page opens with a skeleton and the list follows.
+            // Filter changes, page turns and the actions ask for these by name,
+            // so they come back in the same response. Rescued: a failure offers a retry.
+            'documents' => Inertia::defer($documents, rescue: true),
             'filters' => $filters,
-            'facets' => $pending->facets($officeId, $filters, $employeeId),
+            'facets' => Inertia::defer(fn () => $pending->facets($officeId, $filters, $employeeId), rescue: true),
             'defaultRange' => self::defaultRange(),
             // On process here but hidden by the dates, so the list and the sidebar badge still add up.
-            'outsideRange' => $filters['from'] || $filters['to']
-                ? $pending->query($officeId, [...$filters, 'from' => null, 'to' => null], $employeeId)->count() - $documents->total()
-                : 0,
+            'outsideRange' => Inertia::defer(fn () => $filters['from'] || $filters['to']
+                ? $pending->query($officeId, [...$filters, 'from' => null, 'to' => null], $employeeId)->count() - $documents()->total()
+                : 0, rescue: true),
             'perPageOptions' => self::PER_PAGE_OPTIONS,
             'maxSelection' => self::MAX_SELECTION,
             'offices' => collect($api->getActiveOffices())

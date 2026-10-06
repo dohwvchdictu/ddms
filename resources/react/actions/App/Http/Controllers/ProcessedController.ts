@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\ProcessedController::selectable
- * @see app/Http/Controllers/ProcessedController.php:58
+ * @see app/Http/Controllers/ProcessedController.php:61
  * @route '/status-forwarded/selectable'
  */
 export const selectable = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -59,7 +59,7 @@ selectable.definition = {
 
 /**
 * @see \App\Http\Controllers\ProcessedController::selectable
- * @see app/Http/Controllers/ProcessedController.php:58
+ * @see app/Http/Controllers/ProcessedController.php:61
  * @route '/status-forwarded/selectable'
  */
 selectable.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ selectable.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ProcessedController::selectable
- * @see app/Http/Controllers/ProcessedController.php:58
+ * @see app/Http/Controllers/ProcessedController.php:61
  * @route '/status-forwarded/selectable'
  */
 selectable.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -77,7 +77,7 @@ selectable.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\ProcessedController::selectable
- * @see app/Http/Controllers/ProcessedController.php:58
+ * @see app/Http/Controllers/ProcessedController.php:61
  * @route '/status-forwarded/selectable'
  */
 selectable.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

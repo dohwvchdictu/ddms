@@ -11,10 +11,13 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 use Mockery\MockInterface;
+use Tests\Concerns\LoadsDeferredProps;
 use Tests\TestCase;
 
 class ClosedTest extends TestCase
 {
+    use LoadsDeferredProps;
+
     /** Office ids no real office uses, so the shared dev data never shows up here. */
     protected const OFFICE = 990001;
 
@@ -110,7 +113,7 @@ class ClosedTest extends TestCase
         $this->closed(overrides: ['bundle_id' => $older->id]);                 // closed with its bundle
 
         $this->signedIn()
-            ->get('/status-closed')
+            ->getWithDeferred('/status-closed')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('closed/index')
@@ -131,13 +134,13 @@ class ClosedTest extends TestCase
         $this->closed('2026-09-02 08:00:00');
 
         $this->signedIn()
-            ->get('/status-closed')
+            ->getWithDeferred('/status-closed')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('defaultRange', ['from' => '2026-09-03', 'to' => '2026-10-02'])
                 ->where('documents.total', 2));
 
         $this->signedIn()
-            ->get('/status-closed?from=&to=')
+            ->getWithDeferred('/status-closed?from=&to=')
             ->assertInertia(fn (Assert $page) => $page->where('documents.total', 3));
     }
 
@@ -147,7 +150,7 @@ class ClosedTest extends TestCase
         $this->closed();
 
         $this->signedIn()
-            ->get('/status-closed?search=budget&sort=password&per_page=7&type=receipts')
+            ->getWithDeferred('/status-closed?search=budget&sort=password&per_page=7&type=receipts')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('filters.sort', '-closed_at')
                 ->where('filters.per_page', 25)

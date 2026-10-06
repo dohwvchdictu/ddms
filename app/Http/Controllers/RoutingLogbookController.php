@@ -8,6 +8,7 @@ use App\Models\Document;
 use App\Models\Log;
 use App\Services\ApiService;
 use Carbon\Carbon;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -28,6 +29,23 @@ class RoutingLogbookController extends Controller
     {
         $filters = $this->filters($request);
         $officeId = session('user')['office']['id'];
+
+        return Inertia::render('routing-logbook/index', [
+            // Deferred: the page opens with a skeleton and the list follows.
+            // Filter changes, page turns and the live poll ask for these by
+            // name, so they come back in the same response. Rescued: a failure
+            // offers a retry.
+            'entries' => Inertia::defer(fn () => $this->entries($filters, $officeId, $logbook, $api), rescue: true),
+            'filters' => $filters,
+            'counts' => Inertia::defer(fn () => $logbook->counts($officeId, $filters), rescue: true),
+            'defaultRange' => self::defaultRange(),
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
+        ]);
+    }
+
+    /** One page of the logbook, as the list shows it. */
+    protected function entries(array $filters, int|string $officeId, RoutingLogbook $logbook, ApiService $api): LengthAwarePaginator
+    {
         [, $direction] = self::sortParts($filters['sort']);
 
         $entries = $logbook->withReceipt($logbook->query($officeId, $filters)->select([
@@ -64,13 +82,7 @@ class RoutingLogbookController extends Controller
             'returned_at' => $entry->returned_at ? Carbon::parse($entry->returned_at)->toIso8601String() : null,
         ]);
 
-        return Inertia::render('routing-logbook/index', [
-            'entries' => $entries,
-            'filters' => $filters,
-            'counts' => $logbook->counts($officeId, $filters),
-            'defaultRange' => self::defaultRange(),
-            'perPageOptions' => self::PER_PAGE_OPTIONS,
-        ]);
+        return $entries;
     }
 
     /** @return array{receipt: string, search: string, from: string|null, to: string|null, sort: string, per_page: int} */

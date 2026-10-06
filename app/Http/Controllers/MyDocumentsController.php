@@ -36,23 +36,25 @@ class MyDocumentsController extends Controller
         $filters = $this->filters($request);
         $officeId = session('user')['office']['id'];
 
-        [$column, $direction] = str_starts_with($filters['sort'], '-')
-            ? [substr($filters['sort'], 1), 'desc']
-            : [$filters['sort'], 'asc'];
-
-        $documents = $officeDocuments->query($officeId, $filters)
-            ->with(['category', 'citizencharter'])
-            ->orderBy("documents.{$column}", $direction)
-            ->orderBy('documents.id', $direction)
-            ->paginate($filters['per_page'])
-            ->withQueryString();
-
-        $documents->through($this->rowMapper($api));
-
         return Inertia::render('my-documents/index', [
-            'documents' => $documents,
+            // Deferred: the page opens with a skeleton and the list follows.
+            // Filter changes, page turns and Forward ask for these by name, so
+            // they come back in the same response. Rescued: a failure offers a retry.
+            'documents' => Inertia::defer(function () use ($filters, $officeId, $officeDocuments, $api) {
+                [$column, $direction] = str_starts_with($filters['sort'], '-')
+                    ? [substr($filters['sort'], 1), 'desc']
+                    : [$filters['sort'], 'asc'];
+
+                return $officeDocuments->query($officeId, $filters)
+                    ->with(['category', 'citizencharter'])
+                    ->orderBy("documents.{$column}", $direction)
+                    ->orderBy('documents.id', $direction)
+                    ->paginate($filters['per_page'])
+                    ->withQueryString()
+                    ->through($this->rowMapper($api));
+            }, rescue: true),
             'filters' => $filters,
-            'facets' => $officeDocuments->facets($officeId, $filters),
+            'facets' => Inertia::defer(fn () => $officeDocuments->facets($officeId, $filters), rescue: true),
             'statusOptions' => OfficeDocuments::STATUSES,
             'defaultRange' => self::defaultRange(),
             'perPageOptions' => self::PER_PAGE_OPTIONS,

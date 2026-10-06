@@ -11,10 +11,13 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 use Mockery\MockInterface;
+use Tests\Concerns\LoadsDeferredProps;
 use Tests\TestCase;
 
 class RoutingLogbookTest extends TestCase
 {
+    use LoadsDeferredProps;
+
     /** Office ids no real office uses, so the shared dev data never shows up here. */
     protected const OFFICE = 990001;
 
@@ -120,7 +123,7 @@ class RoutingLogbookTest extends TestCase
         $this->log($returned, 'Returned', self::DESTINATION, self::OFFICE, '2026-10-01 16:00:00', 8);
 
         $this->signedIn()
-            ->get('/routing-logbook')
+            ->getWithDeferred('/routing-logbook')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('routing-logbook/index')
@@ -141,7 +144,7 @@ class RoutingLogbookTest extends TestCase
         $this->log($received, 'Received', self::DESTINATION, self::DESTINATION, '2026-10-02 09:00:00', 8);
 
         $this->signedIn()
-            ->get('/routing-logbook?receipt=received')
+            ->getWithDeferred('/routing-logbook?receipt=received')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('filters.receipt', 'received')
                 ->where('entries.total', 1)
@@ -156,7 +159,7 @@ class RoutingLogbookTest extends TestCase
         $this->log($document, 'For Receiving', self::OFFICE, self::DESTINATION, '2026-10-02 08:00:00', 7);
 
         $this->signedIn()
-            ->get('/routing-logbook')
+            ->getWithDeferred('/routing-logbook')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('entries.data.0.receipt', 'awaiting')
                 ->where('entries.data.1.receipt', 'received'));
@@ -169,7 +172,7 @@ class RoutingLogbookTest extends TestCase
         $this->forwarded('2026-09-25 08:00:00');
 
         $this->signedIn()
-            ->get('/routing-logbook')
+            ->getWithDeferred('/routing-logbook')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('filters.from', '2026-09-26')
                 ->where('filters.to', '2026-10-02')
@@ -178,7 +181,7 @@ class RoutingLogbookTest extends TestCase
 
         // Empty dates mean any date.
         $this->signedIn()
-            ->get('/routing-logbook?from=&to=')
+            ->getWithDeferred('/routing-logbook?from=&to=')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('filters.from', null)
                 ->where('entries.total', 3));
@@ -193,7 +196,7 @@ class RoutingLogbookTest extends TestCase
         Log::where('document_id', $elsewhere->id)->update(['office_id' => self::DESTINATION]);
 
         $this->signedIn()
-            ->get('/routing-logbook')
+            ->getWithDeferred('/routing-logbook')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('entries.total', 1)
                 ->where('entries.data.0.control_no', $bundle->control_no)
@@ -206,7 +209,7 @@ class RoutingLogbookTest extends TestCase
         $this->forwarded();
 
         $this->signedIn()
-            ->get('/routing-logbook?search=budget&receipt=bogus&sort=password&per_page=7')
+            ->getWithDeferred('/routing-logbook?search=budget&receipt=bogus&sort=password&per_page=7')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('filters.receipt', 'all')
                 ->where('filters.sort', '-created_at')

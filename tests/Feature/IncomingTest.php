@@ -8,12 +8,16 @@ use App\Models\Log;
 use App\Services\ApiService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Inertia\Support\Header;
 use Inertia\Testing\AssertableInertia as Assert;
 use Mockery\MockInterface;
+use Tests\Concerns\LoadsDeferredProps;
 use Tests\TestCase;
 
 class IncomingTest extends TestCase
 {
+    use LoadsDeferredProps;
+
     /** Office ids no real office uses, so the shared dev data never shows up here. */
     protected const OFFICE = 990001;
 
@@ -105,7 +109,7 @@ class IncomingTest extends TestCase
         $this->sentHere(['bundle_id' => $waiting->id]);            // travels with its bundle
 
         $this->signedIn()
-            ->get('/status-incoming')
+            ->getWithDeferred('/status-incoming')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('incoming/index')
@@ -122,13 +126,13 @@ class IncomingTest extends TestCase
         DB::table('documents')->where('id', $old->id)->update(['updated_at' => now()->subDays(45)]);
 
         $this->signedIn()
-            ->get('/status-incoming')
+            ->getWithDeferred('/status-incoming')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('documents.total', 1)
                 ->where('outsideRange', 1));
 
         $this->signedIn()
-            ->get('/status-incoming?from=&to=')
+            ->getWithDeferred('/status-incoming?from=&to=')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('documents.total', 2)
                 ->where('outsideRange', 0));
@@ -139,7 +143,7 @@ class IncomingTest extends TestCase
         $document = $this->sentHere(['endorsed_to' => 7]);
 
         $this->signedIn()
-            ->get('/status-incoming')
+            ->getWithDeferred('/status-incoming')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('documents.data.0.control_no', $document->control_no)
                 ->where('documents.data.0.from.name', 'Regulation, Licensing and Enforcement Division')
@@ -153,7 +157,7 @@ class IncomingTest extends TestCase
         $this->sentHere(['status' => 'Returned']);
 
         $this->signedIn()
-            ->get('/status-incoming?status=Returned,Bogus&sort=password&type=receipts')
+            ->getWithDeferred('/status-incoming?status=Returned,Bogus&sort=password&type=receipts')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('filters.statuses', ['Returned'])
                 ->where('filters.sort', 'updated_at')
@@ -178,6 +182,29 @@ class IncomingTest extends TestCase
             $this->assertSame(self::OFFICE, (int) $fresh->assigned_to);
             $this->assertDatabaseHas('logs', ['document_id' => $document->id, 'office_id' => self::OFFICE, 'user_id' => 7]);
         }
+    }
+
+    public function test_after_receiving_the_list_reloads_in_place(): void
+    {
+        $received = $this->sentHere();
+        $this->sentHere();
+        $version = $this->signedIn()->get('/status-incoming')->viewData('page')['version'];
+
+        // As the page posts it: only the list and the badges, so the redirect back
+        // brings them in the same response and the old rows stay up (no skeleton).
+        $this->withHeaders([
+            Header::VERSION => (string) $version,
+            Header::PARTIAL_COMPONENT => 'incoming/index',
+            Header::PARTIAL_ONLY => 'filters,documents,facets,outsideRange,sidebarCounts',
+        ])
+            ->followingRedirects()
+            ->from('/status-incoming')
+            ->post('/status-incoming/receive', ['document_ids' => [$received->id]])
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('incoming/index')
+                ->where('documents.total', 1)
+                ->has('sidebarCounts')
+                ->missing('statusOptions'));
     }
 
     public function test_documents_waiting_elsewhere_cannot_be_received(): void

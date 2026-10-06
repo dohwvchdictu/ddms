@@ -19,6 +19,8 @@ interface CategoryDialogProps {
     /** The category to edit; `{}`-like values with no id add a new one; null closes. */
     category: CategoryValues | null;
     onClose: () => void;
+    /** Back on the list, reload just these props (it keeps its rows instead of showing its skeleton). */
+    reloadOnly?: string[];
 }
 
 const Required = () => (
@@ -28,7 +30,7 @@ const Required = () => (
 );
 
 /** Add or edit a category: its name, prescribed timeline and whether New Document offers it. */
-export default function CategoryDialog({ category, onClose }: CategoryDialogProps) {
+export default function CategoryDialog({ category, onClose, reloadOnly }: CategoryDialogProps) {
     const form = useForm({ name: '', required_days: '', is_active: true });
     const { data, errors, processing } = form;
     const editing = category?.id !== undefined;
@@ -36,7 +38,11 @@ export default function CategoryDialog({ category, onClose }: CategoryDialogProp
     useEffect(() => {
         if (!category) return;
 
-        form.setData({ name: category.name, required_days: category.required_days === null ? '' : String(category.required_days), is_active: category.is_active });
+        form.setData({
+            name: category.name,
+            required_days: category.required_days === null ? '' : String(category.required_days),
+            is_active: category.is_active,
+        });
         form.clearErrors();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [category]);
@@ -46,6 +52,7 @@ export default function CategoryDialog({ category, onClose }: CategoryDialogProp
 
         form.submit(editing ? update(category!.id!) : store(), {
             preserveScroll: true,
+            ...(reloadOnly && { only: reloadOnly }),
             onSuccess: () => onClose(),
         });
     };
@@ -56,7 +63,9 @@ export default function CategoryDialog({ category, onClose }: CategoryDialogProp
                 <form onSubmit={submit} noValidate className="grid gap-5">
                     <DialogHeader>
                         <DialogTitle>{editing ? 'Edit category' : 'Add category'}</DialogTitle>
-                        <DialogDescription>{editing ? 'Changes apply to new documents; existing ones keep their category.' : 'New Document will offer it right away.'}</DialogDescription>
+                        <DialogDescription>
+                            {editing ? 'Changes apply to new documents; existing ones keep their category.' : 'New Document will offer it right away.'}
+                        </DialogDescription>
                     </DialogHeader>
 
                     <div className="grid gap-2">

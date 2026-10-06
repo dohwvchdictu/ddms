@@ -11,11 +11,14 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 use Mockery\MockInterface;
+use Tests\Concerns\LoadsDeferredProps;
 use Tests\TestCase;
 
 /** Report › Endorsements: per employee of the office, incoming / pending / processed. */
 class EndorsementsReportTest extends TestCase
 {
+    use LoadsDeferredProps;
+
     /** Office ids no real office uses, so the shared dev data never shows up here. */
     protected const OFFICE = 990001;
 
@@ -110,7 +113,7 @@ class EndorsementsReportTest extends TestCase
         ]);
 
         $this->signedIn()
-            ->get('/report-status-per-employee')
+            ->getWithDeferred('/report-status-per-employee')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('reports/endorsements')
@@ -134,7 +137,7 @@ class EndorsementsReportTest extends TestCase
         DB::table('documents')->where('id', $before->id)->update(['created_at' => '2026-08-31 23:00:00']);
 
         $this->signedIn()
-            ->get('/report-status-per-employee?from=2026-09-01&to=2026-09-30')
+            ->getWithDeferred('/report-status-per-employee?from=2026-09-01&to=2026-09-30')
             ->assertInertia(fn (Assert $page) => $page->where('report.employees.1.pending', 1));
     }
 }

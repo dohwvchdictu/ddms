@@ -19,6 +19,8 @@ interface CloseDialogProps {
     /** Closing this many or more asks for the HRIS password instead of a code. */
     passwordThreshold: number;
     onDone: () => void;
+    /** Back on the same list, reload just these props (the list keeps its rows instead of showing its skeleton). */
+    reloadOnly?: string[];
 }
 
 /** How many documents the list shows before "and N more". */
@@ -35,7 +37,7 @@ const Required = () => (
  * closing and why, then confirm. It can't be undone, so the confirmation is a
  * typed code for a few documents and the HRIS password for a batch.
  */
-export default function CloseDialog({ open, onOpenChange, documents, passwordThreshold, onDone }: CloseDialogProps) {
+export default function CloseDialog({ open, onOpenChange, documents, passwordThreshold, onDone, reloadOnly }: CloseDialogProps) {
     const form = useForm({ remarks: '', code: '', password: '' });
     const { data, errors, processing } = form;
     const count = documents.length;
@@ -104,6 +106,7 @@ export default function CloseDialog({ open, onOpenChange, documents, passwordThr
         }));
         form.submit(close(), {
             preserveScroll: true,
+            ...(reloadOnly && { only: reloadOnly }),
             onSuccess: () => {
                 onOpenChange(false);
                 onDone();
@@ -150,7 +153,9 @@ export default function CloseDialog({ open, onOpenChange, documents, passwordThr
                                 <ul className={cn('divide-y', showAll && 'max-h-52 overflow-y-auto overscroll-contain')} aria-label="Documents to close">
                                     {shown.map((document) => (
                                         <li key={document.id} className="flex items-baseline gap-3 px-3 py-2 text-sm">
-                                            <span className="shrink-0 font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-400">{document.control_no}</span>
+                                            <span className="shrink-0 font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                                                {document.control_no}
+                                            </span>
                                             <span className="min-w-0 truncate text-muted-foreground" title={document.subject}>
                                                 {document.subject}
                                             </span>
@@ -197,7 +202,10 @@ export default function CloseDialog({ open, onOpenChange, documents, passwordThr
                                         HRIS password <Required />
                                     </Label>
                                     <div className="relative">
-                                        <KeyRound className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                                        <KeyRound
+                                            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+                                            aria-hidden="true"
+                                        />
                                         <Input
                                             ref={secretField}
                                             id="close-password"
@@ -226,7 +234,14 @@ export default function CloseDialog({ open, onOpenChange, documents, passwordThr
                                         >
                                             {code ?? (codeFailed ? '—' : <Loader2 className="size-4 animate-spin text-muted-foreground" />)}
                                         </span>
-                                        <Button type="button" variant="ghost" size="icon" onClick={loadCode} aria-label="Show a new code" title="Show a new code">
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={loadCode}
+                                            aria-label="Show a new code"
+                                            title="Show a new code"
+                                        >
                                             <RefreshCw />
                                         </Button>
                                     </div>

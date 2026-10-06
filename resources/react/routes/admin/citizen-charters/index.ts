@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\Admin\CitizenCharterController::store
- * @see app/Http/Controllers/Admin/CitizenCharterController.php:70
+ * @see app/Http/Controllers/Admin/CitizenCharterController.php:76
  * @route '/admin/citizen-charters'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -59,7 +59,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\CitizenCharterController::store
- * @see app/Http/Controllers/Admin/CitizenCharterController.php:70
+ * @see app/Http/Controllers/Admin/CitizenCharterController.php:76
  * @route '/admin/citizen-charters'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\CitizenCharterController::store
- * @see app/Http/Controllers/Admin/CitizenCharterController.php:70
+ * @see app/Http/Controllers/Admin/CitizenCharterController.php:76
  * @route '/admin/citizen-charters'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -78,7 +78,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
 /**
 * @see \App\Http\Controllers\Admin\CitizenCharterController::update
- * @see app/Http/Controllers/Admin/CitizenCharterController.php:77
+ * @see app/Http/Controllers/Admin/CitizenCharterController.php:83
  * @route '/admin/citizen-charters/{citizenCharter}'
  */
 export const update = (args: { citizenCharter: number | { id: number } } | [citizenCharter: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -93,7 +93,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\CitizenCharterController::update
- * @see app/Http/Controllers/Admin/CitizenCharterController.php:77
+ * @see app/Http/Controllers/Admin/CitizenCharterController.php:83
  * @route '/admin/citizen-charters/{citizenCharter}'
  */
 update.url = (args: { citizenCharter: number | { id: number } } | [citizenCharter: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -126,7 +126,7 @@ update.url = (args: { citizenCharter: number | { id: number } } | [citizenCharte
 
 /**
 * @see \App\Http\Controllers\Admin\CitizenCharterController::update
- * @see app/Http/Controllers/Admin/CitizenCharterController.php:77
+ * @see app/Http/Controllers/Admin/CitizenCharterController.php:83
  * @route '/admin/citizen-charters/{citizenCharter}'
  */
 update.patch = (args: { citizenCharter: number | { id: number } } | [citizenCharter: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({

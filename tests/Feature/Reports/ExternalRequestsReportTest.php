@@ -11,11 +11,14 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 use Mockery\MockInterface;
+use Tests\Concerns\LoadsDeferredProps;
 use Tests\TestCase;
 
 /** Report › External Requests: the office's external requests and their deadlines, on screen and printed. */
 class ExternalRequestsReportTest extends TestCase
 {
+    use LoadsDeferredProps;
+
     /** Office ids no real office uses, so the shared dev data never shows up here. */
     protected const OFFICE = 990001;
 
@@ -118,7 +121,7 @@ class ExternalRequestsReportTest extends TestCase
         ]);
 
         $this->signedIn()
-            ->get('/report-status-of-external-documents')
+            ->getWithDeferred('/report-status-of-external-documents')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('reports/external-requests')
@@ -141,13 +144,13 @@ class ExternalRequestsReportTest extends TestCase
         $overdue = $this->request('2026-09-24 08:00:00');
 
         $this->signedIn()
-            ->get('/report-status-of-external-documents?state=overdue')
+            ->getWithDeferred('/report-status-of-external-documents?state=overdue')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('requests.total', 1)
                 ->where('counts.all', 2));
 
         $this->signedIn()
-            ->get('/report-status-of-external-documents?sort=remaining')
+            ->getWithDeferred('/report-status-of-external-documents?sort=remaining')
             ->assertInertia(fn (Assert $page) => $page->where('requests.data.0.control_no', $overdue->control_no));
     }
 

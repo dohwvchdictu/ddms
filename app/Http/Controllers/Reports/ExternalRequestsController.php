@@ -33,18 +33,26 @@ class ExternalRequestsController extends Controller
     public function index(Request $request, ExternalRequestsReport $report, ApiService $api): Response
     {
         $filters = $this->filters($request);
-        $rows = $this->rows($filters, $report, $api);
-        $shown = $this->sorted($filters['state'] === 'all' ? $rows : $rows->where('state', $filters['state']), $filters['sort']);
-
-        $page = LengthAwarePaginator::resolveCurrentPage();
-        $requests = (new LengthAwarePaginator($shown->forPage($page, $filters['per_page'])->values(), $shown->count(), $filters['per_page'], $page))
-            ->withPath($request->url())
-            ->withQueryString();
+        // Both deferred props come from the same rows; built once, on first use.
+        $rows = null;
+        $loadRows = function () use (&$rows, $filters, $report, $api) {
+            return $rows ??= $this->rows($filters, $report, $api);
+        };
 
         return Inertia::render('reports/external-requests', [
-            'requests' => $requests,
+            // Deferred: the page opens with a skeleton and the list follows
+            // (see TurnaroundController). Rescued: a failure offers a retry.
+            'requests' => Inertia::defer(function () use ($loadRows, $filters, $request) {
+                $rows = $loadRows();
+                $shown = $this->sorted($filters['state'] === 'all' ? $rows : $rows->where('state', $filters['state']), $filters['sort']);
+                $page = LengthAwarePaginator::resolveCurrentPage();
+
+                return (new LengthAwarePaginator($shown->forPage($page, $filters['per_page'])->values(), $shown->count(), $filters['per_page'], $page))
+                    ->withPath($request->url())
+                    ->withQueryString();
+            }, rescue: true),
             'filters' => $filters,
-            'counts' => ExternalRequestsReport::counts($rows),
+            'counts' => Inertia::defer(fn () => ExternalRequestsReport::counts($loadRows()), rescue: true),
             'defaultRange' => self::defaultRange(),
             'perPageOptions' => self::PER_PAGE_OPTIONS,
         ]);

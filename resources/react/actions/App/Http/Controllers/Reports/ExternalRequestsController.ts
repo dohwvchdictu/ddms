@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\Reports\ExternalRequestsController::print
- * @see app/Http/Controllers/Reports/ExternalRequestsController.php:54
+ * @see app/Http/Controllers/Reports/ExternalRequestsController.php:62
  * @route '/print-external-documents-report'
  */
 export const print = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -59,7 +59,7 @@ print.definition = {
 
 /**
 * @see \App\Http\Controllers\Reports\ExternalRequestsController::print
- * @see app/Http/Controllers/Reports/ExternalRequestsController.php:54
+ * @see app/Http/Controllers/Reports/ExternalRequestsController.php:62
  * @route '/print-external-documents-report'
  */
 print.url = (options?: RouteQueryOptions) => {
@@ -68,7 +68,7 @@ print.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Reports\ExternalRequestsController::print
- * @see app/Http/Controllers/Reports/ExternalRequestsController.php:54
+ * @see app/Http/Controllers/Reports/ExternalRequestsController.php:62
  * @route '/print-external-documents-report'
  */
 print.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -77,7 +77,7 @@ print.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Reports\ExternalRequestsController::print
- * @see app/Http/Controllers/Reports/ExternalRequestsController.php:54
+ * @see app/Http/Controllers/Reports/ExternalRequestsController.php:62
  * @route '/print-external-documents-report'
  */
 print.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

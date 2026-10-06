@@ -5,6 +5,12 @@ interface Options<F> {
     /** Filters typed into (search boxes) wait for a pause before reloading. */
     debounce?: (keyof F)[];
     delayMs?: number;
+    /**
+     * Reload only these props. Naming a deferred prop here loads it in the
+     * same response, so a filter change keeps the old data on screen instead
+     * of dropping back to the page's loading skeleton.
+     */
+    only?: string[];
 }
 
 /**
@@ -14,7 +20,7 @@ interface Options<F> {
  * page 1, since `toUrl` builds the URL without a page number.
  */
 export function useListFilters<F extends Record<string, unknown>>(initial: F, toUrl: (filters: F) => string, options: Options<F> = {}) {
-    const { debounce = [], delayMs = 350 } = options;
+    const { debounce = [], delayMs = 350, only } = options;
     const [filters, setFilters] = useState(initial);
     const [loading, setLoading] = useState(false);
     const timer = useRef<number | undefined>(undefined);
@@ -29,6 +35,7 @@ export function useListFilters<F extends Record<string, unknown>>(initial: F, to
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
+                ...(only && { only }),
                 onStart: () => setLoading(true),
                 onFinish: () => setLoading(false),
             },

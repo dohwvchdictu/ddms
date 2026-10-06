@@ -32,7 +32,9 @@ class PerUnitController extends Controller
         return Inertia::render('reports/per-unit', [
             'filters' => $filters,
             'defaultRange' => self::defaultRange(),
-            'report' => $report->handle($filters),
+            // Deferred: the page opens with a skeleton and the report follows
+            // (see TurnaroundController). Rescued: a failure offers a retry.
+            'report' => Inertia::defer(fn () => $report->handle($filters), rescue: true),
             'offices' => $offices,
             'statusOptions' => PerUnitReport::STATUSES,
             'sourceOptions' => PerUnitReport::SOURCES,

@@ -28,7 +28,9 @@ class DocumentStatusController extends Controller
         return Inertia::render('reports/status', [
             'filters' => $range,
             'defaultRange' => self::defaultRange(),
-            'report' => $report->handle($from, $to, $api->getActiveOffices()),
+            // Deferred: the page opens with a skeleton and the report follows
+            // (see TurnaroundController). Rescued: a failure offers a retry.
+            'report' => Inertia::defer(fn () => $report->handle($from, $to, $api->getActiveOffices()), rescue: true),
             // The printed copy covers exactly the period on screen.
             'printUrl' => route('print.document.status', ['startDate' => $from, 'endDate' => $to]),
         ]);

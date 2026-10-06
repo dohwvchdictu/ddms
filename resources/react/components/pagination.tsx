@@ -6,8 +6,11 @@ import type { Paginated } from '@/types';
 
 const number = new Intl.NumberFormat('en-PH');
 
-/** A list's footer: "Showing 1–25 of 312", the page, and previous/next. */
-export default function Pagination({ page }: { page: Paginated<unknown> }) {
+/**
+ * A list's footer: "Showing 1–25 of 312", the page, and previous/next.
+ * `only` reloads just those props, e.g. a deferred list (see useListFilters).
+ */
+export default function Pagination({ page, only }: { page: Paginated<unknown>; only?: string[] }) {
     if (page.total === 0) {
         return null;
     }
@@ -23,10 +26,10 @@ export default function Pagination({ page }: { page: Paginated<unknown> }) {
                 <span className="text-muted-foreground">
                     Page {number.format(page.current_page)} of {number.format(page.last_page)}
                 </span>
-                <PageLink href={page.prev_page_url} label="Previous page">
+                <PageLink href={page.prev_page_url} label="Previous page" only={only}>
                     <ChevronLeft className="size-4" />
                 </PageLink>
-                <PageLink href={page.next_page_url} label="Next page">
+                <PageLink href={page.next_page_url} label="Next page" only={only}>
                     <ChevronRight className="size-4" />
                 </PageLink>
             </div>
@@ -34,7 +37,7 @@ export default function Pagination({ page }: { page: Paginated<unknown> }) {
     );
 }
 
-function PageLink({ href, label, children }: { href: string | null; label: string; children: ReactNode }) {
+function PageLink({ href, label, only, children }: { href: string | null; label: string; only?: string[]; children: ReactNode }) {
     const className = 'flex size-8 items-center justify-center rounded-md border';
 
     return href ? (
@@ -42,6 +45,7 @@ function PageLink({ href, label, children }: { href: string | null; label: strin
             href={href}
             preserveScroll
             preserveState
+            only={only}
             aria-label={label}
             className={cn(className, 'hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none')}
         >

@@ -22,6 +22,8 @@ interface ForwardDialogProps {
     onForwarded: () => void;
     /** Where to send it; My Documents' forward by default. Pending passes its own. */
     action?: { url: string; method: 'post' };
+    /** Back on the same list, reload just these props (the list keeps its rows instead of showing its skeleton). */
+    reloadOnly?: string[];
 }
 
 interface Employee {
@@ -57,7 +59,7 @@ function rememberRecent(officeId: string): void {
 }
 
 /** Forward the selected documents to another office, optionally endorsed to someone there. */
-export default function ForwardDialog({ open, onOpenChange, documents, offices, onForwarded, action }: ForwardDialogProps) {
+export default function ForwardDialog({ open, onOpenChange, documents, offices, onForwarded, action, reloadOnly }: ForwardDialogProps) {
     const form = useForm({ assigned_to: '', endorsed_to: '', remarks: '' });
     const { data, errors, processing } = form;
     const [employees, setEmployees] = useState<Employee[]>([]);
@@ -142,6 +144,7 @@ export default function ForwardDialog({ open, onOpenChange, documents, offices, 
 
         form.submit(action ?? forward(), {
             preserveScroll: true,
+            ...(reloadOnly && { only: reloadOnly }),
             onSuccess: () => {
                 rememberRecent(data.assigned_to);
                 form.reset();
@@ -178,9 +181,7 @@ export default function ForwardDialog({ open, onOpenChange, documents, offices, 
                 <form onSubmit={submit} onKeyDown={onKeyDown} noValidate className="flex max-h-[calc(100dvh-2rem)] min-h-0 min-w-0 flex-col">
                     <div className="grid shrink-0 gap-1 border-b px-6 pt-5 pb-4">
                         <DialogTitle>Forward</DialogTitle>
-                        <DialogDescription>
-                            {count === 1 ? `${documents[0]?.control_no}` : `${count} documents`}
-                        </DialogDescription>
+                        <DialogDescription>{count === 1 ? `${documents[0]?.control_no}` : `${count} documents`}</DialogDescription>
                     </div>
 
                     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
@@ -258,7 +259,7 @@ export default function ForwardDialog({ open, onOpenChange, documents, offices, 
                                     placeholder="Anything the receiving office should know"
                                     aria-invalid={!!errors.remarks || undefined}
                                     // Fixed size: the shared Textarea grows with its content, which here would widen the dialog.
-                                className="resize-none field-sizing-fixed"
+                                    className="resize-none field-sizing-fixed"
                                 />
                             </Field>
                         </div>

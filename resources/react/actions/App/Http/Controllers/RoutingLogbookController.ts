@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\RoutingLogbookController::index
- * @see app/Http/Controllers/RoutingLogbookController.php:27
+ * @see app/Http/Controllers/RoutingLogbookController.php:28
  * @route '/routing-logbook'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\RoutingLogbookController::index
- * @see app/Http/Controllers/RoutingLogbookController.php:27
+ * @see app/Http/Controllers/RoutingLogbookController.php:28
  * @route '/routing-logbook'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\RoutingLogbookController::index
- * @see app/Http/Controllers/RoutingLogbookController.php:27
+ * @see app/Http/Controllers/RoutingLogbookController.php:28
  * @route '/routing-logbook'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\RoutingLogbookController::index
- * @see app/Http/Controllers/RoutingLogbookController.php:27
+ * @see app/Http/Controllers/RoutingLogbookController.php:28
  * @route '/routing-logbook'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

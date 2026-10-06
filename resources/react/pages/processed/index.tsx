@@ -1,8 +1,9 @@
-import { Head } from '@inertiajs/react';
+import { Deferred, Head } from '@inertiajs/react';
 import { CircleDot, ExternalLink, History, Loader2, NotebookText, Send } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import BulkActionButton from '@/components/data-table/bulk-action-button';
+import { LoadFailed, LoadingBody, TableSkeleton } from '@/components/data-table/deferred-states';
 import DateRangeFilter, { describeRange, isSameRange, rangeQuery, type DateRangeValue } from '@/components/data-table/date-range-filter';
 import FacetedFilter, { type FacetOption } from '@/components/data-table/faceted-filter';
 import FilterChips, { type FilterChip } from '@/components/data-table/filter-chips';
@@ -63,15 +64,19 @@ interface Filters {
 }
 
 interface Props {
-    documents: Paginated<Row>;
+    /** Deferred: undefined until it arrives after the page opens. */
+    documents?: Paginated<Row>;
     filters: Filters;
-    facets: { statuses: Record<string, number>; types: Record<DocumentType, number> };
+    facets?: { statuses: Record<string, number>; types: Record<DocumentType, number> };
     statusOptions: string[];
     /** The last 30 days: what the page shows with no dates in the URL. */
     defaultRange: DateRangeValue;
     perPageOptions: number[];
     maxSelection: number;
 }
+
+/** Reloaded by name on filter changes, page turns and actions, so the old rows stay up meanwhile. */
+const RELOAD = ['filters', 'documents', 'facets'];
 
 const DEFAULT_SORT = '-processed_at';
 const DEFAULT_PER_PAGE = 25;
@@ -109,7 +114,7 @@ const documentUrl = (controlNo: string) => `/document/view/${encodeURIComponent(
 
 export default function Processed({ documents, filters: initial, facets, statusOptions, defaultRange, perPageOptions, maxSelection }: Props) {
     const toUrl = (filters: Filters) => processed.url({ query: toQuery(filters, defaultRange) });
-    const { filters, update, loading } = useListFilters(initial, toUrl, { debounce: ['search'] });
+    const { filters, update, loading } = useListFilters(initial, toUrl, { debounce: ['search'], only: RELOAD });
     const { preferences, isVisible, toggleColumn, setDense } = useTablePreferences('processed');
     const [tracking, setTracking] = useState<Row | null>(null);
     const [reviewing, setReviewing] = useState(false);
@@ -125,23 +130,28 @@ export default function Processed({ documents, filters: initial, facets, statusO
     const statusFacet: FacetOption[] = statusOptions.map((status) => ({
         value: status,
         label: status,
-        count: facets.statuses[status] ?? 0,
+        count: facets ? (facets.statuses[status] ?? 0) : undefined,
         display: <StatusBadge status={status} />,
     }));
 
     const chips: FilterChip[] = [
         filters.search && { key: 'search', label: 'Search', value: `“${filters.search}”`, onRemove: () => update({ search: '' }) },
         filters.statuses.length > 0 && { key: 'status', label: 'Status', value: filters.statuses.join(', '), onRemove: () => update({ statuses: [] }) },
-        !isSameRange(filters, defaultRange) && { key: 'processed', label: 'Processed', value: describeRange(filters), onRemove: () => update({ ...defaultRange }) },
+        !isSameRange(filters, defaultRange) && {
+            key: 'processed',
+            label: 'Processed',
+            value: describeRange(filters),
+            onRemove: () => update({ ...defaultRange }),
+        },
     ].filter((chip): chip is FilterChip => Boolean(chip));
 
     const reset = () => update({ search: '', statuses: [], ...defaultRange });
 
     // Only For Receiving rows can go into a logbook, so only they get a checkbox.
-    const pageRows = documents.data.filter((row) => row.selectable);
+    const pageRows = (documents?.data ?? []).filter((row) => row.selectable);
     const pageChecked = pageRows.length > 0 && pageRows.every((row) => selection.has(row.id));
     const pagePartly = !pageChecked && pageRows.some((row) => selection.has(row.id));
-    const morePages = documents.total > documents.data.length;
+    const morePages = documents !== undefined && documents.total > documents.data.length;
     const togglePage = (on: boolean) => (on ? selection.add(pageRows) : selection.remove(pageRows.map((row) => row.id)));
 
     const selectAllMatching = async () => {
@@ -171,7 +181,11 @@ export default function Processed({ documents, filters: initial, facets, statusO
 
             <div className="relative overflow-clip rounded-xl border bg-card shadow-sm">
                 {loading && (
-                    <div className="absolute inset-x-0 top-0 z-10 h-0.5 overflow-hidden bg-emerald-100 dark:bg-emerald-950" role="progressbar" aria-label="Loading">
+                    <div
+                        className="absolute inset-x-0 top-0 z-10 h-0.5 overflow-hidden bg-emerald-100 dark:bg-emerald-950"
+                        role="progressbar"
+                        aria-label="Loading"
+                    >
                         <div className="h-full w-1/3 animate-[table-progress_1s_ease-in-out_infinite] bg-emerald-600" />
                     </div>
                 )}
@@ -180,11 +194,16 @@ export default function Processed({ documents, filters: initial, facets, statusO
                     label="Document type"
                     value={filters.type}
                     onChange={(type) => update({ type: type as DocumentType })}
-                    tabs={TYPE_TABS.map((tab) => ({ ...tab, count: facets.types[tab.value] }))}
+                    tabs={TYPE_TABS.map((tab) => ({ ...tab, count: facets?.types[tab.value] }))}
                 />
 
                 {selecting ? (
-                    <SelectionBar count={selection.size} onClear={selection.clear} onReview={() => setReviewing(true)} onShowFilters={() => setShowFilters(true)}>
+                    <SelectionBar
+                        count={selection.size}
+                        onClear={selection.clear}
+                        onReview={() => setReviewing(true)}
+                        onShowFilters={() => setShowFilters(true)}
+                    >
                         <BulkActionButton icon={NotebookText} label="Generate logbook" shortcut="l" variant="primary" href={logbookUrl} newTab />
                     </SelectionBar>
                 ) : (
@@ -196,11 +215,21 @@ export default function Processed({ documents, filters: initial, facets, statusO
                                 placeholder="Search subject or control no.…"
                                 label="Search processed documents"
                                 loading={loading}
-                                resultCount={filters.search.trim() === initial.search ? documents.total : undefined}
+                                resultCount={documents && filters.search.trim() === initial.search ? documents.total : undefined}
                                 className="w-full sm:max-w-md sm:min-w-72 sm:flex-1"
                             />
-                            <FacetedFilter title="Status" icon={CircleDot} options={statusFacet} value={filters.statuses} onChange={(statuses) => update({ statuses })} />
-                            <DateRangeFilter label="Processed" value={{ from: filters.from, to: filters.to }} onChange={({ from, to }) => update({ from, to })} />
+                            <FacetedFilter
+                                title="Status"
+                                icon={CircleDot}
+                                options={statusFacet}
+                                value={filters.statuses}
+                                onChange={(statuses) => update({ statuses })}
+                            />
+                            <DateRangeFilter
+                                label="Processed"
+                                value={{ from: filters.from, to: filters.to }}
+                                onChange={({ from, to }) => update({ from, to })}
+                            />
                             <div className="ml-auto flex items-center gap-2">
                                 {selection.size > 0 && (
                                     <Button size="sm" onClick={() => setShowFilters(false)} className="h-9 bg-emerald-600 text-white hover:bg-emerald-700">
@@ -223,176 +252,203 @@ export default function Processed({ documents, filters: initial, facets, statusO
                     </>
                 )}
 
-                <div className={cn('transition-opacity', loading && 'pointer-events-none opacity-60')} aria-busy={loading}>
-                    {documents.data.length === 0 ? (
-                        <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
-                            <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                                <Send className="size-5" />
-                            </div>
-                            <p className="text-sm font-medium">{chips.length > 0 ? `No ${emptyKind} match these filters` : `No processed ${emptyKind}`}</p>
-                            <p className="text-sm text-muted-foreground">
-                                {chips.length > 0 ? 'Try fewer filters.' : 'Documents your office forwards show here. Closed ones are under Closed.'}
-                            </p>
-                            {chips.length > 0 && (
-                                <Button variant="outline" size="sm" onClick={reset} className="mt-2">
-                                    Reset filters
-                                </Button>
-                            )}
-                        </div>
-                    ) : (
-                        <Table className={cn(preferences.dense ? '[&_td]:py-1.5' : '[&_td]:py-3')}>
-                            <TableHeader>
-                                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                                    <TableHead className="w-10 pl-4">
-                                        <Checkbox
-                                            checked={pageChecked ? true : pagePartly ? 'indeterminate' : false}
-                                            onCheckedChange={(checked) => togglePage(checked === true)}
-                                            disabled={pageRows.length === 0 || (selection.full && !pageChecked && !pagePartly)}
-                                            aria-label="Select every For Receiving document on this page"
-                                            className={CHECKBOX}
-                                        />
-                                    </TableHead>
-                                    <SortableHead column="control_no" sort={filters.sort} onSort={(sort) => update({ sort })}>
-                                        Control no.
-                                    </SortableHead>
-                                    {isVisible('subject') && <TableHead>Subject</TableHead>}
-                                    {isVisible('processed') && (
-                                        <SortableHead column="processed_at" sort={filters.sort} onSort={(sort) => update({ sort })}>
-                                            Processed
-                                        </SortableHead>
-                                    )}
-                                    {isVisible('processed_by') && <TableHead>Processed by</TableHead>}
-                                    {isVisible('now_at') && <TableHead>Now at</TableHead>}
-                                    <TableHead className="pr-4 text-right">
-                                        <span className="sr-only">Actions</span>
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {pageChecked && morePages && (
-                                    <TableRow className="bg-emerald-50 hover:bg-emerald-50 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/30">
-                                        <TableCell colSpan={columnCount} className="py-2 text-center text-sm">
-                                            All {pageRows.length} For Receiving on this page are selected.{' '}
-                                            <button
-                                                type="button"
-                                                onClick={selectAllMatching}
-                                                disabled={selectingAll || selection.full}
-                                                className="inline-flex items-center gap-1 font-medium text-emerald-700 underline-offset-2 hover:underline disabled:opacity-50 dark:text-emerald-400"
-                                            >
-                                                {selectingAll && <Loader2 className="size-3.5 animate-spin" />}
-                                                Select every match
-                                            </button>
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                                {documents.data.map((row) => (
-                                    <TableRow
-                                        key={row.id}
-                                        data-state={selection.has(row.id) ? 'selected' : undefined}
-                                        className="data-[state=selected]:bg-emerald-50/60 dark:data-[state=selected]:bg-emerald-950/20"
-                                    >
-                                        <TableCell className="pl-4 align-top">
-                                            <Checkbox
-                                                checked={selection.has(row.id)}
-                                                onCheckedChange={(checked) => selection.toggle(row, checked === true)}
-                                                disabled={!row.selectable || (selection.full && !selection.has(row.id))}
-                                                aria-label={`Select ${row.control_no}`}
-                                                title={row.selectable ? undefined : 'Only For Receiving documents go into a logbook'}
-                                                className={cn(CHECKBOX, 'mt-0.5')}
-                                            />
-                                        </TableCell>
-                                        <TableCell className="align-top">
-                                            <a
-                                                href={documentUrl(row.control_no)}
-                                                target="_blank"
-                                                rel="noopener"
-                                                title="Open in a new tab"
-                                                className="inline-flex items-center gap-1 rounded font-mono text-sm font-semibold text-emerald-700 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 dark:text-emerald-400"
-                                            >
-                                                {row.control_no}
-                                                <ExternalLink className="size-3" aria-hidden="true" />
-                                            </a>
-                                            <div className="mt-1.5 flex flex-wrap gap-1">
-                                                <StatusBadge status={row.status} className="px-1.5 py-0 text-[0.65rem] leading-4" />
-                                                {row.is_bundle && <Tag>Bundle</Tag>}
-                                            </div>
-                                        </TableCell>
-                                        {isVisible('subject') && (
-                                            <TableCell className="max-w-md min-w-64 align-top whitespace-normal">
-                                                <p className="text-sm font-medium">{row.classification}</p>
-                                                <p className={cn('text-sm text-muted-foreground', preferences.dense ? 'line-clamp-1' : 'line-clamp-2')} title={row.subject}>
-                                                    {row.subject}
-                                                </p>
-                                                {!preferences.dense && (
-                                                    <div className="mt-1.5 flex flex-wrap gap-1">
-                                                        <Tag
-                                                            className={
-                                                                row.source === 'internal'
-                                                                    ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300'
-                                                                    : 'bg-rose-50 text-rose-800 dark:bg-rose-500/15 dark:text-rose-300'
-                                                            }
+                <Deferred data="documents" fallback={<TableSkeleton columns={4} />} rescue={<LoadFailed only={RELOAD} what="the processed documents" />}>
+                    {documents && (
+                        <>
+                            <LoadingBody loading={loading}>
+                                {documents.data.length === 0 ? (
+                                    <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
+                                        <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                                            <Send className="size-5" />
+                                        </div>
+                                        <p className="text-sm font-medium">
+                                            {chips.length > 0 ? `No ${emptyKind} match these filters` : `No processed ${emptyKind}`}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground">
+                                            {chips.length > 0
+                                                ? 'Try fewer filters.'
+                                                : 'Documents your office forwards show here. Closed ones are under Closed.'}
+                                        </p>
+                                        {chips.length > 0 && (
+                                            <Button variant="outline" size="sm" onClick={reset} className="mt-2">
+                                                Reset filters
+                                            </Button>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <Table className={cn(preferences.dense ? '[&_td]:py-1.5' : '[&_td]:py-3')}>
+                                        <TableHeader>
+                                            <TableRow className="bg-muted/40 hover:bg-muted/40">
+                                                <TableHead className="w-10 pl-4">
+                                                    <Checkbox
+                                                        checked={pageChecked ? true : pagePartly ? 'indeterminate' : false}
+                                                        onCheckedChange={(checked) => togglePage(checked === true)}
+                                                        disabled={pageRows.length === 0 || (selection.full && !pageChecked && !pagePartly)}
+                                                        aria-label="Select every For Receiving document on this page"
+                                                        className={CHECKBOX}
+                                                    />
+                                                </TableHead>
+                                                <SortableHead column="control_no" sort={filters.sort} onSort={(sort) => update({ sort })}>
+                                                    Control no.
+                                                </SortableHead>
+                                                {isVisible('subject') && <TableHead>Subject</TableHead>}
+                                                {isVisible('processed') && (
+                                                    <SortableHead column="processed_at" sort={filters.sort} onSort={(sort) => update({ sort })}>
+                                                        Processed
+                                                    </SortableHead>
+                                                )}
+                                                {isVisible('processed_by') && <TableHead>Processed by</TableHead>}
+                                                {isVisible('now_at') && <TableHead>Now at</TableHead>}
+                                                <TableHead className="pr-4 text-right">
+                                                    <span className="sr-only">Actions</span>
+                                                </TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {pageChecked && morePages && (
+                                                <TableRow className="bg-emerald-50 hover:bg-emerald-50 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/30">
+                                                    <TableCell colSpan={columnCount} className="py-2 text-center text-sm">
+                                                        All {pageRows.length} For Receiving on this page are selected.{' '}
+                                                        <button
+                                                            type="button"
+                                                            onClick={selectAllMatching}
+                                                            disabled={selectingAll || selection.full}
+                                                            className="inline-flex items-center gap-1 font-medium text-emerald-700 underline-offset-2 hover:underline disabled:opacity-50 dark:text-emerald-400"
                                                         >
-                                                            <span className="capitalize">{row.source}</span>
-                                                        </Tag>
-                                                        {row.charter && <Tag>{row.charter}</Tag>}
-                                                    </div>
-                                                )}
-                                            </TableCell>
-                                        )}
-                                        {isVisible('processed') && (
-                                            <TableCell className="align-top text-sm whitespace-nowrap">
-                                                {row.processed_at ? (
-                                                    <>
-                                                        <p>{dateFormat.format(new Date(row.processed_at))}</p>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {row.step && `${row.step} · `}
-                                                            {timeFormat.format(new Date(row.processed_at))}
-                                                        </p>
-                                                    </>
-                                                ) : (
-                                                    '—'
-                                                )}
-                                            </TableCell>
-                                        )}
-                                        {isVisible('processed_by') && (
-                                            <TableCell className="max-w-44 min-w-32 align-top text-sm whitespace-normal wrap-break-word">
-                                                {row.processed_by ?? <span className="text-muted-foreground">—</span>}
-                                            </TableCell>
-                                        )}
-                                        {isVisible('now_at') && (
-                                            <TableCell className="max-w-48 align-top text-sm whitespace-normal">
-                                                {row.now_at.name ?? row.now_at.code ?? <span className="text-muted-foreground">—</span>}
-                                            </TableCell>
-                                        )}
-                                        <TableCell className="pr-4 align-top">
-                                            <div className="flex justify-end">
-                                                <div role="group" aria-label={`Actions for ${row.control_no}`} className="inline-flex divide-x overflow-hidden rounded-md border bg-background shadow-xs">
-                                                    <IconAction label="Routing history" onClick={() => setTracking(row)}>
-                                                        <History />
-                                                    </IconAction>
-                                                    <IconAction label="Open document" href={documentUrl(row.control_no)}>
-                                                        <ExternalLink />
-                                                    </IconAction>
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    )}
-                </div>
+                                                            {selectingAll && <Loader2 className="size-3.5 animate-spin" />}
+                                                            Select every match
+                                                        </button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                            {documents.data.map((row) => (
+                                                <TableRow
+                                                    key={row.id}
+                                                    data-state={selection.has(row.id) ? 'selected' : undefined}
+                                                    className="data-[state=selected]:bg-emerald-50/60 dark:data-[state=selected]:bg-emerald-950/20"
+                                                >
+                                                    <TableCell className="pl-4 align-top">
+                                                        <Checkbox
+                                                            checked={selection.has(row.id)}
+                                                            onCheckedChange={(checked) => selection.toggle(row, checked === true)}
+                                                            disabled={!row.selectable || (selection.full && !selection.has(row.id))}
+                                                            aria-label={`Select ${row.control_no}`}
+                                                            title={row.selectable ? undefined : 'Only For Receiving documents go into a logbook'}
+                                                            className={cn(CHECKBOX, 'mt-0.5')}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell className="align-top">
+                                                        <a
+                                                            href={documentUrl(row.control_no)}
+                                                            target="_blank"
+                                                            rel="noopener"
+                                                            title="Open in a new tab"
+                                                            className="inline-flex items-center gap-1 rounded font-mono text-sm font-semibold text-emerald-700 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 dark:text-emerald-400"
+                                                        >
+                                                            {row.control_no}
+                                                            <ExternalLink className="size-3" aria-hidden="true" />
+                                                        </a>
+                                                        <div className="mt-1.5 flex flex-wrap gap-1">
+                                                            <StatusBadge status={row.status} className="px-1.5 py-0 text-[0.65rem] leading-4" />
+                                                            {row.is_bundle && <Tag>Bundle</Tag>}
+                                                        </div>
+                                                    </TableCell>
+                                                    {isVisible('subject') && (
+                                                        <TableCell className="max-w-md min-w-64 align-top whitespace-normal">
+                                                            <p className="text-sm font-medium">{row.classification}</p>
+                                                            <p
+                                                                className={cn(
+                                                                    'text-sm text-muted-foreground',
+                                                                    preferences.dense ? 'line-clamp-1' : 'line-clamp-2',
+                                                                )}
+                                                                title={row.subject}
+                                                            >
+                                                                {row.subject}
+                                                            </p>
+                                                            {!preferences.dense && (
+                                                                <div className="mt-1.5 flex flex-wrap gap-1">
+                                                                    <Tag
+                                                                        className={
+                                                                            row.source === 'internal'
+                                                                                ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300'
+                                                                                : 'bg-rose-50 text-rose-800 dark:bg-rose-500/15 dark:text-rose-300'
+                                                                        }
+                                                                    >
+                                                                        <span className="capitalize">{row.source}</span>
+                                                                    </Tag>
+                                                                    {row.charter && <Tag>{row.charter}</Tag>}
+                                                                </div>
+                                                            )}
+                                                        </TableCell>
+                                                    )}
+                                                    {isVisible('processed') && (
+                                                        <TableCell className="align-top text-sm whitespace-nowrap">
+                                                            {row.processed_at ? (
+                                                                <>
+                                                                    <p>{dateFormat.format(new Date(row.processed_at))}</p>
+                                                                    <p className="text-xs text-muted-foreground">
+                                                                        {row.step && `${row.step} · `}
+                                                                        {timeFormat.format(new Date(row.processed_at))}
+                                                                    </p>
+                                                                </>
+                                                            ) : (
+                                                                '—'
+                                                            )}
+                                                        </TableCell>
+                                                    )}
+                                                    {isVisible('processed_by') && (
+                                                        <TableCell className="max-w-44 min-w-32 align-top text-sm whitespace-normal wrap-break-word">
+                                                            {row.processed_by ?? <span className="text-muted-foreground">—</span>}
+                                                        </TableCell>
+                                                    )}
+                                                    {isVisible('now_at') && (
+                                                        <TableCell className="max-w-48 align-top text-sm whitespace-normal">
+                                                            {row.now_at.name ?? row.now_at.code ?? <span className="text-muted-foreground">—</span>}
+                                                        </TableCell>
+                                                    )}
+                                                    <TableCell className="pr-4 align-top">
+                                                        <div className="flex justify-end">
+                                                            <div
+                                                                role="group"
+                                                                aria-label={`Actions for ${row.control_no}`}
+                                                                className="inline-flex divide-x overflow-hidden rounded-md border bg-background shadow-xs"
+                                                            >
+                                                                <IconAction label="Routing history" onClick={() => setTracking(row)}>
+                                                                    <History />
+                                                                </IconAction>
+                                                                <IconAction label="Open document" href={documentUrl(row.control_no)}>
+                                                                    <ExternalLink />
+                                                                </IconAction>
+                                                            </div>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </LoadingBody>
 
-                <Pagination page={documents} />
+                            <Pagination page={documents} only={RELOAD} />
+                        </>
+                    )}
+                </Deferred>
             </div>
 
             <TrackingDialog document={tracking} onClose={() => setTracking(null)} />
-            <SelectionDialog open={reviewing} onOpenChange={setReviewing} items={selection.items} onRemove={(id) => selection.remove([id])} onClear={selection.clear} />
+            <SelectionDialog
+                open={reviewing}
+                onOpenChange={setReviewing}
+                items={selection.items}
+                onRemove={(id) => selection.remove([id])}
+                onClear={selection.clear}
+            />
         </AppLayout>
     );
 }
 
-const CHECKBOX = 'data-[state=checked]:border-emerald-600 data-[state=checked]:bg-emerald-600 data-[state=indeterminate]:border-emerald-600 data-[state=indeterminate]:bg-emerald-600 data-[state=indeterminate]:text-white';
+const CHECKBOX =
+    'data-[state=checked]:border-emerald-600 data-[state=checked]:bg-emerald-600 data-[state=indeterminate]:border-emerald-600 data-[state=indeterminate]:bg-emerald-600 data-[state=indeterminate]:text-white';
 
 /** One icon button in a row's action group; links open in a new tab. */
 function IconAction({ label, onClick, href, children }: { label: string; onClick?: () => void; href?: string; children: ReactNode }) {
@@ -415,5 +471,9 @@ function IconAction({ label, onClick, href, children }: { label: string; onClick
 }
 
 function Tag({ children, className }: { children: ReactNode; className?: string }) {
-    return <span className={cn('inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground', className)}>{children}</span>;
+    return (
+        <span className={cn('inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground', className)}>
+            {children}
+        </span>
+    );
 }

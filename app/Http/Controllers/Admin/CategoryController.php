@@ -34,29 +34,35 @@ class CategoryController extends Controller
     public function index(Request $request): Response
     {
         $filters = $this->filters($request);
-        [$column, $direction] = self::sortParts($filters['sort']);
-
-        $categories = $this->query($filters)
-            ->orderBy($column, $direction)
-            ->orderBy('name')
-            ->paginate($filters['per_page'])
-            ->withQueryString()
-            ->through(fn (Category $category) => [
-                'id' => $category->id,
-                'name' => $category->name,
-                'required_days' => $category->required_days,
-                'is_active' => (bool) $category->is_active,
-            ]);
-
-        // Counts for the tabs: the search applies, the tab itself doesn't.
-        $counts = $this->query([...$filters, 'status' => 'all'])->toBase()
-            ->selectRaw('count(*) as total, sum(is_active = 1) as active')
-            ->first();
 
         return Inertia::render('admin/categories', [
-            'categories' => $categories,
+            // Deferred: the page opens with a skeleton and the list follows.
+            // Filter changes, page turns and saves ask for these by name, so they
+            // come back in the same response. Rescued: a failure offers a retry.
+            'categories' => Inertia::defer(function () use ($filters) {
+                [$column, $direction] = self::sortParts($filters['sort']);
+
+                return $this->query($filters)
+                    ->orderBy($column, $direction)
+                    ->orderBy('name')
+                    ->paginate($filters['per_page'])
+                    ->withQueryString()
+                    ->through(fn (Category $category) => [
+                        'id' => $category->id,
+                        'name' => $category->name,
+                        'required_days' => $category->required_days,
+                        'is_active' => (bool) $category->is_active,
+                    ]);
+            }, rescue: true),
             'filters' => $filters,
-            'counts' => ['all' => (int) $counts->total, 'active' => (int) $counts->active, 'inactive' => (int) $counts->total - (int) $counts->active],
+            // Counts for the tabs: the search applies, the tab itself doesn't.
+            'counts' => Inertia::defer(function () use ($filters) {
+                $counts = $this->query([...$filters, 'status' => 'all'])->toBase()
+                    ->selectRaw('count(*) as total, sum(is_active = 1) as active')
+                    ->first();
+
+                return ['all' => (int) $counts->total, 'active' => (int) $counts->active, 'inactive' => (int) $counts->total - (int) $counts->active];
+            }, rescue: true),
             'perPageOptions' => self::PER_PAGE_OPTIONS,
         ]);
     }

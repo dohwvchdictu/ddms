@@ -19,8 +19,10 @@ class DashboardController extends Controller
         }
 
         return Inertia::render('dashboard', [
-            'counts' => $deadlineCounts->handle(),
-            'activity' => $dailyActivity->handle(self::ACTIVITY_DAYS),
+            // Deferred: the page opens with skeletons and the figures follow.
+            // Rescued: a failure offers a retry.
+            'counts' => Inertia::defer(fn () => $deadlineCounts->handle(), rescue: true),
+            'activity' => Inertia::defer(fn () => $dailyActivity->handle(self::ACTIVITY_DAYS), rescue: true),
         ]);
     }
 }

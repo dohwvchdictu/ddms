@@ -11,10 +11,13 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 use Mockery\MockInterface;
+use Tests\Concerns\LoadsDeferredProps;
 use Tests\TestCase;
 
 class PendingTest extends TestCase
 {
+    use LoadsDeferredProps;
+
     /** Office ids no real office uses, so the shared dev data never shows up here. */
     protected const OFFICE = 990001;
 
@@ -111,7 +114,7 @@ class PendingTest extends TestCase
         $this->onProcess(['bundle_id' => $mine->id]);       // inside a bundle
 
         $this->signedIn()
-            ->get('/status-pending')
+            ->getWithDeferred('/status-pending')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('pending/index')
@@ -120,7 +123,7 @@ class PendingTest extends TestCase
                 ->where('closePasswordThreshold', 5));
 
         $this->signedIn()
-            ->get('/status-pending?endorsed=me')
+            ->getWithDeferred('/status-pending?endorsed=me')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('documents.total', 1)
                 ->where('documents.data.0.control_no', $mine->control_no)
@@ -134,14 +137,14 @@ class PendingTest extends TestCase
         DB::table('documents')->where('id', $old->id)->update(['updated_at' => now()->subDays(45)]);
 
         $this->signedIn()
-            ->get('/status-pending')
+            ->getWithDeferred('/status-pending')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('documents.total', 1)
                 ->where('outsideRange', 1));
 
         // Any date: nothing hidden.
         $this->signedIn()
-            ->get('/status-pending?from=&to=')
+            ->getWithDeferred('/status-pending?from=&to=')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('documents.total', 2)
                 ->where('outsideRange', 0));

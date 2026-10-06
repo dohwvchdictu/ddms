@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\Reports\TurnaroundController::office
- * @see app/Http/Controllers/Reports/TurnaroundController.php:38
+ * @see app/Http/Controllers/Reports/TurnaroundController.php:45
  * @route '/report-turnaround-time/offices/{office}'
  */
 export const office = (args: { office: string | number } | [office: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -59,7 +59,7 @@ office.definition = {
 
 /**
 * @see \App\Http\Controllers\Reports\TurnaroundController::office
- * @see app/Http/Controllers/Reports/TurnaroundController.php:38
+ * @see app/Http/Controllers/Reports/TurnaroundController.php:45
  * @route '/report-turnaround-time/offices/{office}'
  */
 office.url = (args: { office: string | number } | [office: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -87,7 +87,7 @@ office.url = (args: { office: string | number } | [office: string | number ] | s
 
 /**
 * @see \App\Http\Controllers\Reports\TurnaroundController::office
- * @see app/Http/Controllers/Reports/TurnaroundController.php:38
+ * @see app/Http/Controllers/Reports/TurnaroundController.php:45
  * @route '/report-turnaround-time/offices/{office}'
  */
 office.get = (args: { office: string | number } | [office: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -96,7 +96,7 @@ office.get = (args: { office: string | number } | [office: string | number ] | s
 })
 /**
 * @see \App\Http\Controllers\Reports\TurnaroundController::office
- * @see app/Http/Controllers/Reports/TurnaroundController.php:38
+ * @see app/Http/Controllers/Reports/TurnaroundController.php:45
  * @route '/report-turnaround-time/offices/{office}'
  */
 office.head = (args: { office: string | number } | [office: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({

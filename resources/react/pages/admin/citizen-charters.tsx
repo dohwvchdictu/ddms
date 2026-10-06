@@ -1,8 +1,9 @@
-import { Head } from '@inertiajs/react';
+import { Deferred, Head } from '@inertiajs/react';
 import { CircleCheck, CircleX, Landmark, Pencil, Plus } from 'lucide-react';
 import { useState } from 'react';
 import CharterDialog, { type CharterValues } from '@/components/admin/charter-dialog';
 import RowMenu from '@/components/admin/row-menu';
+import { LoadFailed, LoadingBody, TableSkeleton } from '@/components/data-table/deferred-states';
 import ListTabs from '@/components/data-table/list-tabs';
 import SortableHead from '@/components/data-table/sortable-head';
 import Pagination from '@/components/pagination';
@@ -37,12 +38,16 @@ interface Filters {
 }
 
 interface Props {
-    charters: Paginated<Row>;
+    /** Deferred: undefined until it arrives after the page opens. */
+    charters?: Paginated<Row>;
     filters: Filters;
-    counts: Record<Status, number>;
+    counts?: Record<Status, number>;
     perPageOptions: number[];
     offices: { id: string; name: string }[];
 }
+
+/** Reloaded by name on filter changes, page turns and actions, so the old rows stay up meanwhile. */
+const RELOAD = ['filters', 'charters', 'counts'];
 
 const DEFAULT_SORT = 'name';
 const DEFAULT_PER_PAGE = 25;
@@ -59,7 +64,7 @@ const toUrl = (filters: Filters) =>
 
 /** Administration › Citizen's Charter: the charter processes New Document offers, with owner and timeline. */
 export default function CitizenCharters({ charters, filters: initial, counts, offices }: Props) {
-    const { filters, update, loading } = useListFilters(initial, toUrl, { debounce: ['search'] });
+    const { filters, update, loading } = useListFilters(initial, toUrl, { debounce: ['search'], only: RELOAD });
     const [editing, setEditing] = useState<CharterValues | null>(null);
 
     return (
@@ -81,7 +86,11 @@ export default function CitizenCharters({ charters, filters: initial, counts, of
 
             <div className="relative overflow-clip rounded-xl border bg-card shadow-sm">
                 {loading && (
-                    <div className="absolute inset-x-0 top-0 z-10 h-0.5 overflow-hidden bg-emerald-100 dark:bg-emerald-950" role="progressbar" aria-label="Loading">
+                    <div
+                        className="absolute inset-x-0 top-0 z-10 h-0.5 overflow-hidden bg-emerald-100 dark:bg-emerald-950"
+                        role="progressbar"
+                        aria-label="Loading"
+                    >
                         <div className="h-full w-1/3 animate-[table-progress_1s_ease-in-out_infinite] bg-emerald-600" />
                     </div>
                 )}
@@ -91,9 +100,9 @@ export default function CitizenCharters({ charters, filters: initial, counts, of
                     value={filters.status}
                     onChange={(status) => update({ status: status as Status })}
                     tabs={[
-                        { value: 'all', label: 'All', count: counts.all },
-                        { value: 'active', label: 'Active', count: counts.active },
-                        { value: 'inactive', label: 'Inactive', count: counts.inactive },
+                        { value: 'all', label: 'All', count: counts?.all },
+                        { value: 'active', label: 'Active', count: counts?.active },
+                        { value: 'inactive', label: 'Inactive', count: counts?.inactive },
                     ]}
                 />
 
@@ -104,64 +113,80 @@ export default function CitizenCharters({ charters, filters: initial, counts, of
                         placeholder="Search process…"
                         label="Search Citizen's Charter processes"
                         loading={loading}
-                        resultCount={filters.search.trim() === initial.search ? charters.total : undefined}
+                        resultCount={charters && filters.search.trim() === initial.search ? charters.total : undefined}
                         className="w-full sm:max-w-md sm:min-w-72 sm:flex-1"
                     />
                 </div>
 
-                <div className={cn('transition-opacity', loading && 'pointer-events-none opacity-60')} aria-busy={loading}>
-                    {charters.data.length === 0 ? (
-                        <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
-                            <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                                <Landmark className="size-5" />
-                            </div>
-                            <p className="text-sm font-medium">No processes match</p>
-                            <p className="text-sm text-muted-foreground">Try another search or tab.</p>
-                        </div>
-                    ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                                    <SortableHead column="name" sort={filters.sort} onSort={(sort) => update({ sort })} className="pl-4">
-                                        Process Name
-                                    </SortableHead>
-                                    <TableHead>Owner</TableHead>
-                                    <TableHead>Is External</TableHead>
-                                    <TableHead>Is Active</TableHead>
-                                    <SortableHead column="required_days" sort={filters.sort} onSort={(sort) => update({ sort })} className="text-right">
-                                        Required Days
-                                    </SortableHead>
-                                    <TableHead className="pr-4 text-right">
-                                        <span className="sr-only">Actions</span>
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {charters.data.map((row) => (
-                                    <TableRow key={row.id} className={cn(!row.is_active && 'text-muted-foreground')}>
-                                        <TableCell className="max-w-lg pl-4 text-sm font-medium whitespace-normal text-foreground">{row.name}</TableCell>
-                                        <TableCell className="max-w-56 text-sm whitespace-normal">{row.office}</TableCell>
-                                        <TableCell>
-                                            <YesNo value={row.is_external} />
-                                        </TableCell>
-                                        <TableCell>
-                                            <YesNo value={row.is_active} />
-                                        </TableCell>
-                                        <TableCell className="text-right text-sm tabular-nums">{row.required_days ?? '—'}</TableCell>
-                                        <TableCell className="pr-4 text-right">
-                                            <RowMenu label={`Actions for ${row.name}`} items={[{ label: 'Edit', icon: Pencil, onSelect: () => setEditing(row) }]} />
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    )}
-                </div>
+                <Deferred data="charters" fallback={<TableSkeleton columns={4} />} rescue={<LoadFailed only={RELOAD} what="the procedures" />}>
+                    {charters && (
+                        <>
+                            <LoadingBody loading={loading}>
+                                {charters.data.length === 0 ? (
+                                    <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
+                                        <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                                            <Landmark className="size-5" />
+                                        </div>
+                                        <p className="text-sm font-medium">No processes match</p>
+                                        <p className="text-sm text-muted-foreground">Try another search or tab.</p>
+                                    </div>
+                                ) : (
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow className="bg-muted/40 hover:bg-muted/40">
+                                                <SortableHead column="name" sort={filters.sort} onSort={(sort) => update({ sort })} className="pl-4">
+                                                    Process Name
+                                                </SortableHead>
+                                                <TableHead>Owner</TableHead>
+                                                <TableHead>Is External</TableHead>
+                                                <TableHead>Is Active</TableHead>
+                                                <SortableHead
+                                                    column="required_days"
+                                                    sort={filters.sort}
+                                                    onSort={(sort) => update({ sort })}
+                                                    className="text-right"
+                                                >
+                                                    Required Days
+                                                </SortableHead>
+                                                <TableHead className="pr-4 text-right">
+                                                    <span className="sr-only">Actions</span>
+                                                </TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {charters.data.map((row) => (
+                                                <TableRow key={row.id} className={cn(!row.is_active && 'text-muted-foreground')}>
+                                                    <TableCell className="max-w-lg pl-4 text-sm font-medium whitespace-normal text-foreground">
+                                                        {row.name}
+                                                    </TableCell>
+                                                    <TableCell className="max-w-56 text-sm whitespace-normal">{row.office}</TableCell>
+                                                    <TableCell>
+                                                        <YesNo value={row.is_external} />
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <YesNo value={row.is_active} />
+                                                    </TableCell>
+                                                    <TableCell className="text-right text-sm tabular-nums">{row.required_days ?? '—'}</TableCell>
+                                                    <TableCell className="pr-4 text-right">
+                                                        <RowMenu
+                                                            label={`Actions for ${row.name}`}
+                                                            items={[{ label: 'Edit', icon: Pencil, onSelect: () => setEditing(row) }]}
+                                                        />
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </LoadingBody>
 
-                <Pagination page={charters} />
+                            <Pagination page={charters} only={RELOAD} />
+                        </>
+                    )}
+                </Deferred>
             </div>
 
-            <CharterDialog charter={editing} offices={offices} onClose={() => setEditing(null)} />
+            <CharterDialog charter={editing} offices={offices} onClose={() => setEditing(null)} reloadOnly={RELOAD} />
         </AppLayout>
     );
 }

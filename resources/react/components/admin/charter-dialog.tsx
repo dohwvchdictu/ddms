@@ -24,6 +24,8 @@ interface CharterDialogProps {
     /** Active offices, for the owner. */
     offices: { id: string; name: string }[];
     onClose: () => void;
+    /** Back on the list, reload just these props (it keeps its rows instead of showing its skeleton). */
+    reloadOnly?: string[];
 }
 
 const Required = () => (
@@ -33,7 +35,7 @@ const Required = () => (
 );
 
 /** Add or edit a Citizen's Charter process: its owner office, timeline and whether New Document offers it. */
-export default function CharterDialog({ charter, offices, onClose }: CharterDialogProps) {
+export default function CharterDialog({ charter, offices, onClose, reloadOnly }: CharterDialogProps) {
     const form = useForm({ name: '', office_id: '', required_days: '', is_external: true, is_active: true });
     const { data, errors, processing } = form;
     const editing = charter?.id !== undefined;
@@ -57,6 +59,7 @@ export default function CharterDialog({ charter, offices, onClose }: CharterDial
 
         form.submit(editing ? update(charter!.id!) : store(), {
             preserveScroll: true,
+            ...(reloadOnly && { only: reloadOnly }),
             onSuccess: () => onClose(),
         });
     };
@@ -67,7 +70,9 @@ export default function CharterDialog({ charter, offices, onClose }: CharterDial
                 <form onSubmit={submit} noValidate className="grid gap-5">
                     <DialogHeader>
                         <DialogTitle>{editing ? "Edit Citizen's Charter process" : "Add Citizen's Charter process"}</DialogTitle>
-                        <DialogDescription>{editing ? 'Changes apply to new documents; existing ones keep their process.' : 'New Document will offer it right away.'}</DialogDescription>
+                        <DialogDescription>
+                            {editing ? 'Changes apply to new documents; existing ones keep their process.' : 'New Document will offer it right away.'}
+                        </DialogDescription>
                     </DialogHeader>
 
                     <div className="grid gap-2">

@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\DashboardDocumentsController::__invoke
- * @see app/Http/Controllers/DashboardDocumentsController.php:20
+ * @see app/Http/Controllers/DashboardDocumentsController.php:21
  * @route '/dashboard/documents'
  */
 export const documents = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ documents.definition = {
 
 /**
 * @see \App\Http\Controllers\DashboardDocumentsController::__invoke
- * @see app/Http/Controllers/DashboardDocumentsController.php:20
+ * @see app/Http/Controllers/DashboardDocumentsController.php:21
  * @route '/dashboard/documents'
  */
 documents.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ documents.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\DashboardDocumentsController::__invoke
- * @see app/Http/Controllers/DashboardDocumentsController.php:20
+ * @see app/Http/Controllers/DashboardDocumentsController.php:21
  * @route '/dashboard/documents'
  */
 documents.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ documents.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\DashboardDocumentsController::__invoke
- * @see app/Http/Controllers/DashboardDocumentsController.php:20
+ * @see app/Http/Controllers/DashboardDocumentsController.php:21
  * @route '/dashboard/documents'
  */
 documents.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

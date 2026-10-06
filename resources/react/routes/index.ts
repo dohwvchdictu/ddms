@@ -259,7 +259,7 @@ processed.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\ClosedController::closed
- * @see app/Http/Controllers/ClosedController.php:27
+ * @see app/Http/Controllers/ClosedController.php:28
  * @route '/status-closed'
  */
 export const closed = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -274,7 +274,7 @@ closed.definition = {
 
 /**
 * @see \App\Http\Controllers\ClosedController::closed
- * @see app/Http/Controllers/ClosedController.php:27
+ * @see app/Http/Controllers/ClosedController.php:28
  * @route '/status-closed'
  */
 closed.url = (options?: RouteQueryOptions) => {
@@ -283,7 +283,7 @@ closed.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ClosedController::closed
- * @see app/Http/Controllers/ClosedController.php:27
+ * @see app/Http/Controllers/ClosedController.php:28
  * @route '/status-closed'
  */
 closed.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -292,7 +292,7 @@ closed.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\ClosedController::closed
- * @see app/Http/Controllers/ClosedController.php:27
+ * @see app/Http/Controllers/ClosedController.php:28
  * @route '/status-closed'
  */
 closed.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -302,7 +302,7 @@ closed.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
 /**
 * @see \App\Http\Controllers\RoutingLogbookController::routingLogbook
- * @see app/Http/Controllers/RoutingLogbookController.php:27
+ * @see app/Http/Controllers/RoutingLogbookController.php:28
  * @route '/routing-logbook'
  */
 export const routingLogbook = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -317,7 +317,7 @@ routingLogbook.definition = {
 
 /**
 * @see \App\Http\Controllers\RoutingLogbookController::routingLogbook
- * @see app/Http/Controllers/RoutingLogbookController.php:27
+ * @see app/Http/Controllers/RoutingLogbookController.php:28
  * @route '/routing-logbook'
  */
 routingLogbook.url = (options?: RouteQueryOptions) => {
@@ -326,7 +326,7 @@ routingLogbook.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\RoutingLogbookController::routingLogbook
- * @see app/Http/Controllers/RoutingLogbookController.php:27
+ * @see app/Http/Controllers/RoutingLogbookController.php:28
  * @route '/routing-logbook'
  */
 routingLogbook.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -335,7 +335,7 @@ routingLogbook.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\RoutingLogbookController::routingLogbook
- * @see app/Http/Controllers/RoutingLogbookController.php:27
+ * @see app/Http/Controllers/RoutingLogbookController.php:28
  * @route '/routing-logbook'
  */
 routingLogbook.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

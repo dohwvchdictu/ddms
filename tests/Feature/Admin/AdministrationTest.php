@@ -9,11 +9,14 @@ use App\Services\ApiService;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 use Mockery\MockInterface;
+use Tests\Concerns\LoadsDeferredProps;
 use Tests\TestCase;
 
 /** Administration: categories, citizen's charter, actions, for the offices in ADMIN_OFFICE_IDS (ICTU). */
 class AdministrationTest extends TestCase
 {
+    use LoadsDeferredProps;
+
     /** Stands in for ICTU: its staff may administer. */
     protected const OFFICE = 990001;
 
@@ -84,7 +87,7 @@ class AdministrationTest extends TestCase
     public function test_the_sidebar_shows_administration_only_to_them(): void
     {
         $this->signedIn()->get('/admin/actions')->assertInertia(fn (Assert $page) => $page->where('auth.canAdminister', true));
-        $this->signedIn(self::OTHER_OFFICE)->get('/dashboard')->assertInertia(fn (Assert $page) => $page->where('auth.canAdminister', false));
+        $this->signedIn(self::OTHER_OFFICE)->getWithDeferred('/dashboard')->assertInertia(fn (Assert $page) => $page->where('auth.canAdminister', false));
     }
 
     public function test_a_category_is_added_with_a_slug_and_edited_without_losing_it(): void
@@ -131,7 +134,7 @@ class AdministrationTest extends TestCase
         Category::create(['name' => 'Zz Test Inactive', 'slug' => 'zz-test-inactive', 'required_days' => 3, 'is_active' => false]);
 
         $this->signedIn()
-            ->get('/admin/categories?search=Zz Test&status=inactive')
+            ->getWithDeferred('/admin/categories?search=Zz Test&status=inactive')
             ->assertInertia(fn (Assert $page) => $page
                 ->component('admin/categories')
                 ->where('counts', ['all' => 2, 'active' => 1, 'inactive' => 1])
@@ -165,7 +168,7 @@ class AdministrationTest extends TestCase
         $this->assertFalse((bool) $charter->is_active);
 
         $this->signedIn()
-            ->get('/admin/citizen-charters?search=Zz Test')
+            ->getWithDeferred('/admin/citizen-charters?search=Zz Test')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('charters.data.0.office', 'Knowledge Management and ICT Unit')
                 ->has('offices', 1));

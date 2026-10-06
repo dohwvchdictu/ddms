@@ -7,10 +7,13 @@ use App\Actions\Dashboard\DeadlineCounts;
 use App\Actions\Navigation\SidebarCounts;
 use Inertia\Testing\AssertableInertia as Assert;
 use Mockery\MockInterface;
+use Tests\Concerns\LoadsDeferredProps;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
 {
+    use LoadsDeferredProps;
+
     protected const COUNTS = [
         'for_action' => 4,
         'pending' => 9,
@@ -65,7 +68,7 @@ class DashboardTest extends TestCase
     public function test_dashboard_renders_the_react_page_with_the_counts(): void
     {
         $this->signedIn()
-            ->get('/dashboard')
+            ->getWithDeferred('/dashboard')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('dashboard')
@@ -83,7 +86,7 @@ class DashboardTest extends TestCase
     public function test_layout_props_carry_the_greeting_office_and_badges(): void
     {
         $this->signedIn()
-            ->get('/dashboard')
+            ->getWithDeferred('/dashboard')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('auth.user.firstName', 'Juan')
                 ->where('auth.user.name', 'Juan Dela Cruz')

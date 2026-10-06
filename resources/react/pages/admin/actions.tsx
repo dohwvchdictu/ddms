@@ -20,7 +20,13 @@ export default function Actions({ actions }: Props) {
         <AppLayout
             title="Actions"
             actions={
-                <Button size="icon" onClick={() => setAdding(true)} aria-label="Add action" title="Add action" className="bg-emerald-600 text-white hover:bg-emerald-700">
+                <Button
+                    size="icon"
+                    onClick={() => setAdding(true)}
+                    aria-label="Add action"
+                    title="Add action"
+                    className="bg-emerald-600 text-white hover:bg-emerald-700"
+                >
                     <Plus />
                 </Button>
             }
@@ -31,8 +37,8 @@ export default function Actions({ actions }: Props) {
                 <Alert>
                     <Info />
                     <AlertDescription>
-                        These are the actions a document's routing is recorded with. Existing ones can't be renamed or removed: the system finds them by name, so a change would
-                        break routing.
+                        These are the actions a document's routing is recorded with. Existing ones can't be renamed or removed: the system finds them by name,
+                        so a change would break routing.
                     </AlertDescription>
                 </Alert>
 
