@@ -9,7 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Report › Per Unit: how many documents were encoded per procedure / category
+ * Report › Per Category: how many documents were encoded per procedure / category
  * in a period. Ported from Livewire Report\PerUnit, without its split into
  * purchase requests, payments and general (removed at the user's request).
  *

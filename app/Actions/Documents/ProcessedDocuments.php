@@ -12,10 +12,11 @@ use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 /**
- * Documents an office has finished with: forwarded on or closed there. One
- * row per document, dated by its latest such step here. Bundle contents travel
- * with their bundle, so only top-level documents are listed. Replaces Livewire
- * Status\Forwarded.
+ * Documents an office forwarded on: one row per document, dated by its latest
+ * forward from here. Documents the office closed are left out (they are in
+ * Closed), so the two pages never overlap; one forwarded here and closed
+ * elsewhere later still counts. Bundle contents travel with their bundle, so
+ * only top-level documents are listed. Replaces Livewire Status\Forwarded.
  */
 class ProcessedDocuments
 {
@@ -46,6 +47,8 @@ class ProcessedDocuments
         return DocumentTypes::apply(Document::query(), DocumentTypes::normalize($filters['type'] ?? null))
             ->whereNull('documents.bundle_id')
             ->whereExists($stepInPeriod)
+            // Closed here: listed under Closed instead.
+            ->whereNotExists($this->closedHere($officeId))
             ->when($search !== '', fn (Builder $query) => $query->where(function (Builder $where) use ($search) {
                 $where->where('documents.control_no', 'like', "%{$search}%")
                     ->orWhere('documents.subject', 'like', "%{$search}%");
@@ -84,21 +87,28 @@ class ProcessedDocuments
         ];
     }
 
-    /** @return array<int, string> Action id → name, for the steps this page lists. */
+    /** @return array<int, string> Action id → name, for the step this page lists. */
     public function stepNames(): array
     {
-        return array_flip(array_intersect_key($this->actionIds(), array_flip(['Forwarded', 'Closed'])));
+        return array_flip(array_intersect_key($this->actionIds(), array_flip(['Forwarded'])));
     }
 
-    /** This office's Forwarded and Closed logs on the outer document. */
+    /** This office's Forwarded logs on the outer document. */
     protected function steps(int|string $officeId): QueryBuilder
     {
-        $ids = $this->actionIds();
-
         return DB::table('logs')
             ->whereColumn('logs.document_id', 'documents.id')
             ->where('logs.assigned_to', $officeId)
-            ->whereIn('logs.action_id', [$ids['Forwarded'], $ids['Closed']]);
+            ->where('logs.action_id', $this->actionIds()['Forwarded']);
+    }
+
+    /** This office's Closed log on the outer document, if any. */
+    protected function closedHere(int|string $officeId): QueryBuilder
+    {
+        return DB::table('logs as closed')
+            ->whereColumn('closed.document_id', 'documents.id')
+            ->where('closed.assigned_to', $officeId)
+            ->where('closed.action_id', $this->actionIds()['Closed']);
     }
 
     protected function latest(int|string $officeId, string $column): QueryBuilder

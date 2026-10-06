@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-/** Report › Per Unit: documents per procedure / category. Replaces Livewire Report\PerUnit. */
+/** Report › Per Category: documents per procedure / category. Replaces Livewire Report\PerUnit. */
 class PerUnitController extends Controller
 {
     use ReadsListFilters;

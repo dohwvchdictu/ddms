@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-/** Processed: what this office forwarded on or closed. Replaces Livewire Status\Forwarded. */
+/** Processed: what this office forwarded on (closed ones are under Closed). Replaces Livewire Status\Forwarded. */
 class ProcessedController extends Controller
 {
     use ReadsListFilters;

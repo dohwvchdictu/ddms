@@ -12,7 +12,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Mockery\MockInterface;
 use Tests\TestCase;
 
-/** Report › Per Unit: documents per procedure / category. */
+/** Report › Per Category: documents per procedure / category. */
 class PerUnitReportTest extends TestCase
 {
     /** Office ids no real office uses, so the shared dev data never shows up here. */

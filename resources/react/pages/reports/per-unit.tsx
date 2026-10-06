@@ -117,8 +117,8 @@ export default function PerUnitReport({ filters: initial, defaultRange, report, 
     const largest = report.rows[0]?.count ?? 0;
 
     return (
-        <AppLayout title="Per Unit">
-            <Head title="Per Unit" />
+        <AppLayout title="Per Category">
+            <Head title="Per Category" />
 
             <div className="relative overflow-clip rounded-xl border bg-card shadow-sm">
                 {loading && (

@@ -109,10 +109,14 @@ class ProcessedTest extends TestCase
         $this->get('/status-forwarded')->assertRedirect(route('login'));
     }
 
-    public function test_forwarded_and_closed_documents_are_listed_newest_first(): void
+    public function test_documents_forwarded_from_here_are_listed_newest_first(): void
     {
-        $closed = $this->processed('Closed', '2026-10-01 10:00:00');
         $forwarded = $this->processed('Forwarded', '2026-10-02 08:00:00');
+        // Forwarded from here, then closed by the next office: still ours to list.
+        $closedElsewhere = $this->processed('Forwarded', '2026-10-01 10:00:00', ['status' => 'Closed']);
+        $this->step($closedElsewhere, 'Closed', '2026-10-01 15:00:00', self::OTHER);
+
+        $this->processed('Closed');                                                     // closed here: it's in Closed
         $this->processed('Forwarded', overrides: [], office: self::OTHER);              // another office's work
         $this->processed('Received');                                                   // not a processing step
         $this->processed(overrides: ['bundle_id' => $forwarded->id]);                   // travels with its bundle
@@ -128,12 +132,28 @@ class ProcessedTest extends TestCase
                 ->where('documents.data.0.selectable', true)
                 ->where('documents.data.0.processed_by', 'Juan Dela Cruz')
                 ->where('documents.data.0.now_at.name', 'Regulation, Licensing and Enforcement Division')
-                ->where('documents.data.1.control_no', $closed->control_no)
-                ->where('documents.data.1.step', 'Closed')
+                ->where('documents.data.1.control_no', $closedElsewhere->control_no)
+                ->where('documents.data.1.step', 'Forwarded')
                 ->where('documents.data.1.selectable', false)
-                ->where('documents.data.1.now_at.name', 'Knowledge Management and ICT Unit')
                 ->where('facets.statuses.For Receiving', 1)
                 ->where('facets.statuses.Closed', 1));
+    }
+
+    public function test_a_document_forwarded_then_closed_here_is_left_out(): void
+    {
+        // Forwarded from here, came back, and this office closed it: it belongs to Closed.
+        $document = $this->processed('Forwarded', '2026-10-01 08:00:00', ['status' => 'Closed', 'assigned_to' => self::OFFICE]);
+        $this->step($document, 'Closed', '2026-10-02 08:00:00');
+
+        $this->signedIn()
+            ->get('/status-forwarded')
+            ->assertInertia(fn (Assert $page) => $page->where('documents.total', 0));
+
+        $this->signedIn()
+            ->get('/status-closed')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('documents.total', 1)
+                ->where('documents.data.0.control_no', $document->control_no));
     }
 
     public function test_the_latest_step_here_is_shown_and_filtered_on(): void

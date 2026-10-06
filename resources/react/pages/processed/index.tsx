@@ -44,7 +44,7 @@ interface Row {
     /** For Receiving: it can go into an electronic logbook. */
     selectable: boolean;
     /** The latest step here. */
-    step: 'Forwarded' | 'Closed' | null;
+    step: 'Forwarded' | null;
     processed_at: string | null;
     processed_by: string | null;
     /** The office holding it now: another one, or still this one. */
@@ -231,7 +231,7 @@ export default function Processed({ documents, filters: initial, facets, statusO
                             </div>
                             <p className="text-sm font-medium">{chips.length > 0 ? `No ${emptyKind} match these filters` : `No processed ${emptyKind}`}</p>
                             <p className="text-sm text-muted-foreground">
-                                {chips.length > 0 ? 'Try fewer filters.' : 'Documents your office forwards or closes show here.'}
+                                {chips.length > 0 ? 'Try fewer filters.' : 'Documents your office forwards show here. Closed ones are under Closed.'}
                             </p>
                             {chips.length > 0 && (
                                 <Button variant="outline" size="sm" onClick={reset} className="mt-2">
