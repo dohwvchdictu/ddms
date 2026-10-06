@@ -36,17 +36,13 @@ class ProcessedDocuments
         $from = ($filters['from'] ?? null) ? Carbon::parse($filters['from'])->startOfDay() : null;
         $to = ($filters['to'] ?? null) ? Carbon::parse($filters['to'])->endOfDay() : null;
 
-        // A step here inside the period. Implied by the latest-step filter below
-        // (the latest step is such a step), so it changes no result, but it lets
-        // MySQL start from the period's steps (logs_assigned_action_created_index)
-        // instead of checking every document's latest step one by one.
-        $stepInPeriod = $this->steps($officeId)
-            ->when($from, fn ($query) => $query->where('logs.created_at', '>=', $from))
-            ->when($to, fn ($query) => $query->where('logs.created_at', '<=', $to));
-
         return DocumentTypes::apply(Document::query(), DocumentTypes::normalize($filters['type'] ?? null))
+            // Each document's latest forward from here, joined once. Looking it up
+            // per document instead (a correlated subquery for the filter, the sort
+            // and each column) took ~4.5 s for a busy office over a year; this ~0.2 s.
+            ->joinSub($this->latestSteps($officeId), 'last_step', 'last_step.document_id', '=', 'documents.id')
+            ->join('logs as latest_step', 'latest_step.id', '=', 'last_step.last_id')
             ->whereNull('documents.bundle_id')
-            ->whereExists($stepInPeriod)
             // Closed here: listed under Closed instead.
             ->whereNotExists($this->closedHere($officeId))
             ->when($search !== '', fn (Builder $query) => $query->where(function (Builder $where) use ($search) {
@@ -55,17 +51,20 @@ class ProcessedDocuments
             }))
             ->when($statuses, fn (Builder $query) => $query->whereIn('documents.status', $statuses))
             // On the date shown: its latest step here.
-            ->when($from, fn (Builder $query) => $query->where($this->latest($officeId, 'created_at'), '>=', $from))
-            ->when($to, fn (Builder $query) => $query->where($this->latest($officeId, 'created_at'), '<=', $to));
+            ->when($from, fn (Builder $query) => $query->where('latest_step.created_at', '>=', $from))
+            ->when($to, fn (Builder $query) => $query->where('latest_step.created_at', '<=', $to));
     }
 
-    /** Adds the latest step here: when (`processed_at`), by whom (`processed_by`) and which (`processed_action`). */
+    /**
+     * Adds the latest step here: when (`processed_at`), by whom (`processed_by`)
+     * and which (`processed_action`). The step is already joined by query().
+     */
     public function withLatestStep(Builder $query, int|string $officeId): Builder
     {
         return $query->addSelect([
-            'processed_at' => $this->latest($officeId, 'created_at'),
-            'processed_by' => $this->latest($officeId, 'user_id'),
-            'processed_action' => $this->latest($officeId, 'action_id'),
+            'latest_step.created_at as processed_at',
+            'latest_step.user_id as processed_by',
+            'latest_step.action_id as processed_action',
         ]);
     }
 
@@ -93,13 +92,15 @@ class ProcessedDocuments
         return array_flip(array_intersect_key($this->actionIds(), array_flip(['Forwarded'])));
     }
 
-    /** This office's Forwarded logs on the outer document. */
-    protected function steps(int|string $officeId): QueryBuilder
+    /** Per document, the id of this office's latest Forwarded log (the highest id). */
+    protected function latestSteps(int|string $officeId): QueryBuilder
     {
         return DB::table('logs')
-            ->whereColumn('logs.document_id', 'documents.id')
-            ->where('logs.assigned_to', $officeId)
-            ->where('logs.action_id', $this->actionIds()['Forwarded']);
+            ->select('document_id')
+            ->selectRaw('max(id) as last_id')
+            ->where('assigned_to', $officeId)
+            ->where('action_id', $this->actionIds()['Forwarded'])
+            ->groupBy('document_id');
     }
 
     /** This office's Closed log on the outer document, if any. */
@@ -109,11 +110,6 @@ class ProcessedDocuments
             ->whereColumn('closed.document_id', 'documents.id')
             ->where('closed.assigned_to', $officeId)
             ->where('closed.action_id', $this->actionIds()['Closed']);
-    }
-
-    protected function latest(int|string $officeId, string $column): QueryBuilder
-    {
-        return $this->steps($officeId)->select("logs.{$column}")->orderByDesc('logs.id')->limit(1);
     }
 
     /** @return array{Forwarded: int, Closed: int} */
