@@ -161,7 +161,7 @@ export default function AppSidebar({ collapsed = false, onNavigate }: AppSidebar
                         )}
                     >
                         <span className="relative">
-                            <Icon className={cn(iconClass(active), nested || inFlyout ? 'size-4' : 'size-[1.15rem]')} />
+                            <Icon weight={active ? 'fill' : 'bold'} className={cn(iconClass(active), nested || inFlyout ? 'size-4' : 'size-[1.15rem]')} />
                             {rail && <RailBadge count={itemCount} />}
                         </span>
                         {!rail && (
@@ -205,7 +205,7 @@ export default function AppSidebar({ collapsed = false, onNavigate }: AppSidebar
                                 )}
                             >
                                 <span className="relative">
-                                    <Icon className={cn(iconClass(active), 'size-[1.15rem]')} />
+                                    <Icon weight="fill" className={cn(iconClass(active), 'size-[1.15rem]')} />
                                     <RailBadge count={count(group.badge)} />
                                 </span>
                             </button>
@@ -233,7 +233,7 @@ export default function AppSidebar({ collapsed = false, onNavigate }: AppSidebar
                     aria-controls={panelId}
                     className={cn(rowBase, 'h-9', rowIdle, active && 'text-foreground')}
                 >
-                    <Icon className={cn(iconClass(active), 'size-[1.15rem]')} />
+                    <Icon weight="fill" className={cn(iconClass(active), 'size-[1.15rem]')} />
                     <span className="truncate">{group.title}</span>
                     {/* While open, the counts show on the rows themselves. */}
                     {!open && <CountBadge count={count(group.badge)} />}

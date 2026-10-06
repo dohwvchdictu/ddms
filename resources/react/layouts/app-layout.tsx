@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
-import { CircleAlert, type LucideIcon } from 'lucide-react';
+import type { Icon } from '@phosphor-icons/react';
+import { CircleAlert } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import AppHeader from '@/components/app-header';
 import AppSidebar from '@/components/app-sidebar';
@@ -34,7 +35,7 @@ interface AppLayoutProps {
     /** The page title, shown under the breadcrumbs. */
     title?: string;
     /** The title's icon; by default the icon of the sidebar item for this page. */
-    icon?: LucideIcon;
+    icon?: Icon;
     /** Page-level controls at the right of the title. */
     actions?: ReactNode;
 }
@@ -119,8 +120,9 @@ export default function AppLayout({ children, breadcrumbs, title, icon, actions 
                                     {title && (
                                         <h1 className="flex items-center gap-3 text-2xl font-semibold tracking-tight">
                                             {TitleIcon && (
-                                                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm shadow-emerald-900/20 dark:bg-emerald-500/20 dark:text-emerald-300">
-                                                    <TitleIcon className="size-5" aria-hidden="true" />
+                                                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                                                    {/* Filled, like the current page's icon in the sidebar. */}
+                                                    <TitleIcon weight="fill" className="size-5" aria-hidden="true" />
                                                 </span>
                                             )}
                                             {title}
